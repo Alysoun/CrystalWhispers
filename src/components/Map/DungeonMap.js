@@ -23,7 +23,7 @@ function DungeonMap({ dungeon, playerPosition }) {
   const lastCenteredRoom = useRef(null);
   const hasInitializedRef = useRef(false);
 
-  // Get container dimensions and try to center map
+  // Move all useEffect hooks before any conditional logic
   useEffect(() => {
     const updateViewportAndCenter = () => {
       if (!mapRef.current || dungeon?.currentRoomId === undefined) return;
@@ -52,7 +52,6 @@ function DungeonMap({ dungeon, playerPosition }) {
     return () => window.removeEventListener('resize', updateViewportAndCenter);
   }, [dungeon]);
 
-  // Handle room changes after initial centering
   useEffect(() => {
     if (!dungeon?.currentRoomId || !viewport.width || !viewport.height || !hasInitializedRef.current) return;
 
@@ -68,33 +67,9 @@ function DungeonMap({ dungeon, playerPosition }) {
     lastCenteredRoom.current = currentRoom.id;
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
 
-  // Add visual indicator for map interaction
-  const renderMapHint = () => {
-    return (
-      <div className="map-hint">
-        <div className="hint-text">
-          🔍 Scroll to zoom, drag to move
-        </div>
-      </div>
-    );
-  };
-
-  if (!dungeon) {
-    return (
-      <div className="map-container">
-        <div className="map-placeholder">No map available</div>
-      </div>
-    );
-  }
-
-  // Calculate map dimensions
-  const width = dungeon.width * CELL_SIZE;
-  const height = dungeon.height * CELL_SIZE;
-
-  // Add wheel event listener with passive: false
   useEffect(() => {
     const mapElement = mapRef.current;
-    if (!mapElement) return;
+    if (!mapElement || !dungeon) return;
 
     const handleWheel = (e) => {
       e.preventDefault();
@@ -130,6 +105,29 @@ function DungeonMap({ dungeon, playerPosition }) {
     mapElement.addEventListener('wheel', handleWheel, { passive: false });
     return () => mapElement.removeEventListener('wheel', handleWheel);
   }, [dungeon]);
+
+  // Add visual indicator for map interaction
+  const renderMapHint = () => {
+    return (
+      <div className="map-hint">
+        <div className="hint-text">
+          🔍 Scroll to zoom, drag to move
+        </div>
+      </div>
+    );
+  };
+
+  if (!dungeon) {
+    return (
+      <div className="map-container">
+        <div className="map-placeholder">No map available</div>
+      </div>
+    );
+  }
+
+  // Calculate map dimensions
+  const width = dungeon.width * CELL_SIZE;
+  const height = dungeon.height * CELL_SIZE;
 
   // Handle drag start
   const handleMouseDown = (e) => {
