@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './DungeonMap.css';
 
 const CELL_SIZE = 20;
@@ -22,14 +22,8 @@ function DungeonMap({ dungeon, playerPosition }) {
   const mapRef = useRef();
   const lastCenteredRoom = useRef(null);
   const hasInitializedRef = useRef(false);
-  const transformRef = useRef(transform);
 
-  // Update transform ref when state changes
-  useEffect(() => {
-    transformRef.current = transform;
-  }, [transform]);
-
-  // Initial setup and resize handler
+  // Get container dimensions and try to center map
   useEffect(() => {
     const updateViewportAndCenter = () => {
       if (!mapRef.current || dungeon?.currentRoomId === undefined) return;
@@ -58,7 +52,7 @@ function DungeonMap({ dungeon, playerPosition }) {
     return () => window.removeEventListener('resize', updateViewportAndCenter);
   }, [dungeon]);
 
-  // Room centering effect
+  // Handle room changes after initial centering
   useEffect(() => {
     if (!dungeon?.currentRoomId || !viewport.width || !viewport.height || !hasInitializedRef.current) return;
 
@@ -74,31 +68,50 @@ function DungeonMap({ dungeon, playerPosition }) {
     lastCenteredRoom.current = currentRoom.id;
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
 
-  // Handle wheel event
-  const handleWheel = (e) => {
-    e.preventDefault();
-    if (!dungeon || !mapRef.current) return;
-
-    const delta = -e.deltaY;
-    const scaleFactor = delta > 0 ? 1.1 : 0.9;
+    // Handle mouse wheel zoom
+    const handleWheel = (e) => {
+        e.preventDefault();
+        
+        // Ignore if no dungeon
+        if (!dungeon) return;
     
-    const rect = mapRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    const currentTransform = transformRef.current;
-    const newScale = Math.max(0.5, Math.min(2.0, currentTransform.scale * scaleFactor));
+        const delta = -e.deltaY;
+        const scaleFactor = delta > 0 ? 1.1 : 0.9;
+        
+        // Get mouse position relative to the map container
+        const rect = mapRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
     
-    if (newScale === currentTransform.scale) return;
-    
-    const scaleRatio = newScale / currentTransform.scale;
-    
-    setTransform({
-      scale: newScale,
-      x: mouseX - (mouseX - currentTransform.x) * scaleRatio,
-      y: mouseY - (mouseY - currentTransform.y) * scaleRatio
-    });
-  };
+        setTransform(prev => {
+          // Limit scale between 0.5 and 2.0
+          const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+          
+          // If scale hasn't changed, don't update
+          if (newScale === prev.scale) return prev;
+          
+          const scaleRatio = newScale / prev.scale;
+          
+          return {
+            scale: newScale,
+            x: mouseX - (mouseX - prev.x) * scaleRatio,
+            y: mouseY - (mouseY - prev.y) * scaleRatio
+          };
+        });
+      };
+      
+  useEffect(() => {
+    const mapElement = mapRef.current;
+    if (!mapElement) return;
+  
+    // Add non-passive wheel event listener
+    mapElement.addEventListener('wheel', handleWheel, { passive: false });
+  
+    // Cleanup event listener on unmount
+    return () => {
+      mapElement.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
 
   // Add visual indicator for map interaction
   const renderMapHint = () => {
@@ -122,6 +135,8 @@ function DungeonMap({ dungeon, playerPosition }) {
   // Calculate map dimensions
   const width = dungeon.width * CELL_SIZE;
   const height = dungeon.height * CELL_SIZE;
+
+
 
   // Handle drag start
   const handleMouseDown = (e) => {
@@ -250,7 +265,6 @@ function DungeonMap({ dungeon, playerPosition }) {
       {renderMapHint()}
       <div 
         className="map-scroll"
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
