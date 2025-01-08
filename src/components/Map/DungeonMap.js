@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './DungeonMap.css';
 
 const CELL_SIZE = 20;
@@ -67,44 +67,42 @@ function DungeonMap({ dungeon, playerPosition }) {
     lastCenteredRoom.current = currentRoom.id;
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
 
+  // Extract wheel handler to useCallback
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    
+    if (!dungeon) return;
+
+    const delta = -e.deltaY;
+    const scaleFactor = delta > 0 ? 1.1 : 0.9;
+    
+    const rect = mapRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    setTransform(prev => {
+      const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+      
+      if (newScale === prev.scale) return prev;
+      
+      const scaleRatio = newScale / prev.scale;
+      
+      return {
+        scale: newScale,
+        x: mouseX - (mouseX - prev.x) * scaleRatio,
+        y: mouseY - (mouseY - prev.y) * scaleRatio
+      };
+    });
+  }, [dungeon, setTransform]);
+
+  // Use the memoized handler in useEffect
   useEffect(() => {
     const mapElement = mapRef.current;
     if (!mapElement || !dungeon) return;
 
-    const handleWheel = (e) => {
-      e.preventDefault();
-      
-      // Ignore if no dungeon
-      if (!dungeon) return;
-
-      const delta = -e.deltaY;
-      const scaleFactor = delta > 0 ? 1.1 : 0.9;
-      
-      // Get mouse position relative to the map container
-      const rect = mapElement.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      setTransform(prev => {
-        // Limit scale between 0.5 and 2.0
-        const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
-        
-        // If scale hasn't changed, don't update
-        if (newScale === prev.scale) return prev;
-        
-        const scaleRatio = newScale / prev.scale;
-        
-        return {
-          scale: newScale,
-          x: mouseX - (mouseX - prev.x) * scaleRatio,
-          y: mouseY - (mouseY - prev.y) * scaleRatio
-        };
-      });
-    };
-
     mapElement.addEventListener('wheel', handleWheel, { passive: false });
     return () => mapElement.removeEventListener('wheel', handleWheel);
-  }, [dungeon]);
+  }, [dungeon, handleWheel]);
 
   // Add visual indicator for map interaction
   const renderMapHint = () => {
