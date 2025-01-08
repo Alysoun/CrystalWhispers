@@ -22,4 +22,15 @@
   flex-direction: column;
   min-width: 400px;
   max-width: 800px;
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    flex-direction: column;
+  }
+  
+  .game-right {
+    min-width: unset;
+    max-width: 100%;
+  }
 } 

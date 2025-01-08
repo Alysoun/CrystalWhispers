@@ -82,8 +82,8 @@ function App() {
     const { command, target } = parseCommand(input);
     const commandType = getCommandType(command);
 
-    // Modify guard clause to allow load and help commands
-    if (!gameState.currentRoom && commandType !== 'load' && commandType !== 'help') {
+    // Add check for dungeon existence
+    if (!gameState.dungeon && commandType !== 'load' && commandType !== 'help') {
       addToOutput("You need to start or load a game first.", input);
       return;
     }
@@ -116,16 +116,17 @@ function App() {
               }
           
               // Update gameState with the new room and player position
-              setGameState(prev => ({
-                ...prev,
-                dungeon: {
-                  ...prev.dungeon,
-                  currentRoomId: nextRoomId,
-                  rooms: new Map(prev.dungeon.rooms),
-                },
-                currentRoom: nextRoom,
-                playerPosition: { x: nextRoom.x, y: nextRoom.y }, // Ensure position is updated
-              }));
+              setGameState(prev => {
+                const updatedDungeon = prev.dungeon;
+                updatedDungeon.currentRoomId = nextRoomId;
+                
+                return {
+                  ...prev,
+                  dungeon: updatedDungeon,
+                  currentRoom: nextRoom,
+                  playerPosition: { x: nextRoom.x, y: nextRoom.y },
+                };
+              });
           
               addToOutput(nextRoom.getFullDescription(), input);
               addJournalEntry(`Moved ${direction} to room ${nextRoomId}`);
@@ -156,8 +157,8 @@ function App() {
         const itemToTake = findItem(target, gameState.currentRoom.items);
         
         if (itemToTake && itemToTake.canTake) {
-          // Get the current room from the dungeon
-          const currentRoom = gameState.dungeon.getCurrentRoom();
+          // Get the current room directly from the rooms Map
+          const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
           
           // Update the room's items directly
           currentRoom.items = currentRoom.items.filter(i => i !== itemToTake);

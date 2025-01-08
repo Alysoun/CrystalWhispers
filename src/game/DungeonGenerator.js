@@ -602,34 +602,34 @@ class Room {
 }
 
 class Dungeon {
-  constructor(width, height, roomCount, level = 1) {
+  constructor(width, height, numRooms, level = 1) {
     this.width = width;
     this.height = height;
+    this.numRooms = numRooms;
+    this.level = level;
     this.rooms = new Map();
     this.currentRoomId = 0;
-    this.level = level;
-    this.theme = new FloorTheme(level);
+    this.theme = this.generateTheme();
+    this.generateDungeon();
+  }
 
+  generateTheme() {
+    return new FloorTheme(this.level);
+  }
+
+  generateDungeon() {
     // Create the starting room in the center
-    const centerX = Math.floor(width / 2);
-    const centerY = Math.floor(height / 2);
+    const centerX = Math.floor(this.width / 2);
+    const centerY = Math.floor(this.height / 2);
     const ROOM_SIZE = 5;
     const startRoom = new Room(0, centerX, centerY, ROOM_SIZE, ROOM_SIZE, this.theme);
     this.rooms.set(0, startRoom);
 
-    // Generate the rest of the layout
-    this.generateLayout(roomCount, ROOM_SIZE);
-    
-    // Discover the starting room
-    startRoom.discover();
-  }
-
-  generateLayout(roomCount, roomSize) {
-    // Create additional rooms and connections
-    for (let i = 1; i < roomCount; i++) {
-      this.addAdjacentRoom(i, roomSize);
+    // Generate additional rooms
+    for (let i = 1; i < this.numRooms; i++) {
+      this.addAdjacentRoom(i, ROOM_SIZE);
     }
-    
+
     // Add extra connections for variety
     this.connectRooms();
     this.addExtraConnections();
@@ -651,22 +651,18 @@ class Dungeon {
     ].sort(() => Math.random() - 0.5);
 
     for (const { dx, dy, dir } of directions) {
-      // Position rooms with one unit space between them for corridors
       const newX = parentRoom.x + (dx * ROOM_SPACING);
       const newY = parentRoom.y + (dy * ROOM_SPACING);
 
-      // Check if position is valid and not occupied
       if (this.isValidPosition(newX, newY, roomSize) && !this.hasOverlap(newX, newY, roomSize)) {
         const newRoom = new Room(id, newX, newY, roomSize, roomSize, this.theme);
         this.rooms.set(id, newRoom);
-        
-        // Connect the rooms
         parentRoom.connectTo(newRoom, dir);
         return;
       }
     }
 
-    // If we couldn't place the room in any direction, try with a different parent
+    // If we couldn't place the room, try again with a different parent
     if (existingRooms.length > 1) {
       this.addAdjacentRoom(id, roomSize);
     }
@@ -677,7 +673,6 @@ class Dungeon {
   }
 
   hasOverlap(x, y, size) {
-    // Add a small buffer between rooms for corridors
     const BUFFER = 1;
     return Array.from(this.rooms.values()).some(room => {
       return !(x + size + BUFFER <= room.x || 
@@ -748,8 +743,8 @@ class Dungeon {
     const roomIds = Array.from(this.rooms.keys());
     
     for (let i = 0; i < EXTRA_CONNECTIONS; i++) {
-      const roomAId = roomIds[getRandomInt(0, roomIds.length)];
-      const roomBId = roomIds[getRandomInt(0, roomIds.length)];
+      const roomAId = roomIds[Math.floor(Math.random() * roomIds.length)];
+      const roomBId = roomIds[Math.floor(Math.random() * roomIds.length)];
       const roomA = this.rooms.get(roomAId);
       const roomB = this.rooms.get(roomBId);
       
@@ -762,11 +757,6 @@ class Dungeon {
 
   getCurrentRoom() {
     return this.rooms.get(this.currentRoomId);
-  }
-
-  getConnectedRooms(roomId) {
-    const room = this.rooms.get(roomId);
-    return Array.from(room.connections.values()).map(({ room }) => room);
   }
 }
 
