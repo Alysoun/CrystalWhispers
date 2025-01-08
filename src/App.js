@@ -208,7 +208,7 @@ function App() {
             });
             
             setGameState(loadedState);
-            const currentRoom = loadedState.dungeon.getCurrentRoom();
+            const currentRoom = loadedState.dungeon.rooms.get(loadedState.dungeon.currentRoomId);
             addToOutput("Game loaded successfully.", input);
             addToOutput(currentRoom.getFullDescription());
             addJournalEntry("Game loaded");
