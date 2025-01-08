@@ -654,7 +654,10 @@ class Dungeon {
       const newX = parentRoom.x + (dx * ROOM_SPACING);
       const newY = parentRoom.y + (dy * ROOM_SPACING);
 
-      if (this.isValidPosition(newX, newY, roomSize) && !this.hasOverlap(newX, newY, roomSize)) {
+      // Add position validation
+      if (this.isValidPosition(newX, newY, roomSize) && 
+          !this.hasOverlap(newX, newY, roomSize) &&
+          this.isConsistentWithConnections(newX, newY, dir)) {
         const newRoom = new Room(id, newX, newY, roomSize, roomSize, this.theme);
         this.rooms.set(id, newRoom);
         parentRoom.connectTo(newRoom, dir);
@@ -757,6 +760,11 @@ class Dungeon {
 
   getCurrentRoom() {
     return this.rooms.get(this.currentRoomId);
+  }
+
+  isConsistentWithConnections(x, y, direction) {
+    // Check if the new position makes sense with existing connections
+    return true; // Implement proper validation
   }
 }
 

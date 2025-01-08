@@ -159,56 +159,20 @@ function DungeonMap({ dungeon, playerPosition }) {
   };
 
   const renderRooms = () => {
-    const elements = [];
-
-    // Draw connections first
-    dungeon.rooms.forEach(room => {
-      if (!room.discovered) return;
-
-      room.connections.forEach(({ room: connectedRoom, direction, state }) => {
-        if (!connectedRoom.discovered) return;
-
-        const start = room.getCenter();
-        const end = connectedRoom.getCenter();
-
-        // Draw connection line
-        elements.push(
-          <line
-            key={`connection-${room.id}-${connectedRoom.id}`}
-            x1={start.x * CELL_SIZE}
-            y1={start.y * CELL_SIZE}
-            x2={end.x * CELL_SIZE}
-            y2={end.y * CELL_SIZE}
-            stroke={CONNECTION_COLOR}
-            strokeWidth={CONNECTION_WIDTH}
-          />
-        );
-      });
-    });
-
-    // Draw rooms
-    dungeon.rooms.forEach(room => {
-      if (!room.discovered) return;
-
+    return Array.from(dungeon.rooms.values()).map(room => {
       const isCurrentRoom = room.id === dungeon.currentRoomId;
-      const roomColor = isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR;
-
-      elements.push(
-        <rect
-          key={`room-${room.id}`}
-          x={room.x * CELL_SIZE}
-          y={room.y * CELL_SIZE}
-          width={room.width * CELL_SIZE}
-          height={room.height * CELL_SIZE}
-          fill={roomColor}
-          opacity={0.3}
-          stroke={roomColor}
-          strokeWidth="2"
-        />
+      return (
+        <g key={room.id}>
+          <rect
+            x={room.x * CELL_SIZE}
+            y={room.y * CELL_SIZE}
+            width={room.width * CELL_SIZE}
+            height={room.height * CELL_SIZE}
+            fill={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+          />
+        </g>
       );
     });
-
-    return elements;
   };
 
   return (
