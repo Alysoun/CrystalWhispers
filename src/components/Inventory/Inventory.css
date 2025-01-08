@@ -1,31 +1,35 @@
 .inventory-container {
-  background-color: #2a2a2a;
-  border-radius: 4px;
-  padding: 15px;
+  background-color: #1a1a1a;
+  padding: 10px;
+  margin: 10px;
+  border: 1px solid #333;
 }
 
-.inventory-container h2 {
-  margin: 0 0 15px 0;
-  font-size: 1.2em;
+.inventory-title {
   color: #0f0;
+  margin-bottom: 10px;
+  font-family: 'Courier New', monospace;
 }
 
-.inventory-empty {
-  color: #666;
-  font-style: italic;
+.inventory-items {
+  max-height: 120px; /* Height of about 4-5 items */
+  overflow-y: auto;
+  padding-right: 10px;
+  /* Add custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #0f0 #1a1a1a;
 }
 
-.inventory-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Webkit scrollbar styling */
+.inventory-items::-webkit-scrollbar {
+  width: 8px;
 }
 
-.inventory-item {
-  padding: 5px 0;
-  border-bottom: 1px solid #333;
+.inventory-items::-webkit-scrollbar-track {
+  background: #1a1a1a;
 }
 
-.inventory-item:last-child {
-  border-bottom: none;
+.inventory-items::-webkit-scrollbar-thumb {
+  background-color: #0f0;
+  border-radius: 4px;
 } 

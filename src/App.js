@@ -31,10 +31,18 @@ function App() {
   useEffect(() => {
     // Initialize game state
     const initializeGame = () => {
-      const dungeon = new Dungeon(50, 50, 15);
+      const minRooms = 15;
+      const maxRooms = 30;
+      const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
+      const dungeon = new Dungeon(50, 50, numRooms);
       const startingRoom = dungeon.rooms.get(0);
       startingRoom.discovered = true;
-      startingRoom.createItemsFromFeatures(); // Initialize items for starting room
+      startingRoom.createItemsFromFeatures();
+      
+      // Mark the starting room's exits as known
+      startingRoom.connections.forEach(({ room: connectedRoom }) => {
+        connectedRoom.knownExit = true;
+      });
 
       if (hasSavedGame()) {
         setGameState(prev => ({

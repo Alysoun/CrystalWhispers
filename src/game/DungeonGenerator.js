@@ -294,16 +294,14 @@ class Room {
     this.y = y;
     this.width = width;
     this.height = height;
-    this.connections = new Map();
+    this.theme = theme;
+    this.connections = new Map(); // Map<roomId, {room, direction, state}>
     this.items = [];
     this.features = [];
     this.discovered = false;
     this.generated = false;
-    this.theme = theme;
-    this.isCosmicRealm = theme.currentTheme === theme.themes[5];
-    if (this.isCosmicRealm) {
-      this.landmark = theme.getRandomLandmark();
-    }
+    this.knownExit = false;
+    this.description = '';
     this.lastUpdateTime = Date.now();
     this.updateInterval = 30000; // 30 seconds
     this.updateDescription();
@@ -342,7 +340,6 @@ class Room {
 
     // For each feature in the room
     this.features.forEach(feature => {
-      // Find matching item definition by checking if the feature text contains the item key
       const itemKey = Object.keys(featureItems).find(key => feature.includes(key));
       if (itemKey) {
         const itemDef = featureItems[itemKey];
@@ -352,39 +349,6 @@ class Room {
         });
       }
     });
-  }
-
-  generateDescription() {
-    return `You're in a ${this.theme.getRandomSize()} ${this.theme.getRandomAtmosphere()} chamber.`;
-  }
-
-  connectTo(otherRoom, direction) {
-    // Check if we already have a connection in this direction
-    const hasExistingConnection = Array.from(this.connections.values())
-      .some(conn => conn.direction === direction);
-    
-    if (!hasExistingConnection) {
-      // Add connection only if we don't already have one in this direction
-      this.connections.set(otherRoom.id, {
-        room: otherRoom,
-        direction: direction,
-        state: 'open'
-      });
-
-      // Add reverse connection with opposite direction
-      const oppositeDirection = {
-        'north': 'south',
-        'south': 'north',
-        'east': 'west',
-        'west': 'east'
-      }[direction];
-
-      otherRoom.connections.set(this.id, {
-        room: this,
-        direction: oppositeDirection,
-        state: 'open'
-      });
-    }
   }
 
   getExits() {
@@ -413,176 +377,19 @@ class Room {
       description += ` ${this.currentEvent}`;
     }
 
-    // Filter features to remove ones that mention items we've taken
-    let features = this.features.filter(feature => {
-      const featureItem = this.items.find(item => feature.includes(item.name));
-      return featureItem || !feature.match(/straw|bucket|bowl|pot/); // Add other takeable items here
-    });
-
-    // Get all possible item names and aliases from remaining items
-    const itemPatterns = this.items.map(item => {
-      const patterns = [item.name, ...(item.aliases || [])];
-      return `(${patterns.join('|')})`;
-    }).join('|');
-
-    // Highlight items in description and features
-    if (itemPatterns) {
-      const itemRegex = new RegExp(itemPatterns, 'gi');
-      description = description.replace(itemRegex, match => `<item>${match}</item>`);
-      features = features.map(feature => feature.replace(itemRegex, match => `<item>${match}</item>`));
-    }
-
-    // Build the complete description
-    let fullDescription = description;
-
-    // Add up to 2 unique features that don't repeat item mentions
-    const uniqueFeatures = features
-      .filter(feature => !description.toLowerCase().includes(feature.toLowerCase()))
-      .slice(0, 2);
-
-    if (uniqueFeatures.length > 0) {
-      fullDescription += ` ${uniqueFeatures.join(' ')}`;
-    }
-
     // Add visible items if any remain
     if (this.items.length > 0) {
-      const visibleItems = this.items
-        .filter(item => !fullDescription.toLowerCase().includes(item.name.toLowerCase()))
-        .map(item => `<item>${item.name}</item>`);
-      
+      const visibleItems = this.items.map(item => `<item>${item.name}</item>`);
       if (visibleItems.length > 0) {
-        fullDescription += `\nYou also see: ${visibleItems.join(', ')}.`;
+        description += `\nYou also see: ${visibleItems.join(', ')}.`;
       }
     }
 
     // Add exits
     const exits = this.getExits();
-    fullDescription += `\nExits: ${exits}`;
+    description += `\nExits: ${exits}`;
 
-    return fullDescription;
-  }
-
-  getCenter() {
-    return {
-      x: this.x + Math.floor(this.width / 2),
-      y: this.y + Math.floor(this.height / 2)
-    };
-  }
-
-  getAsciiMap() {
-    // Larger 11x11 room template
-    let ascii = [
-      '┌─────────┐',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '│         │',
-      '└─────────┘'
-    ];
-
-    // Add doors based on connections
-    this.connections.forEach(({ direction }) => {
-      switch (direction) {
-        case 'north':
-          ascii[0] = ascii[0].substring(0, 5) + '═' + ascii[0].substring(6);
-          break;
-        case 'south':
-          ascii[10] = ascii[10].substring(0, 5) + '═' + ascii[10].substring(6);
-          break;
-        case 'east':
-          ascii[5] = ascii[5].substring(0, 10) + '║';
-          break;
-        case 'west':
-          ascii[5] = '║' + ascii[5].substring(1);
-          break;
-      }
-    });
-
-    // Theme-specific symbols
-    const themeSymbols = {
-      'Prison Level': {
-        'chains': '⛓',
-        'cot': '▭',
-        'bench': '═',
-        'feeding bowl': 'o',
-        default: '·'
-      },
-      'Ancient Temple': {
-        'altar': '†',
-        'braziers': 'Ω',
-        'statues': '⊥',
-        'offering bowls': '○',
-        default: '·'
-      },
-      'Crypt Level': {
-        'bones': '☠',
-        'urns': '⚱',
-        'sarcophagus': '⚰',
-        'niches': '□',
-        default: '∴'
-      },
-      'Arcane Laboratory': {
-        'apparatus': '⚗',
-        'circles': '◎',
-        'crystals': '♦',
-        'symbols': '※',
-        default: '⁂'
-      },
-      'Cosmic Realm': {
-        'altar': '✧',
-        'void': '✫',
-        'shapes': '❖',
-        'energy': '✺',
-        default: '⋆'
-      }
-    };
-
-    // Place features in ASCII map with better spacing
-    const usedPositions = new Set();
-
-    this.items.forEach(item => {
-      const symbols = themeSymbols[this.theme.currentTheme.name] || themeSymbols['Prison Level'];
-      // Use the item's name to look up the symbol
-      const symbol = symbols[item.name] || symbols.default;
-      
-      // Try to find an unused position
-      let placed = false;
-      let attempts = 0;
-      while (!placed && attempts < 20) {
-        const row = getRandomInt(1, 10);
-        const col = getRandomInt(1, 9);
-        const position = `${row},${col}`;
-        
-        if (!usedPositions.has(position)) {
-          usedPositions.add(position);
-          ascii[row] = ascii[row].substring(0, col) + symbol + ascii[row].substring(col + 1);
-          placed = true;
-        }
-        attempts++;
-      }
-    });
-
-    // For cosmic realm, fill empty spaces more sparsely
-    if (this.isCosmicRealm) {
-      for (let i = 1; i < 10; i++) {
-        for (let j = 1; j < 9; j++) {
-          const position = `${i},${j}`;
-          if (!usedPositions.has(position) && Math.random() < 0.3) { // 30% chance to add cosmic effect
-            const cosmicSymbols = ['✧', '✦', '⋆', '✫', '·'];
-            ascii[i] = ascii[i].substring(0, j) + 
-                      cosmicSymbols[getRandomInt(0, cosmicSymbols.length)] + 
-                      ascii[i].substring(j + 1);
-          }
-        }
-      }
-    }
-
-    return ascii.join('\n');
+    return description;
   }
 
   discover() {
@@ -592,12 +399,51 @@ class Room {
         this.generateContent();
         this.generated = true;
       }
+      
+      // Mark connected rooms as known exits
+      this.connections.forEach(({ room: connectedRoom }) => {
+        connectedRoom.partiallyDiscover();
+      });
     }
+  }
+
+  partiallyDiscover() {
+    // Just mark that we know this is an exit
+    this.knownExit = true;
   }
 
   generateContent() {
     this.updateDescription();
     this.createItemsFromFeatures();
+  }
+
+  connectTo(room, direction) {
+    // Only allow connections if rooms are adjacent
+    const ROOM_SPACING = this.width + 2; // Same spacing as used in generation
+    const dx = room.x - this.x;
+    const dy = room.y - this.y;
+    
+    const isAdjacent = (
+      (direction === 'east' && dx === ROOM_SPACING && Math.abs(dy) < 1) ||
+      (direction === 'west' && dx === -ROOM_SPACING && Math.abs(dy) < 1) ||
+      (direction === 'south' && dy === ROOM_SPACING && Math.abs(dx) < 1) ||
+      (direction === 'north' && dy === -ROOM_SPACING && Math.abs(dx) < 1)
+    );
+
+    if (isAdjacent) {
+      this.connections.set(room.id, {
+        room: room,
+        direction: direction,
+        state: 'open'
+      });
+    }
+  }
+
+  getCenter() {
+    return {
+      x: this.x + this.width/2,
+      y: this.y + this.height/2
+    };
   }
 }
 
@@ -609,6 +455,7 @@ class Dungeon {
     this.level = level;
     this.rooms = new Map();
     this.currentRoomId = 0;
+    this.nextRoomId = 0; // Add this to track room IDs
     this.theme = this.generateTheme();
     this.generateDungeon();
   }
@@ -622,12 +469,12 @@ class Dungeon {
     const centerX = Math.floor(this.width / 2);
     const centerY = Math.floor(this.height / 2);
     const ROOM_SIZE = 5;
-    const startRoom = new Room(0, centerX, centerY, ROOM_SIZE, ROOM_SIZE, this.theme);
-    this.rooms.set(0, startRoom);
+    const startRoom = new Room(this.getNextRoomId(), centerX, centerY, ROOM_SIZE, ROOM_SIZE, this.theme);
+    this.rooms.set(startRoom.id, startRoom);
 
     // Generate additional rooms
     for (let i = 1; i < this.numRooms; i++) {
-      this.addAdjacentRoom(i, ROOM_SIZE);
+      this.addAdjacentRoom(ROOM_SIZE);
     }
 
     // Add extra connections for variety
@@ -635,13 +482,18 @@ class Dungeon {
     this.addExtraConnections();
   }
 
-  addAdjacentRoom(id, roomSize) {
+  getNextRoomId() {
+    return this.nextRoomId++;
+  }
+
+  addAdjacentRoom(roomSize) {
     // Pick a random existing room to branch from
     const existingRooms = Array.from(this.rooms.values());
     const parentRoom = existingRooms[Math.floor(Math.random() * existingRooms.length)];
+    const newRoomId = this.getNextRoomId();
 
     // Room spacing should be roomSize + 1 for corridors
-    const ROOM_SPACING = roomSize + 1;
+    const ROOM_SPACING = roomSize + 2;
     
     const directions = [
       { dx: 1, dy: 0, dir: 'east' },
@@ -654,35 +506,46 @@ class Dungeon {
       const newX = parentRoom.x + (dx * ROOM_SPACING);
       const newY = parentRoom.y + (dy * ROOM_SPACING);
 
-      // Add position validation
-      if (this.isValidPosition(newX, newY, roomSize) && 
-          !this.hasOverlap(newX, newY, roomSize) &&
-          this.isConsistentWithConnections(newX, newY, dir)) {
-        const newRoom = new Room(id, newX, newY, roomSize, roomSize, this.theme);
-        this.rooms.set(id, newRoom);
+      if (this.isValidPosition(newX, newY, roomSize) && !this.hasOverlap(newX, newY, roomSize)) {
+        const newRoom = new Room(newRoomId, newX, newY, roomSize, roomSize, this.theme);
+        this.rooms.set(newRoomId, newRoom);
+        
+        // Create bidirectional connections with proper opposite directions
+        const oppositeDir = this.getOppositeDirection(dir);
         parentRoom.connectTo(newRoom, dir);
+        newRoom.connectTo(parentRoom, oppositeDir);
         return;
       }
     }
 
     // If we couldn't place the room, try again with a different parent
     if (existingRooms.length > 1) {
-      this.addAdjacentRoom(id, roomSize);
+      this.addAdjacentRoom(roomSize);
     }
   }
 
-  isValidPosition(x, y, size) {
-    return x >= 0 && x + size <= this.width && y >= 0 && y + size <= this.height;
+  getOppositeDirection(dir) {
+    const opposites = {
+      'north': 'south',
+      'south': 'north',
+      'east': 'west',
+      'west': 'east'
+    };
+    return opposites[dir];
   }
 
   hasOverlap(x, y, size) {
-    const BUFFER = 1;
+    const BUFFER = 2; // Increased buffer between rooms
     return Array.from(this.rooms.values()).some(room => {
       return !(x + size + BUFFER <= room.x || 
                x >= room.x + room.width + BUFFER ||
                y + size + BUFFER <= room.y || 
                y >= room.y + room.height + BUFFER);
     });
+  }
+
+  isValidPosition(x, y, size) {
+    return x >= 0 && x + size <= this.width && y >= 0 && y + size <= this.height;
   }
 
   connectRooms() {
@@ -714,7 +577,11 @@ class Dungeon {
 
       if (bestPair && bestDirection) {
         const [roomAId, roomBId] = bestPair;
-        this.rooms.get(roomAId).connectTo(this.rooms.get(roomBId), bestDirection);
+        const roomA = this.rooms.get(roomAId);
+        const roomB = this.rooms.get(roomBId);
+        // Add bidirectional connections
+        roomA.connectTo(roomB, bestDirection);
+        roomB.connectTo(roomA, this.getOppositeDirection(bestDirection));
         connected.add(roomBId);
         unconnected.delete(roomBId);
       }
@@ -753,7 +620,9 @@ class Dungeon {
       
       if (roomAId !== roomBId && !roomA.connections.has(roomBId)) {
         const direction = this.getDirection(roomA, roomB);
+        // Add bidirectional connections
         roomA.connectTo(roomB, direction);
+        roomB.connectTo(roomA, this.getOppositeDirection(direction));
       }
     }
   }

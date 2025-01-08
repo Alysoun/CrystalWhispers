@@ -7,11 +7,12 @@ const ROOM_COLOR = '#0f0';
 const CURRENT_ROOM_COLOR = '#ff0';
 const UNDISCOVERED_COLOR = '#222';
 const CONNECTION_COLOR = '#666';
-const CONNECTION_WIDTH = '3';
+const CONNECTION_WIDTH = 2;
 const VIEWPORT_WIDTH = 600;
 const VIEWPORT_HEIGHT = 400;
-const DOOR_SIZE = 4;
-const DOOR_COLOR = '#8b4513'; // Brown color for doors
+const DOOR_SIZE = 12;
+const DOOR_COLOR = '#8b4513';
+const DOOR_OFFSET = 2;
 
 function DungeonMap({ dungeon, playerPosition }) {
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 0.8 });
@@ -90,25 +91,45 @@ function DungeonMap({ dungeon, playerPosition }) {
   const width = dungeon.width * CELL_SIZE;
   const height = dungeon.height * CELL_SIZE;
 
-  // Handle mouse wheel zoom
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = -e.deltaY;
-    const scaleFactor = delta > 0 ? 1.1 : 0.9;
-    const mouseX = e.nativeEvent.offsetX;
-    const mouseY = e.nativeEvent.offsetY;
+  // Add wheel event listener with passive: false
+  useEffect(() => {
+    const mapElement = mapRef.current;
+    if (!mapElement) return;
 
-    setTransform(prev => {
-      const newScale = Math.max(0.5, Math.min(2, prev.scale * scaleFactor));
-      const scaleRatio = newScale / prev.scale;
+    const handleWheel = (e) => {
+      e.preventDefault();
       
-      return {
-        scale: newScale,
-        x: mouseX - (mouseX - prev.x) * scaleRatio,
-        y: mouseY - (mouseY - prev.y) * scaleRatio
-      };
-    });
-  };
+      // Ignore if no dungeon
+      if (!dungeon) return;
+
+      const delta = -e.deltaY;
+      const scaleFactor = delta > 0 ? 1.1 : 0.9;
+      
+      // Get mouse position relative to the map container
+      const rect = mapElement.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      setTransform(prev => {
+        // Limit scale between 0.5 and 2.0
+        const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+        
+        // If scale hasn't changed, don't update
+        if (newScale === prev.scale) return prev;
+        
+        const scaleRatio = newScale / prev.scale;
+        
+        return {
+          scale: newScale,
+          x: mouseX - (mouseX - prev.x) * scaleRatio,
+          y: mouseY - (mouseY - prev.y) * scaleRatio
+        };
+      });
+    };
+
+    mapElement.addEventListener('wheel', handleWheel, { passive: false });
+    return () => mapElement.removeEventListener('wheel', handleWheel);
+  }, [dungeon]);
 
   // Handle drag start
   const handleMouseDown = (e) => {
@@ -137,42 +158,98 @@ function DungeonMap({ dungeon, playerPosition }) {
     setIsDragging(false);
   };
 
-  const renderDoor = (room, connectedRoom) => {
-    const start = room.getCenter();
-    const end = connectedRoom.getCenter();
-    const doorX = (start.x + end.x) / 2 * CELL_SIZE;
-    const doorY = (start.y + end.y) / 2 * CELL_SIZE;
-
-    return (
-      <rect
-        key={`door-${room.id}-${connectedRoom.id}`}
-        x={doorX - DOOR_SIZE/2}
-        y={doorY - DOOR_SIZE/2}
-        width={DOOR_SIZE}
-        height={DOOR_SIZE}
-        fill={DOOR_COLOR}
-        transform={`rotate(${
-          Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI
-        }, ${doorX}, ${doorY})`}
-      />
-    );
+  const getDoorPosition = (room, direction) => {
+    const roomCenterX = (room.x + room.width/2) * CELL_SIZE;
+    const roomCenterY = (room.y + room.height/2) * CELL_SIZE;
+    
+    switch(direction) {
+      case 'north':
+        return { x: roomCenterX, y: room.y * CELL_SIZE - DOOR_OFFSET };
+      case 'south':
+        return { x: roomCenterX, y: (room.y + room.height) * CELL_SIZE + DOOR_OFFSET };
+      case 'east':
+        return { x: (room.x + room.width) * CELL_SIZE + DOOR_OFFSET, y: roomCenterY };
+      case 'west':
+        return { x: room.x * CELL_SIZE - DOOR_OFFSET, y: roomCenterY };
+      default:
+        return { x: 0, y: 0 };
+    }
   };
 
   const renderRooms = () => {
-    return Array.from(dungeon.rooms.values()).map(room => {
-      const isCurrentRoom = room.id === dungeon.currentRoomId;
-      return (
-        <g key={room.id}>
-          <rect
-            x={room.x * CELL_SIZE}
-            y={room.y * CELL_SIZE}
-            width={room.width * CELL_SIZE}
-            height={room.height * CELL_SIZE}
-            fill={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+    const elements = [];
+
+    // Draw connections first
+    dungeon.rooms.forEach(room => {
+      if (!room.discovered) return;
+
+      room.connections.forEach(({ room: connectedRoom, direction, state }) => {
+        // Only draw connections between discovered rooms
+        if (!connectedRoom.discovered) return;
+
+        const start = room.getCenter();
+        const end = connectedRoom.getCenter();
+
+        // Draw connection line
+        elements.push(
+          <line
+            key={`connection-${room.id}-${connectedRoom.id}`}
+            x1={start.x * CELL_SIZE}
+            y1={start.y * CELL_SIZE}
+            x2={end.x * CELL_SIZE}
+            y2={end.y * CELL_SIZE}
+            stroke={CONNECTION_COLOR}
+            strokeWidth={CONNECTION_WIDTH}
           />
-        </g>
+        );
+      });
+    });
+
+    // Draw doors
+    dungeon.rooms.forEach(room => {
+      if (!room.discovered) return;
+
+      room.connections.forEach(({ room: connectedRoom, direction }) => {
+        const doorPos = getDoorPosition(room, direction);
+        elements.push(
+          <rect
+            key={`door-${room.id}-${connectedRoom.id}`}
+            x={doorPos.x - DOOR_SIZE/2}
+            y={doorPos.y - DOOR_SIZE/2}
+            width={DOOR_SIZE}
+            height={DOOR_SIZE}
+            fill={DOOR_COLOR}
+            stroke="#000"
+            strokeWidth="1"
+            transform={`rotate(${
+              direction === 'east' || direction === 'west' ? 90 : 0
+            }, ${doorPos.x}, ${doorPos.y})`}
+          />
+        );
+      });
+    });
+
+    // Draw rooms on top
+    dungeon.rooms.forEach(room => {
+      if (!room.discovered) return;
+      
+      const isCurrentRoom = room.id === dungeon.currentRoomId;
+      elements.push(
+        <rect
+          key={`room-${room.id}`}
+          x={room.x * CELL_SIZE}
+          y={room.y * CELL_SIZE}
+          width={room.width * CELL_SIZE}
+          height={room.height * CELL_SIZE}
+          fill={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+          opacity={0.7}
+          stroke={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+          strokeWidth="2"
+        />
       );
     });
+
+    return elements;
   };
 
   return (
@@ -181,7 +258,6 @@ function DungeonMap({ dungeon, playerPosition }) {
       {renderMapHint()}
       <div 
         className="map-scroll"
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -217,6 +293,10 @@ function DungeonMap({ dungeon, playerPosition }) {
         <div className="legend-item">
           <span className="legend-color" style={{ backgroundColor: ROOM_COLOR }}></span>
           Discovered Rooms
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: DOOR_COLOR }}></span>
+          Doors
         </div>
       </div>
     </div>
