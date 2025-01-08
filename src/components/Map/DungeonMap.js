@@ -22,8 +22,14 @@ function DungeonMap({ dungeon, playerPosition }) {
   const mapRef = useRef();
   const lastCenteredRoom = useRef(null);
   const hasInitializedRef = useRef(false);
+  const transformRef = useRef(transform);
 
-  // Move all useEffect hooks before any conditional logic
+  // Update transform ref when state changes
+  useEffect(() => {
+    transformRef.current = transform;
+  }, [transform]);
+
+  // Initial setup and resize handler
   useEffect(() => {
     const updateViewportAndCenter = () => {
       if (!mapRef.current || dungeon?.currentRoomId === undefined) return;
@@ -52,6 +58,7 @@ function DungeonMap({ dungeon, playerPosition }) {
     return () => window.removeEventListener('resize', updateViewportAndCenter);
   }, [dungeon]);
 
+  // Room centering effect
   useEffect(() => {
     if (!dungeon?.currentRoomId || !viewport.width || !viewport.height || !hasInitializedRef.current) return;
 
@@ -67,11 +74,10 @@ function DungeonMap({ dungeon, playerPosition }) {
     lastCenteredRoom.current = currentRoom.id;
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
 
-  // Extract wheel handler to useCallback
-  const handleWheel = useCallback((e) => {
+  // Handle wheel event
+  const handleWheel = (e) => {
     e.preventDefault();
-    
-    if (!dungeon) return;
+    if (!dungeon || !mapRef.current) return;
 
     const delta = -e.deltaY;
     const scaleFactor = delta > 0 ? 1.1 : 0.9;
@@ -80,29 +86,19 @@ function DungeonMap({ dungeon, playerPosition }) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    setTransform(prev => {
-      const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
-      
-      if (newScale === prev.scale) return prev;
-      
-      const scaleRatio = newScale / prev.scale;
-      
-      return {
-        scale: newScale,
-        x: mouseX - (mouseX - prev.x) * scaleRatio,
-        y: mouseY - (mouseY - prev.y) * scaleRatio
-      };
+    const currentTransform = transformRef.current;
+    const newScale = Math.max(0.5, Math.min(2.0, currentTransform.scale * scaleFactor));
+    
+    if (newScale === currentTransform.scale) return;
+    
+    const scaleRatio = newScale / currentTransform.scale;
+    
+    setTransform({
+      scale: newScale,
+      x: mouseX - (mouseX - currentTransform.x) * scaleRatio,
+      y: mouseY - (mouseY - currentTransform.y) * scaleRatio
     });
-  }, [dungeon, setTransform]);
-
-  // Use the memoized handler in useEffect
-  useEffect(() => {
-    const mapElement = mapRef.current;
-    if (!mapElement || !dungeon) return;
-
-    mapElement.addEventListener('wheel', handleWheel, { passive: false });
-    return () => mapElement.removeEventListener('wheel', handleWheel);
-  }, [dungeon, handleWheel]);
+  };
 
   // Add visual indicator for map interaction
   const renderMapHint = () => {
@@ -254,6 +250,7 @@ function DungeonMap({ dungeon, playerPosition }) {
       {renderMapHint()}
       <div 
         className="map-scroll"
+        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
