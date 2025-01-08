@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/CrystalWhispers/static/css/main.ed795870.css",
+    "main.js": "/CrystalWhispers/static/js/main.70fd8eb4.js",
+    "index.html": "/CrystalWhispers/index.html",
+    "main.ed795870.css.map": "/CrystalWhispers/static/css/main.ed795870.css.map",
+    "main.70fd8eb4.js.map": "/CrystalWhispers/static/js/main.70fd8eb4.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ed795870.css",
+    "static/js/main.70fd8eb4.js"
+  ]
+}
