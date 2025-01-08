@@ -1,0 +1,40 @@
+.game-output {
+  flex: 1;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  overflow-y: auto;
+  font-family: monospace;
+}
+
+.message {
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.message:last-child {
+  margin-bottom: 0;
+}
+
+.message.save-message {
+  color: #4CAF50;
+}
+
+.message.load-message {
+  color: #2196F3;
+}
+
+.message.error-message {
+  color: #f44336;
+}
+
+.interactable-item {
+  color: #00ff00; /* Bright green */
+  cursor: pointer;
+}
+
+.interactable-item:hover {
+  text-decoration: underline;
+  filter: brightness(120%);
+} 

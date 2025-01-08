@@ -1,0 +1,23 @@
+.command-prompt {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+}
+
+.prompt-symbol {
+  color: #0f0;
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.command-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: monospace;
+  font-size: 16px;
+  outline: none;
+} 

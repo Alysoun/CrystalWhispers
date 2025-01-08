@@ -1,0 +1,24 @@
+.image-display {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 20px;
+  min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ascii-art {
+  color: #0f0;
+  font-family: monospace;
+  text-align: center;
+  margin: 0;
+  white-space: pre;
+}
+
+.no-image {
+  color: #666;
+  font-style: italic;
+} 
