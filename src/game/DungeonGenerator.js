@@ -4,214 +4,299 @@ class FloorTheme {
   constructor(level) {
     this.themes = {
       1: {
-        name: 'Prison Level',
-        sizes: ['cramped', 'narrow', 'small', 'confined', 'tight', 'claustrophobic', 'restrictive'],
+        name: 'Forgotten Halls',
+        sizes: ['familiar', 'preserved', 'unchanging', 'dreamlike', 'mirror-filled'],
         atmospheres: [
-          'dank', 'dark', 'gloomy', 'dim', 'musty', 'stale', 'oppressive', 
-          'shadow-filled', 'cold', 'damp'
+          'strangely comfortable', 'hazily remembered', 'oddly peaceful', 
+          'seemingly frozen', 'timelessly still', 'eerily familiar'
         ],
         details: [
-          'Water drips steadily from the ceiling.',
-          'The stone floor is worn smooth by countless footsteps.',
-          'Moss grows in the cracks between stones.',
-          'The air is thick with the smell of mildew.',
-          'Your footsteps echo hollowly.',
-          'A chill draft whistles through the chamber.',
-          'The walls are slick with condensation.',
-          'Tiny vermin scurry in the shadows.',
-          'The stones here are stained with age.',
-          'Your torch casts dancing shadows on the walls.',
-          'The mortar between stones has largely crumbled away.',
-          'The ceiling is low and oppressive.'
+          'Mirrors reflect scenes that feel like memories.',
+          'Time seems to flow differently here.',
+          'Everything feels exactly as you remember it.',
+          'The walls shift subtly when you look away.',
+          'Echoes of laughter fade just as you notice them.',
+          'Light filters through windows that shouldn\'t exist.'
         ],
         features: [
-          'Rusty chains hang from the walls, softly clinking.',
-          'Old shackles are bolted to the walls, their locks long since rusted shut.',
-          'A moldy prisoner\'s cot rots in the corner, stuffing spilling out.',
-          'A broken chamber pot lies in the corner, partially buried in debris.',
-          'An iron feeding bowl sits abandoned, kicked into a corner.',
-          'A crude stone bench stands against the wall, worn smooth by use.',
-          'Faded prisoner tallies are scratched into the walls, telling silent stories.',
-          'A pile of moldy straw lies in the corner, rustling softly.',
-          'Iron rings are set into the walls at regular intervals.',
-          'A rusted grate in the floor leads to darkness below.',
-          'Corroded manacles dangle from wall-mounted chains.',
-          'A wooden bucket sits beneath a steady drip from the ceiling.'
+          'A familiar chair sits in an impossible corner.',
+          'A table is set for guests who will never arrive.',
+          'Family portraits hang on walls that shouldn\'t be here.',
+          'Mirrors reflect versions of the room that can\'t exist.',
+          'A music box sits on a shelf, its melody just out of reach.',
+          'An old photograph floats impossibly in mid-air.',
+          'A leather-bound journal rests on a side table.',
+          'A pocket watch hangs from a hook, ticking backwards.',
+          'A child\'s toy lies forgotten in a corner.',
+          'Windows look out on memories rather than views.',
+          'A perfectly preserved scene stands frozen in time.',
+          'Shelves hold books that write themselves.',
+          'A grandfather clock shows impossible hours.',
+          'A tea set steams with an eternal brew.'
         ],
         events: [
-          'A rat scurries across the floor, disappearing into a crack.',
-          'Water drips rhythmically from somewhere in the darkness.',
-          'A cold draft carries the distant sound of chains rattling.',
-          'Something skitters in the shadows just out of sight.',
-          'The torch light flickers, making the shadows dance.',
-          'A mournful draft moans through the chamber.',
-          'Tiny pebbles occasionally fall from the ceiling.',
-          'The sound of dripping water echoes from somewhere nearby.',
-          'A distant metallic clang echoes through the corridors.',
-          'The shadows seem to shift and move on their own.'
+          'A memory flickers at the edge of your vision.',
+          'The sound of familiar laughter echoes distantly.',
+          'Shadows of people who aren\'t there dance across the walls.',
+          'Time seems to skip like a broken record.',
+          'The room briefly appears as it once was.',
+          'A door opens to somewhere that can\'t exist.'
         ],
-        featureItems: {
-          'Rusty chains hang from the walls': {
-            name: 'chains',
-            description: 'Heavy iron chains, red with rust. They rattle softly when touched.',
-            canTake: false,
-            aliases: ['chain', 'rusty chains']
-          },
-          'Old shackles are bolted to the walls': {
-            name: 'shackles',
-            description: 'Iron shackles, rusted but still firmly attached to the wall.',
-            canTake: false,
-            aliases: ['shackle', 'iron shackles']
-          },
-          'A moldy prisoner\'s cot rots in the corner': {
-            name: 'cot',
-            description: 'A moldy prison cot, barely holding together. The straw mattress is damp and rotting.',
-            canTake: false,
-            aliases: ['bed', 'prison cot']
-          },
-          'A wooden bucket sits beneath a steady drip': {
-            name: 'bucket',
-            description: 'A wooden bucket, collecting water from the ceiling.',
-            canTake: true,
-            aliases: ['wooden bucket', 'water bucket']
-          },
-          'A broken chamber pot lies in the corner': {
-            name: 'pot',
-            description: 'A crude ceramic pot, cracked and stained with age.',
-            canTake: true,
-            aliases: ['chamber pot', 'ceramic pot']
-          },
-          'An iron feeding bowl sits abandoned': {
-            name: 'bowl',
-            description: 'A shallow iron bowl, dented and rusty.',
-            canTake: true,
-            aliases: ['feeding bowl', 'iron bowl']
-          },
-          'A crude stone bench stands against the wall': {
-            name: 'bench',
-            description: 'A rough stone bench, worn smooth by countless prisoners.',
-            canTake: false,
-            aliases: ['stone bench']
-          },
-          'A pile of moldy straw lies in the corner': {
-            name: 'straw',
-            description: 'A heap of rotting straw that might have served as bedding.',
-            canTake: true,
-            aliases: ['moldy straw', 'bedding']
-          },
-          'A rusted grate in the floor': {
-            name: 'grate',
-            description: 'A heavy iron grate, rusted into the floor. It leads to darkness below.',
-            canTake: false,
-            aliases: ['floor grate', 'iron grate']
-          }
-        },
         ambience: [
-          'The air is thick with the smell of decay',
-          'A distant dripping echoes through the corridors',
-          'The stone walls seem to absorb all warmth',
-          'Your torch casts wild shadows on the walls',
-          'The silence feels almost suffocating',
-          'The air tastes of rust and old stone'
+          'The air feels thick with forgotten memories',
+          'Time moves strangely here, like honey dripping',
+          'Everything seems frozen in a perfect moment',
+          'The walls hold echoes of what once was',
+          'Reality feels thin, like tissue paper',
+          'The past and present blur together'
         ],
         conditions: [
-          'Patches of luminescent mold give off a sickly glow',
-          'A thin layer of condensation covers everything',
-          'Ancient bloodstains darken the stone floor',
-          'The flagstones are slick with moisture',
-          'Cobwebs flutter in unseen drafts',
-          'The mortar between stones has largely crumbled away'
+          'The room maintains an impossible perfection',
+          'Everything is exactly as you remember it',
+          'Time seems to loop in small ways',
+          'The space defies natural decay',
+          'Reality bends to preserve what was',
+          'Nothing here changes, no matter what'
         ],
         senses: [
-          'The musty air fills your lungs with each breath',
-          'The cold seeps into your bones',
-          'Your footsteps echo strangely in the darkness',
-          'The smell of ancient stone and decay surrounds you',
-          'The walls feel rough and damp to the touch',
-          'The air tastes metallic and stale'
-        ]
+          'The air tastes like childhood memories',
+          'Everything feels eerily familiar',
+          'Sounds echo as if from long ago',
+          'The light has an unnatural permanence',
+          'Time feels frozen in amber',
+          'Your memories seem more real than reality'
+        ],
+        featureItems: {
+          'A perfectly preserved scene stands frozen in time': {
+            name: 'memory crystal',
+            description: 'A delicate crystal sphere that seems to capture a moment in time. Within its depths, you see fleeting images of happiness.',
+            canTake: true,
+            aliases: ['crystal', 'preserved crystal', 'sphere'],
+            examine: 'The crystal shows different scenes each time you look: a family dinner, children playing, someone reading by firelight. The images feel achingly familiar.'
+          },
+          'Family portraits hang on walls': {
+            name: 'portrait',
+            description: 'A family portrait whose subjects seem to shift when viewed from different angles.',
+            canTake: false,
+            aliases: ['painting', 'family portrait', 'picture'],
+            examine: 'The faces in the portrait are blurred, yet somehow familiar. They seem to change expressions when you look away.'
+          },
+          'chair': {
+            name: 'chair',
+            description: 'A comfortable-looking armchair that seems to belong to another time and place.',
+            canTake: false,
+            aliases: ['armchair', 'comfortable chair', 'rocking chair'],
+            examine: 'The chair feels warm, as if someone just stood up from it. You recognize it, but can\'t quite place from where.'
+          },
+          'mirror': {
+            name: 'mirror',
+            description: 'An ornate mirror that shows impossible reflections.',
+            canTake: false,
+            aliases: ['looking glass', 'reflection'],
+            examine: 'In the mirror, the room appears different - warmer, lived-in, full of life. For a moment, you see someone familiar in the reflection.'
+          },
+          'A table is set for guests': {
+            name: 'place setting',
+            description: 'Fine china and silverware, perfectly arranged, gathering no dust.',
+            canTake: true,
+            aliases: ['dishes', 'silverware', 'china'],
+            examine: 'The plates are still warm, as if dinner was just served. You recognize the pattern on the china from somewhere...'
+          },
+          'A music box sits on a shelf': {
+            name: 'music box',
+            description: 'A delicate wooden box with a brass key.',
+            canTake: true,
+            aliases: ['box', 'wooden box'],
+            examine: 'When wound, it plays a melody you\'ve known all your life, though you can\'t remember learning it.',
+            use: 'The music box plays a haunting lullaby. For a moment, the room seems to shift around you.'
+          },
+          'A leather-bound journal rests on a side table': {
+            name: 'journal',
+            description: 'A worn journal with blank pages that sometimes show writing.',
+            canTake: true,
+            aliases: ['diary', 'book', 'leather book'],
+            examine: 'The pages appear blank at first, but as you watch, familiar handwriting fades in and out, telling stories you almost remember.',
+            read: 'The writing is difficult to make out, but you catch glimpses: "...happy times..." "...wish you were here..." "...please remember..."'
+          },
+          'A pocket watch hangs from a hook': {
+            name: 'pocket watch',
+            description: 'An antique gold pocket watch that never tells the same time twice.',
+            canTake: true,
+            aliases: ['watch', 'timepiece', 'gold watch'],
+            examine: 'The watch face shows impossible times, and the second hand sometimes moves backwards. It feels important somehow.',
+            use: 'The watch ticks irregularly in your hand. Time seems to flow strangely around you.'
+          },
+          'A child\'s toy lies forgotten in a corner': {
+            name: 'toy',
+            description: 'A well-loved stuffed animal that seems to change appearance.',
+            canTake: true,
+            aliases: ['stuffed animal', 'plush toy', 'stuffed toy'],
+            examine: 'Each time you look at it, the toy seems different, yet each version feels deeply familiar. It brings comfort you don\'t understand.'
+          },
+          'photograph': {
+            name: 'photograph',
+            description: 'A sepia-toned photograph that changes its image when you blink.',
+            canTake: true,
+            aliases: ['photo', 'picture', 'sepia photo'],
+            examine: 'The photograph shows different scenes each time you look: a birthday party, a wedding, a quiet morning. All feel like memories you can\'t quite grasp.',
+            feature: 'An old photograph floats impossibly in mid-air'
+          },
+          'portrait': {
+            name: 'portrait',
+            description: 'A portrait that seems to shift and change as you look at it.',
+            canTake: false
+          },
+          'chair': {
+            name: 'chair',
+            description: 'A comfortable-looking armchair that seems to belong to another time and place.',
+            canTake: false
+          },
+          'mirror': {
+            name: 'mirror',
+            description: 'The mirror shows reflections that shouldn\'t be possible.',
+            canTake: false
+          },
+          'table': {
+            name: 'table',
+            description: 'An elegantly set table, waiting for guests who will never arrive.',
+            canTake: false
+          }
+        }
       },
       2: {
-        name: 'Ancient Temple',
-        sizes: ['vast', 'ceremonial', 'grand', 'sacred'],
-        atmospheres: ['reverent', 'still', 'hushed', 'ethereal'],
-        materials: ['marble', 'gilded', 'ornate', 'carved'],
+        name: 'Shattered Sanctum',
+        sizes: ['fractured', 'broken', 'ruptured', 'unstable', 'crumbling'],
+        atmospheres: [
+          'violently disturbed', 'seething', 'crackling', 
+          'unstable', 'turbulent', 'destructive'
+        ],
+        details: [
+          'Deep cracks spider across the walls.',
+          'The floor is littered with broken fragments.',
+          'The air itself seems to vibrate with tension.',
+          'Heat radiates from the scarred walls.',
+          'The ceiling bears marks of violent impact.',
+          'Destruction has left its mark everywhere.'
+        ],
         features: [
-          'Broken altar pieces lie scattered about.',
-          'Religious symbols adorn the walls.',
-          'Ceremonial braziers stand cold and empty.',
-          'Ancient prayers are carved into the walls.',
-          'The remains of offering bowls litter the floor.',
-          'Shattered stained glass crunches underfoot.',
-          'Weathered statues of forgotten gods stand watch.',
-          'Incense holders hang from tarnished chains.'
-        ]
+          'Shattered crystals cover the ground, still humming with energy.',
+          'A once-beautiful mural lies in pieces.',
+          'Scorch marks mar every surface.',
+          'Broken furniture lies scattered about.',
+          'The walls bear deep, violent gashes.',
+          'Everything of value has been thoroughly destroyed.'
+        ],
+        events: [
+          'Something shatters in the distance.',
+          'A wave of heat pulses through the room.',
+          'The walls crack further under unseen pressure.',
+          'Debris falls from fresh damage above.',
+          'The ground trembles with suppressed force.',
+          'The air crackles with violent energy.'
+        ],
+        ambience: [
+          'The air burns with barely contained rage',
+          'Everything vibrates with destructive energy',
+          'The very stones seem to seethe with anger',
+          'Heat radiates from the scarred walls',
+          'The atmosphere crackles with tension',
+          'Destruction hangs heavy in the air'
+        ],
+        conditions: [
+          'Fresh cracks appear without warning',
+          'The destruction is still ongoing',
+          'Everything bears marks of violence',
+          'Nothing remains whole or untouched',
+          'The damage seems deliberate and thorough',
+          'Signs of rage mark every surface'
+        ],
+        senses: [
+          'The air tastes of ash and destruction',
+          'Heat radiates from every surface',
+          'The sound of breaking echoes endlessly',
+          'Everything feels jagged to the touch',
+          'The scent of burning lingers',
+          'Your teeth vibrate with tension'
+        ],
+        featureItems: {
+          'Shattered crystals': {
+            name: 'rage shard',
+            description: 'A crystal fragment humming with violent energy.',
+            canTake: true,
+            aliases: ['shard', 'crystal fragment']
+          }
+        }
       },
       3: {
-        name: 'Crypt Level',
-        sizes: ['tomb-like', 'burial', 'catacomb', 'sepulchral'],
-        atmospheres: ['deathly quiet', 'stale', 'musty', 'tomb-cold'],
-        materials: ['bone-inlaid', 'obsidian', 'ebony', 'death-marked'],
+        name: 'Trading Halls',
+        sizes: ['labyrinthine', 'maze-like', 'winding', 'branching', 'complex'],
+        atmospheres: [
+          'negotiative', 'promising', 'enticing', 
+          'opportunistic', 'desperate', 'hopeful'
+        ],
+        details: [
+          'Countless paths branch in every direction.',
+          'Each doorway promises a different outcome.',
+          'The room seems to offer endless possibilities.',
+          'Alternative routes tempt at every turn.',
+          'Everything here seems to ask "what if?"',
+          'Time feels fluid, as if choices could be unmade.'
+        ],
         features: [
-          'Ancient bones are stacked in alcoves.',
-          'Burial niches line the walls.',
-          'Sarcophagus fragments litter the ground.',
-          'The air is thick with the dust of ages.',
-          'Funeral urns stand in recessed shelves.',
-          'Burial wrappings flutter in a ghostly breeze.',
-          'Death masks stare from wall mountings.',
-          'The floor is inlaid with memorial stones.'
+          'An ornate trading scale balances nothing against nothing.',
+          'Contracts written in strange script flutter in a nonexistent wind.',
+          'A merchant\'s counter stands empty, waiting for trade.',
+          'Paths split and rejoin in impossible ways.',
+          'Mirrors show paths not taken.',
+          'A collection of keys hangs, each promising a different path.'
         ]
       },
       4: {
-        name: 'Arcane Laboratory',
-        sizes: ['circular', 'octagonal', 'strange', 'twisted'],
-        atmospheres: ['crackling', 'humming', 'shifting', 'unstable'],
-        materials: ['crystal-studded', 'rune-carved', 'enchanted', 'glowing'],
+        name: 'Sunless Depths',
+        sizes: ['vast', 'empty', 'hollow', 'endless', 'void-like'],
+        atmospheres: [
+          'oppressively silent', 'heavy', 'suffocating', 
+          'lightless', 'weighty', 'draining'
+        ],
+        details: [
+          'Your footsteps echo in the emptiness.',
+          'The darkness seems to absorb all hope.',
+          'The air feels thick with unspoken words.',
+          'Time moves like molasses here.',
+          'The silence weighs heavily.',
+          'Even light seems to struggle here.'
+        ],
         features: [
-          'Broken alchemical apparatus litters workbenches.',
-          'Magical residue stains the walls.',
-          'Arcane circles are carved into the floor.',
-          'Crystal shards pulse with dim light.',
-          'The air shimmers with residual magic.',
-          'Strange symbols float in the air.',
-          'Fractured summoning circles remain visible.',
-          'The walls ripple with contained power.'
+          'A void of darkness stretches endlessly.',
+          'Remnants of life lie abandoned and forgotten.',
+          'Shadows pool like liquid in the corners.',
+          'The walls seem to absorb all sound.',
+          'A heavy mist clings to everything.',
+          'Light sources struggle against the darkness.'
         ]
       },
       5: {
-        name: 'Cosmic Realm',
-        sizes: ['vast', 'twisted', 'impossible', 'warped'],
-        atmospheres: ['reality-bending', 'star-filled', 'void-touched', 'cosmic'],
-        materials: ['starlit', 'void-black', 'constellation-marked', 'cosmic-veined'],
+        name: 'Tranquil Sanctuary',
+        sizes: ['balanced', 'harmonious', 'peaceful', 'serene', 'complete'],
+        atmospheres: [
+          'calmly resolute', 'accepting', 'tranquil', 
+          'understanding', 'peaceful', 'settled'
+        ],
+        details: [
+          'The chaos and order here exist in perfect balance.',
+          'Light and shadow dance in harmony.',
+          'The air carries a sense of completion.',
+          'Time flows naturally here, neither fast nor slow.',
+          'The space feels at peace with itself.',
+          'Everything here seems to have found its place.'
+        ],
         features: [
-          'Reality seems to bend at the corners of your vision.',
-          'Stars wheel overhead in impossible patterns.',
-          'The walls pulse with cosmic energy.',
-          'Geometric shapes float and reconfigure themselves.',
-          'Constellations drift across the walls.',
-          'The ceiling opens to an infinite void.',
-          'Your footsteps echo in impossible ways.',
-          'The air tastes of stardust and infinity.',
-          'Cosmic winds howl silently.'
-        ],
-        events: [
-          'A shower of starlight briefly illuminates ancient runes.',
-          'The air shimmers with otherworldly energy.',
-          'Distant stars seem to watch your movements.',
-          'Colors shift in ways that shouldn\'t be possible.',
-          'Whispers of cosmic secrets echo faintly.',
-          'The shadows dance with strange purpose.',
-          'Patterns in the walls shift hypnotically.',
-          'The air grows thick with swirling stardust.'
-        ],
-        landmarks: [
-          'A massive crystalline formation pulses with cosmic energy.',
-          'An ancient alien altar floats silently.',
-          'A tear in reality remains stable and fixed.',
-          'A pillar of swirling cosmic energy stands firm.',
-          'A strange mechanical device hums with power.',
-          'An otherworldly archway frames the passage.'
+          'A pool reflects both light and shadow equally.',
+          'Crystal formations have grown around broken remnants.',
+          'New life grows through old decay.',
+          'Paths converge at a central point of calm.',
+          'The room embraces both its beauty and flaws.',
+          'Windows show both past and present simultaneously.'
         ]
       }
     };
@@ -295,112 +380,120 @@ class Room {
     this.width = width;
     this.height = height;
     this.theme = theme;
-    this.connections = new Map(); // Map<roomId, {room, direction, state}>
+    this.connections = new Map();
     this.items = [];
     this.features = [];
     this.discovered = false;
     this.generated = false;
     this.knownExit = false;
-    this.description = '';
-    this.lastUpdateTime = Date.now();
-    this.updateInterval = 30000; // 30 seconds
-    this.updateDescription();
+    
+    // Store persistent description elements
+    this.roomSize = '';
+    this.roomAtmosphere = '';
+    this.roomAmbience = '';
+    this.roomFeatures = [];
   }
 
-  updateDescription() {
-    // Base description changes less frequently
-    if (!this.description || Math.random() < 0.1) {
-      this.description = this.theme.generateRoomDescription();
-    }
-    
-    // Dynamic elements change more often
-    this.currentAmbience = this.theme.getRandomAmbience();
-    
-    // Events are temporary and change frequently
-    if (Math.random() < 0.3) {
-      this.currentEvent = this.theme.getRandomEvent();
-    } else {
-      this.currentEvent = null;
-    }
-
-    // Select 1-2 unique features for the room
-    this.features = this.theme.getRandomFeatures(getRandomInt(1, 3));
-
-    // Create items based on the new features
-    this.createItemsFromFeatures();
-  }
-
-  createItemsFromFeatures() {
-    // Clear existing feature-based items
-    this.items = this.items.filter(item => !item.feature);
-
-    // Get the feature items for the current theme
-    const featureItems = this.theme.currentTheme.featureItems;
-    if (!featureItems) return;
-
-    // For each feature in the room
-    this.features.forEach(feature => {
-      const itemKey = Object.keys(featureItems).find(key => feature.includes(key));
-      if (itemKey) {
-        const itemDef = featureItems[itemKey];
-        this.items.push({
-          ...itemDef,
-          feature: feature
-        });
+  generateContent() {
+    if (!this.generated) {
+      // Generate persistent room description elements
+      this.roomSize = this.theme.getRandomSize();
+      this.roomAtmosphere = this.theme.getRandomAtmosphere();
+      this.roomAmbience = this.theme.getRandomAmbience();
+      
+      // Get all available features
+      const allFeatures = [...this.theme.currentTheme.features];
+      
+      // Shuffle the features array
+      for (let i = allFeatures.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allFeatures[i], allFeatures[j]] = [allFeatures[j], allFeatures[i]];
       }
-    });
-  }
-
-  getExits() {
-    return Array.from(this.connections.values())
-      .map(({ direction, state }) => `${direction} (${state})`)
-      .join(', ');
+      
+      // Take 2-3 random features
+      const numFeatures = getRandomInt(2, 3);
+      this.roomFeatures = allFeatures.slice(0, numFeatures);
+      
+      // Create initial items based on features
+      this.createItemsFromFeatures();
+      
+      this.generated = true;
+    }
   }
 
   getFullDescription() {
-    // Check if it's time to update
-    const now = Date.now();
-    if (now - this.lastUpdateTime > this.updateInterval) {
-      this.updateDescription();
-      this.lastUpdateTime = now;
+    if (!this.generated) {
+      this.generateContent();
     }
 
-    let description = this.description;
-    
-    // Add current ambience if it exists
-    if (this.currentAmbience) {
-      description += ` ${this.currentAmbience}.`;
+    let description = [];
+
+    // Room description
+    description.push(`A ${this.roomSize}, ${this.roomAtmosphere} space opens before you.`);
+
+    // Ambience
+    if (this.roomAmbience) {
+      description.push(this.roomAmbience + '.');
     }
 
-    // Add current event if it exists
-    if (this.currentEvent) {
-      description += ` ${this.currentEvent}`;
+    // Features with interactable items
+    if (this.roomFeatures && this.roomFeatures.length > 0) {
+      description.push('\nIn this room:');
+      this.roomFeatures.forEach(feature => {
+        let modifiedFeature = feature;
+        
+        // Find any items that are part of this feature
+        const featureItems = this.items.filter(item => item.feature === feature);
+
+        if (featureItems.length > 0) {
+          featureItems.forEach(item => {
+            const itemName = item.name;
+            if (!modifiedFeature.includes(`<item>${itemName}</item>`)) {
+              const regex = new RegExp(`\\b${itemName}\\b`, 'gi');
+              modifiedFeature = modifiedFeature.replace(regex, `<item>${itemName}</item>`);
+            }
+          });
+          description.push(`  - ${modifiedFeature}`);
+        } else {
+          // Skip features that had items that were taken
+          const itemKey = Object.keys(this.theme.currentTheme.featureItems || {})
+            .find(key => feature.toLowerCase().includes(key.toLowerCase()));
+          
+          if (!itemKey) {
+            // Only show features that never had items
+            description.push(`  - ${feature}`);
+          }
+        }
+      });
     }
 
-    // Add visible items if any remain
-    if (this.items.length > 0) {
-      const visibleItems = this.items.map(item => `<item>${item.name}</item>`);
-      if (visibleItems.length > 0) {
-        description += `\nYou also see: ${visibleItems.join(', ')}.`;
-      }
+    // Loose items (not part of features)
+    const looseItems = this.items.filter(item => !item.feature);
+    if (looseItems.length > 0) {
+      description.push('\nYou can see:');
+      looseItems.forEach(item => {
+        description.push(`  - <item>${item.name}</item>`);
+      });
     }
 
-    // Add exits
+    // Exits
     const exits = this.getExits();
-    description += `\nExits: ${exits}`;
+    description.push('\nExits:');
+    Object.entries(exits).forEach(([direction, state]) => {
+      description.push(`  - ${direction}: ${state}`);
+    });
 
-    return description;
+    return description.join('\n');
   }
 
+  // Remove updateDescription as it's no longer needed
   discover() {
     if (!this.discovered) {
       this.discovered = true;
       if (!this.generated) {
         this.generateContent();
-        this.generated = true;
       }
       
-      // Mark connected rooms as known exits
       this.connections.forEach(({ room: connectedRoom }) => {
         connectedRoom.partiallyDiscover();
       });
@@ -412,9 +505,32 @@ class Room {
     this.knownExit = true;
   }
 
-  generateContent() {
-    this.updateDescription();
-    this.createItemsFromFeatures();
+  createItemsFromFeatures() {
+    // Clear existing feature-based items
+    this.items = this.items.filter(item => !item.feature);
+
+    // For each feature in the room
+    this.roomFeatures.forEach(feature => {
+      // Check each feature item definition
+      Object.entries(this.theme.currentTheme.featureItems || {}).forEach(([key, itemDef]) => {
+        // Check if this feature matches the item's associated feature text
+        if (itemDef.feature === feature || feature.toLowerCase().includes(key.toLowerCase())) {
+          // Create a new item based on the definition
+          this.items.push({
+            ...itemDef,
+            feature: feature
+          });
+        }
+      });
+    });
+  }
+
+  getExits() {
+    const exits = {};
+    this.connections.forEach((connection, roomId) => {
+      exits[connection.direction] = connection.state || 'open';
+    });
+    return exits;
   }
 
   connectTo(room, direction) {
@@ -636,5 +752,6 @@ class Dungeon {
     return true; // Implement proper validation
   }
 }
+
 
 export { Dungeon, Room }; 

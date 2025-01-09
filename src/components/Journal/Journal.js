@@ -16,7 +16,7 @@ function Journal({ entries }) {
         {entries.map((entry, index) => (
           <div key={index} className="journal-entry">
             <span className="entry-timestamp">{entry.timestamp}</span>
-            <span className="entry-text">{entry.text}</span>
+            <span className="entry-text"> - {entry.text}</span>
           </div>
         ))}
         <div ref={journalEndRef} /> {/* Scroll anchor */}

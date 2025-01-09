@@ -73,17 +73,11 @@ function App() {
     }));
   };
 
-  const addToOutput = (message, userInput = '') => {
-    setGameState(prev => {
-      const currentMessages = prev.gameOutput || [];
-      const newMessages = userInput 
-        ? [...currentMessages, `> ${userInput}`, message]
-        : [...currentMessages, message];
-      return {
-        ...prev,
-        gameOutput: newMessages.slice(-MAX_MESSAGES)
-      };
-    });
+  const addToOutput = (message, command, clearScreen = false) => {
+    setGameState(prev => ({
+      ...prev,
+      gameOutput: clearScreen ? [message] : [...prev.gameOutput, message]
+    }));
   };
 
   const handleCommand = (input) => {
@@ -136,11 +130,11 @@ function App() {
                 };
               });
           
-              addToOutput(nextRoom.getFullDescription(), input);
+              addToOutput(nextRoom.getFullDescription(), input, true);
               addJournalEntry(`Moved ${direction} to room ${nextRoomId}`);
             } else {
               if (direction) {
-                addToOutput(`You cannot go ${direction} from here.`, input);
+                addToOutput(direction ? `You cannot go ${direction} from here.` : "Go where?", input);
               } else {
                 addToOutput("Go where?", input);
               }
@@ -150,11 +144,11 @@ function App() {
 
       case 'look':
         if (!target) {
-          addToOutput(gameState.currentRoom.getFullDescription(), input);
+          addToOutput(gameState.currentRoom.getFullDescription(), input, true);
         } else {
           const item = findItem(target, gameState.currentRoom.items);
           if (item) {
-            addToOutput(item.description, input);
+            addToOutput(item.description, input, false);
           } else {
             addToOutput("You don't see that here.", input);
           }
@@ -171,12 +165,34 @@ function App() {
           // Update the room's items directly
           currentRoom.items = currentRoom.items.filter(i => i !== itemToTake);
           
-          setGameState(prev => ({
-            ...prev,
-            inventory: [...prev.inventory, itemToTake]
-          }));
+          // Update inventory, handling duplicates
+          setGameState(prev => {
+            // Create a new inventory array
+            const newInventory = [...prev.inventory];
+            
+            // Check if we already have this type of item
+            const existingItem = newInventory.find(item => 
+              item.name.toLowerCase() === itemToTake.name.toLowerCase()
+            );
+
+            if (existingItem) {
+              // If we already have this item, just add the new one
+              newInventory.push(itemToTake);
+            } else {
+              // If it's a new item type, add it to inventory
+              newInventory.push(itemToTake);
+            }
+
+            return {
+              ...prev,
+              inventory: newInventory
+            };
+          });
           
-          addToOutput(`You take the ${itemToTake.name}.`, input);
+          // Clear screen and show the take message and updated room description
+          addToOutput(currentRoom.getFullDescription(), input, true);
+          addToOutput(`You take the ${itemToTake.name}.`, input, false);
+          
           if (itemToTake.important) {
             addJournalEntry(`Found ${itemToTake.name}`);
           }

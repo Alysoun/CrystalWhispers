@@ -6,11 +6,16 @@
   margin-bottom: 20px;
   overflow-y: auto;
   font-family: monospace;
+  white-space: pre-wrap;
 }
 
 .message {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   line-height: 1.4;
+}
+
+.message-line {
+  margin-bottom: 4px;
 }
 
 .message:last-child {
@@ -30,7 +35,7 @@
 }
 
 .interactable-item {
-  color: #00ff00; /* Bright green */
+  color: #00ff00;
   cursor: pointer;
 }
 

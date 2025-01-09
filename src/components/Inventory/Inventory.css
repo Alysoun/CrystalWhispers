@@ -3,6 +3,9 @@
   padding: 10px;
   margin: 10px;
   border: 1px solid #333;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
 }
 
 .inventory-title {
@@ -11,25 +14,43 @@
   font-family: 'Courier New', monospace;
 }
 
-.inventory-items {
-  max-height: 120px; /* Height of about 4-5 items */
+.inventory-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
   overflow-y: auto;
-  padding-right: 10px;
-  /* Add custom scrollbar styling */
+  flex-grow: 1;
   scrollbar-width: thin;
   scrollbar-color: #0f0 #1a1a1a;
 }
 
-/* Webkit scrollbar styling */
-.inventory-items::-webkit-scrollbar {
+.inventory-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.inventory-items::-webkit-scrollbar-track {
+.inventory-list::-webkit-scrollbar-track {
   background: #1a1a1a;
 }
 
-.inventory-items::-webkit-scrollbar-thumb {
+.inventory-list::-webkit-scrollbar-thumb {
   background-color: #0f0;
   border-radius: 4px;
+}
+
+.inventory-item {
+  color: #00ff00;
+  font-family: 'Courier New', monospace;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.inventory-item:hover {
+  text-decoration: underline;
+  filter: brightness(120%);
+}
+
+.inventory-empty {
+  color: #666;
+  font-style: italic;
+  font-family: 'Courier New', monospace;
 } 

@@ -3,16 +3,21 @@ import './GameOutput.css';
 
 function GameOutput({ messages }) {
   const renderMessage = (message) => {
-    // Split the message by item tags
-    const parts = message.split(/(<item>.*?<\/item>)/g);
-    
-    return parts.map((part, index) => {
-      if (part.startsWith('<item>') && part.endsWith('</item>')) {
-        // Extract the text between the tags and render in green
-        const text = part.replace(/<\/?item>/g, '');
-        return <span key={index} className="interactable-item">{text}</span>;
-      }
-      return <span key={index}>{part}</span>;
+    return message.split('\n').map((line, lineIndex) => {
+      // Match complete item tags with content
+      const parts = line.split(/(<item>[^<]+<\/item>)/g);
+      
+      return (
+        <div key={lineIndex} className="message-line">
+          {parts.map((part, partIndex) => {
+            if (part.startsWith('<item>') && part.endsWith('</item>')) {
+              const text = part.slice(6, -7); // Remove <item> and </item>
+              return <span key={partIndex} className="interactable-item">{text}</span>;
+            }
+            return <span key={partIndex}>{part}</span>;
+          })}
+        </div>
+      );
     });
   };
 
