@@ -8,35 +8,27 @@ class FloorTheme {
   constructor(level) {
     this.themes = {
       1: {
-        name: 'Forgotten Halls',
-        sizes: ['familiar', 'preserved', 'unchanging', 'dreamlike', 'mirror-filled'],
+        name: 'Memory Banks',
+        sizes: ['8-bit', 'pixelated', 'low-res', 'glitching', '16-color'],
         atmospheres: [
-          'strangely comfortable', 'hazily remembered', 'oddly peaceful', 
-          'seemingly frozen', 'timelessly still', 'eerily familiar'
+          'softly humming', 'gently flickering', 'faintly buzzing', 
+          'quietly processing', 'steadily running', 'dimly glowing'
         ],
         details: [
-          'Mirrors reflect scenes that feel like memories.',
-          'Time seems to flow differently here.',
-          'Everything feels exactly as you remember it.',
-          'The walls shift subtly when you look away.',
-          'Echoes of laughter fade just as you notice them.',
-          'Light filters through windows that shouldn\'t exist.'
+          'Scan lines ripple across the walls.',
+          'The resolution seems to shift and change.',
+          'Pixels reorganize themselves when you look away.',
+          'Code fragments scroll by in the air.',
+          'The cursor blinks patiently in the corner.',
+          'Loading screens appear in impossible places.'
         ],
         features: [
-          'A familiar chair sits in an impossible corner.',
-          'A table is set for guests who will never arrive.',
-          'Family portraits hang on walls that shouldn\'t be here.',
-          'Mirrors reflect versions of the room that can\'t exist.',
-          'A music box sits on a shelf, its melody just out of reach.',
-          'An old photograph floats impossibly in mid-air.',
-          'A leather-bound journal rests on a side table.',
-          'A pocket watch hangs from a hook, ticking backwards.',
-          'A child\'s toy lies forgotten in a corner.',
-          'Windows look out on memories rather than views.',
-          'A perfectly preserved scene stands frozen in time.',
-          'Shelves hold books that write themselves.',
-          'A grandfather clock shows impossible hours.',
-          'A tea set steams with an eternal brew.'
+          'An old save file floats impossibly in the air.',
+          'A command prompt blinks endlessly.',
+          'Sprites animate in impossible patterns.',
+          'A high score table updates itself.',
+          'Loading bars progress without end.',
+          'Corrupted pixels form familiar shapes.'
         ],
         events: [
           'A memory flickers at the edge of your vision.',
@@ -307,34 +299,26 @@ class FloorTheme {
     this.currentTheme = this.themes[level] || this.themes[1];
   }
 
-  generateRoomDescription() {
-    const size = this.getRandomSize();
-    const atmosphere = this.getRandomAtmosphere();
+  generateRoomDescription(room) {
+    let description = [];
     
-    // Randomly choose description style
-    const style = Math.random();
+    // Add atmospheric description
+    description.push(room.description);
     
-    if (style < 0.3) {
-      // Environmental focus
-      const ambience = this.currentTheme.ambience[getRandomInt(0, this.currentTheme.ambience.length)];
-      const condition = this.currentTheme.conditions[getRandomInt(0, this.currentTheme.conditions.length)];
-      return `You're in a ${size} ${atmosphere} chamber. ${ambience}. ${condition}.`;
-    } 
-    else if (style < 0.6) {
-      // Architectural focus
-      const detail = this.getRandomDetail();
-      return `This ${size} chamber feels ${atmosphere}. ${detail}`;
+    // If room has a puzzle, add it to description without command tags
+    if (room.puzzle) {
+      description.push("There seems to be a puzzle here. Type 'examine puzzle' to investigate it more closely.");
     }
-    else {
-      // Sensory focus - fallback to detail if senses aren't available
-      if (this.currentTheme.senses) {
-        const sense = this.currentTheme.senses[getRandomInt(0, this.currentTheme.senses.length)];
-        return `A ${size}, ${atmosphere} space opens before you. ${sense}`;
-      } else {
-        const detail = this.getRandomDetail();
-        return `A ${size}, ${atmosphere} space opens before you. ${detail}`;
-      }
+
+    // List room features
+    if (room.features && room.features.length > 0) {
+      description.push("In this room:");
+      room.features.forEach(feature => {
+        description.push(`  - ${feature}`);
+      });
     }
+
+    return description.join("\n");
   }
 
   getRandomDetail() {
@@ -391,10 +375,10 @@ class Room {
     this.discovered = false;
     this.contentGenerated = false;
     this.knownExit = false;
+    this.featureItems = new Map();
     
     // Initialize room description elements
-    const description = theme.generateRoomDescription();
-    this.description = description;
+    this.description = this.generateBaseDescription();
     this.roomSize = theme.getRandomSize();
     this.roomAtmosphere = theme.getRandomAtmosphere();
     this.roomAmbience = theme.getRandomAmbience();
@@ -403,6 +387,14 @@ class Room {
     // Initialize pools
     this.treasurePool = new TreasurePool();
     this.puzzlePool = new PuzzlePool();
+  }
+
+  generateBaseDescription() {
+    const size = this.theme.getRandomSize();
+    const atmosphere = this.theme.getRandomAtmosphere();
+    const ambience = this.theme.getRandomAmbience();
+    
+    return `You're in a ${size} ${atmosphere} chamber. ${ambience || ''}`.trim();
   }
 
   generateContent() {
@@ -560,12 +552,20 @@ class Room {
     if (this.roomFeatures.length > 0) {
       description.push('\nIn this room:');
       this.roomFeatures.forEach(feature => {
-        const featureItems = this.items.filter(item => item.feature === feature);
+        // Get items associated with this feature
+        const featureItems = this.featureItems.get(feature) || [];
         if (featureItems.length > 0) {
           let featureText = feature;
           featureItems.forEach(item => {
-            const regex = new RegExp(`\\b${item.name}\\b`, 'gi');
-            featureText = featureText.replace(regex, `<item>${item.name}</item>`);
+            // Make sure we're marking the item name as interactable
+            const itemName = item.name.toLowerCase();
+            const featureLower = feature.toLowerCase();
+            if (featureLower.includes(itemName)) {
+              featureText = featureText.replace(
+                new RegExp(`\\b${item.name}\\b`, 'gi'),
+                `<item>${item.name}</item>`
+              );
+            }
           });
           description.push(`  - ${featureText}`);
         } else {
@@ -576,7 +576,7 @@ class Room {
 
     // If this is a puzzle room, add a hint about interaction
     if (this.puzzle && !this.puzzle.solved && !this.puzzle.destroyed) {
-      description.push('\nThere seems to be a puzzle here. You can <command>examine puzzle</command> to investigate it more closely.');
+      description.push('\nThere seems to be a puzzle here. Type "examine puzzle" to investigate it more closely.');
     }
 
     // Loose items
@@ -622,36 +622,33 @@ class Room {
   }
 
   createItemsFromFeatures() {
-    // Clear existing feature-based items
-    this.items = this.items.filter(item => !item.feature);
+    if (!this.items) {
+      this.items = [];
+    }
+    if (!this.featureItems) {
+      this.featureItems = new Map();
+    }
 
-    // For each feature in the room
     this.roomFeatures.forEach(feature => {
-      // Check if this feature should generate an item
-      if (this.theme.currentTheme.featureItems) {
-        Object.entries(this.theme.currentTheme.featureItems).forEach(([key, itemDef]) => {
-          if (feature.toLowerCase().includes(key.toLowerCase())) {
-            // Create a new item based on the definition
-            const item = {
-              ...itemDef,
-              feature: feature,
-              id: `item_${this.id}_${key}`,
-              discovered: false
-            };
-            this.items.push(item);
-          }
-        });
-      }
-    });
-
-    // After creating items, store which features are tied to which items
-    this.items.forEach(item => {
-      const relatedFeature = this.roomFeatures.find(feature => 
-        feature.toLowerCase().includes(item.name.toLowerCase())
-      );
-      if (relatedFeature) {
-        item.feature = relatedFeature;
-      }
+      // Check each feature item definition for a match
+      Object.entries(this.theme.currentTheme.featureItems).forEach(([key, itemDef]) => {
+        // Check if the feature contains the key or vice versa
+        if (feature.toLowerCase().includes(key.toLowerCase()) || 
+            key.toLowerCase().includes(feature.toLowerCase())) {
+          const item = {
+            ...itemDef,
+            feature: feature,
+            id: `item_${this.id}_${key}`,
+            discovered: false
+          };
+          this.items.push(item);
+          
+          // Store reference to feature items
+          const featureItems = this.featureItems.get(feature) || [];
+          featureItems.push(item);
+          this.featureItems.set(feature, featureItems);
+        }
+      });
     });
   }
 
@@ -753,38 +750,52 @@ class Room {
     };
   }
 
-  removeItem(item) {
-    // Remove the item from the items array
-    this.items = this.items.filter(i => i !== item);
-
-    // Remove any features that were associated with this item
-    this.roomFeatures = this.roomFeatures.filter(feature => {
-      // Check for direct feature matches
-      if (feature.toLowerCase().includes(item.name.toLowerCase())) {
-        return false;
-      }
-      // Check for feature matches using the item's feature property
-      if (item.feature && feature === item.feature) {
-        return false;
-      }
-      // Check for matches in featureItems keys
-      const featureItemKey = Object.keys(this.theme.featureItems).find(key => 
-        key.toLowerCase().includes(item.name.toLowerCase())
-      );
-      if (featureItemKey && feature.includes(featureItemKey)) {
-        return false;
-      }
-      return true;
-    });
-
-    // Also update the room's description if it contains mention of the item
-    if (this.description) {
-      const lines = this.description.split('\n');
-      this.description = lines.filter(line => 
-        !line.toLowerCase().includes(item.name.toLowerCase()) &&
-        !line.toLowerCase().includes(item.feature)
-      ).join('\n');
+  removeItem(itemToRemove) {
+    if (!this.items) {
+      this.items = [];
+      return false;
     }
+
+    const index = this.items.findIndex(item => 
+      item.name === itemToRemove.name || 
+      (item.aliases && item.aliases.includes(itemToRemove.name))
+    );
+
+    if (index !== -1) {
+      // If item is associated with a feature, update feature items
+      if (itemToRemove.feature) {
+        const featureItems = this.featureItems.get(itemToRemove.feature) || [];
+        this.featureItems.set(
+          itemToRemove.feature,
+          featureItems.filter(item => item.name !== itemToRemove.name)
+        );
+
+        // Update the room features to remove or modify the feature text
+        this.roomFeatures = this.roomFeatures.map(feature => {
+          if (feature === itemToRemove.feature) {
+            // If this was the only item in the feature, remove or modify the feature
+            const remainingItems = this.featureItems.get(feature) || [];
+            if (remainingItems.length === 0) {
+              // Remove feature entirely if it was just about the item
+              if (feature.toLowerCase().includes(itemToRemove.name.toLowerCase())) {
+                return null;
+              }
+              // Otherwise modify the feature to indicate item was taken
+              return feature.replace(
+                new RegExp(`\\b${itemToRemove.name}\\b.*?(?=\\.|$)`, 'i'),
+                'An empty hook remains'
+              );
+            }
+          }
+          return feature;
+        }).filter(Boolean); // Remove null entries
+      }
+
+      // Remove from items array
+      this.items.splice(index, 1);
+      return true;
+    }
+    return false;
   }
 }
 

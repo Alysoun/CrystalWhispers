@@ -82,4 +82,21 @@ function findItem(itemName, items) {
   );
 }
 
-export { parseCommand, getCommandType, findItem }; 
+const handleExamine = (args, gameState) => {
+  const target = args.join(" ").toLowerCase();
+  
+  if (target === "puzzle") {
+    const currentRoom = gameState.currentRoom;
+    if (currentRoom.puzzle) {
+      // Trigger puzzle UI
+      gameState.setPuzzleActive(currentRoom.puzzle);
+      return `Examining the puzzle...`;
+    } else {
+      return `There is no puzzle here to examine.`;
+    }
+  }
+  
+  return `You don't see that here.`;
+};
+
+export { parseCommand, getCommandType, findItem, handleExamine }; 

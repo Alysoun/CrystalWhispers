@@ -1,32 +1,45 @@
 export const Story = {
   introduction: [
-    "You wake in a familiar place... or is it?",
-    "Everything feels both known and unknown, like a dream half-remembered.",
-    "Something important lies at the end of this journey, but the path seems to shift and change.",
-    "Perhaps by moving forward, you'll remember what you're looking for..."
+    "The screen flickers to life, green text on black...",
+    "The system feels familiar, like an old friend.",
+    "Commands await your input, just like they used to.",
+    "Something tells you this journey is important, though you can't quite remember why..."
   ],
 
   // Subtle hints in room descriptions
   levelOneThemes: {
     normalRooms: [
-      "This room feels like it should be familiar...",
-      "Something about this place tugs at your memory...",
+      "The pixels seem to shift when you're not looking directly at them...",
+      "There's a faint beeping sound, steady and rhythmic...",
       "You've been here before... haven't you?",
-      "The air feels thick with forgotten moments..."
+      "The room's edges blur like an unfocused monitor..."
     ],
     // Special rooms have more specific descriptions
     specialRooms: {
-      memory: "A scene plays out before you, just at the edge of recognition...",
-      revelation: "For a moment, everything seems clearer, though you're not sure why...",
-      doubt: "The walls seem to whisper questions you can't quite hear..."
+      memory: {
+        first: "A scene flickers across the screen, almost too fast to catch...",
+        hidden: "The beeping falters for a moment, then continues..."
+      },
+      revelation: {
+        first: "The display seems clearer here, though you're not sure why...",
+        hidden: "For a moment, you hear voices outside the game..."
+      }
     }
   },
 
   // Revealed gradually through gameplay
   memoryFragments: [
-    "A child's laughter echoes distantly...",
-    "The scent of home-cooked meals wafts by...",
-    "Warm sunlight streams through windows that aren't there...",
-    "Voices call out names you almost remember..."
+    "LOAD \"*\", 8, 1",
+    "PRESS PLAY ON TAPE",
+    "The familiar clack of a keyboard...",
+    "Weekend afternoons spent in digital worlds..."
+  ],
+
+  // These only show after beating Acceptance
+  revealedTruths: [
+    "The beeping was always there, wasn't it?",
+    "Those voices... they were never part of the game.",
+    "One last adventure, rendered in perfect 8-bit clarity.",
+    "Some games aren't meant to be won, only experienced."
   ]
 }; 

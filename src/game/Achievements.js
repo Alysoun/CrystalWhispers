@@ -100,6 +100,21 @@ export const Achievements = {
           }
         }
       }
+    },
+    INTERFACE: {
+      name: "System Interface",
+      achievements: {
+        HELP_FOUND: {
+          id: 'help_found',
+          name: 'User Manual Located',
+          description: 'Found the help system',
+          condition: (stats) => stats.helpUsed,
+          reward: {
+            fragments: 5,
+            message: "Knowledge gained..."
+          }
+        }
+      }
     }
   },
 

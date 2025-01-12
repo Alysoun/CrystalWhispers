@@ -18,40 +18,12 @@ import AchievementUI from './components/AchievementUI/AchievementUI';
 import AchievementNotification from './components/AchievementNotification/AchievementNotification';
 import { Achievements } from './game/Achievements';
 import './App.css';
+import SplashScreen from './components/SplashScreen/SplashScreen';
+import { Story } from './game/Story';
 
 function App() {
-  const [gameState, setGameState] = useState({
-    currentLevel: 1,
-    playerPosition: { x: 0, y: 0 },
-    inventory: [],
-    currentRoom: null,
-    gameOutput: ['Welcome to Crystal Whispers!', 'Type "help" for commands.'],
-    map: [],
-    currentImage: null,
-    journalEntries: [],
-    dungeon: null,
-    player: new Player(),
-    statsRevealed: false,
-    stats: {
-      roomsDiscovered: 0,
-      combatsWon: 0,
-      puzzlesSolved: 0,
-      perfectPuzzles: 0,
-      totalFragments: 0,
-      uniqueTreasures: 0,
-      bossesDefeated: []
-    },
-    unlockedAchievements: [],
-    unlockedStats: {
-      health: true,        // Bar always visible
-      healthNumbers: false, // Numbers need to be unlocked
-      level: false,        // Unlocked after Mirror Keeper
-      experience: false,   // Purchasable
-      attack: false,      // Purchasable
-      defense: false      // Purchasable
-    },
-    memoryFragments: 0
-  });
+  const [gameState, setGameState] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Add state for help modal
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -69,42 +41,65 @@ function App() {
   // Add state for achievement notifications
   const [achievementNotification, setAchievementNotification] = useState(null);
 
-  useEffect(() => {
-    // Initialize game state
-    const initializeGame = () => {
-      const minRooms = 15;
-      const maxRooms = 30;
-      const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
-      const dungeon = new Dungeon(50, 50, numRooms);
-      const startingRoom = dungeon.rooms.get(0);
-      startingRoom.discovered = true;
-      startingRoom.createItemsFromFeatures();
-      
-      // Mark the starting room's exits as known
-      startingRoom.connections.forEach(({ room: connectedRoom }) => {
-        connectedRoom.knownExit = true;
-      });
+  // Add state for active puzzle
+  const [activePuzzle, setActivePuzzle] = useState(null);
 
-      if (hasSavedGame()) {
-        setGameState(prev => ({
-          ...prev,
-          dungeon,
-          currentRoom: startingRoom,
-          gameOutput: ['Welcome to the Roguelike Adventure!', 
-                      'Type "help" for commands.',
-                      'Found a saved game. Type "load" to restore it.']
-        }));
-      } else {
-        setGameState(prev => ({
-          ...prev,
-          dungeon,
-          currentRoom: startingRoom
-        }));
-      }
-    };
+  const initializeGame = () => {
+    const minRooms = 15;
+    const maxRooms = 30;
+    const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
+    const dungeon = new Dungeon(50, 50, numRooms);
+    const startingRoom = dungeon.rooms.get(0);
+    startingRoom.discovered = true;
+    startingRoom.createItemsFromFeatures();
+    
+    setGameState({
+      currentLevel: 1,
+      playerPosition: { x: 0, y: 0 },
+      inventory: [],
+      currentRoom: startingRoom,
+      gameOutput: [
+        'Welcome to Crystal Whispers!', 
+        ...Story.introduction,
+        '\nPerhaps you can find a way to get <command>help</command>...'
+      ],
+      map: [],
+      currentImage: null,
+      journalEntries: [],
+      dungeon,
+      player: new Player(),
+      statsRevealed: false,
+      stats: {
+        roomsDiscovered: 0,
+        combatsWon: 0,
+        puzzlesSolved: 0,
+        perfectPuzzles: 0,
+        totalFragments: 0,
+        uniqueTreasures: 0,
+        bossesDefeated: []
+      },
+      unlockedAchievements: [],
+      unlockedStats: {
+        health: true,        // Bar always visible
+        healthNumbers: false, // Numbers need to be unlocked
+        level: false,        // Unlocked after Mirror Keeper
+        experience: false,   // Purchasable
+        attack: false,      // Purchasable
+        defense: false      // Purchasable
+      },
+      memoryFragments: 0,
+      setPuzzleActive: () => {}
+    });
+    setShowSplash(false);
+  };
 
-    initializeGame();
-  }, []);
+  const handleLoadGame = () => {
+    const loadedState = loadGame();
+    if (loadedState) {
+      setGameState(loadedState);
+      setShowSplash(false);
+    }
+  };
 
   // Add effect for keyboard shortcut
   useEffect(() => {
@@ -376,17 +371,27 @@ function App() {
         break;
 
       case 'take':
-        const itemToTake = findItem(target, currentRoom.items);
+        const itemToTake = findItem(target, currentRoom.items || []);
         if (itemToTake) {
+          if (!itemToTake.canTake) {
+            addToOutput(`You can't take the ${itemToTake.name}.`);
+            return;
+          }
+          
           setGameState(prev => ({
             ...prev,
             inventory: [...prev.inventory, itemToTake]
           }));
-          currentRoom.removeItem(itemToTake);
-          addToOutput(`You take the ${itemToTake.name}.`);
-          addJournalEntry(`Acquired ${itemToTake.name}`);
-          if (itemToTake.isTreasure) {
-            handleTreasureFound(itemToTake);
+          
+          const removed = currentRoom.removeItem(itemToTake);
+          if (removed) {
+            addToOutput(`You take the ${itemToTake.name}.`);
+            addJournalEntry(`Acquired ${itemToTake.name}`);
+            if (itemToTake.isTreasure) {
+              handleTreasureFound(itemToTake);
+            }
+          } else {
+            addToOutput("Something went wrong trying to take that item.");
           }
         } else {
           addToOutput("You don't see that here.");
@@ -440,6 +445,12 @@ function App() {
       case 'help':
         setIsHelpOpen(true);
         addToOutput("Showing help screen.", input);
+        // Update stats for help achievement
+        if (!gameState.stats.helpUsed) {
+          updateStats({
+            helpUsed: true
+          });
+        }
         break;
 
       case 'examine':
@@ -517,58 +528,84 @@ function App() {
     }
   };
 
+  // Add method to set puzzle active
+  const setPuzzleActive = (puzzle) => {
+    setActivePuzzle(puzzle);
+  };
+
   return (
-    <div className="game-container">
-      <div className="game-left">
-        <ImageDisplay currentImage={gameState.currentImage} />
-        <GameOutput messages={gameState.gameOutput} />
-        <CommandPrompt onCommand={handleCommand} />
-      </div>
-      <div className="game-center">
-        <PlayerStats 
-          player={gameState.player} 
-          statsRevealed={gameState.statsRevealed}
-          memoryFragments={gameState.memoryFragments}
-          unlockedStats={gameState.unlockedStats}
-          onPurchase={handleStatUnlock}
+    <>
+      {showSplash ? (
+        <SplashScreen
+          onNewGame={initializeGame}
+          onLoadGame={handleLoadGame}
+          onShowAchievements={() => setIsAchievementsOpen(true)}
+          hasSavedGame={hasSavedGame()}
         />
-        <DungeonMap dungeon={gameState.dungeon} playerPosition={gameState.playerPosition} />
-      </div>
-      <div className="game-right">
-        <Inventory items={gameState.inventory} />
-        <Journal entries={gameState.journalEntries} />
-      </div>
-      <Help isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <Combat 
-        isOpen={isCombatOpen} 
-        onClose={() => setIsCombatOpen(false)}
-        player={gameState.player}
-        enemy={currentEnemy}
-        onCombatEnd={handleCombatEnd}
-      />
-      <DebugMenu
-        isOpen={showDebugMenu}
-        onClose={() => setShowDebugMenu(false)}
-        player={gameState.player}
-        setPlayer={(player) => setGameState(prev => ({ ...prev, player }))}
-        dungeon={gameState.dungeon}
-        setDungeon={(dungeon) => setGameState(prev => ({ ...prev, dungeon }))}
-        memoryFragments={gameState.memoryFragments}
-        setMemoryFragments={(fragments) => setGameState(prev => ({ ...prev, memoryFragments: fragments }))}
-        discoveredTreasures={new Set()}
-        setDiscoveredTreasures={(discoveredTreasures) => setGameState(prev => ({ ...prev, discoveredTreasures }))}
-      />
-      <AchievementUI 
-        isOpen={isAchievementsOpen}
-        onClose={() => setIsAchievementsOpen(false)}
-        stats={gameState.stats}
-        unlockedAchievements={gameState.unlockedAchievements}
-      />
-      <AchievementNotification 
-        achievement={achievementNotification}
-        onDismiss={() => setAchievementNotification(null)}
-      />
-    </div>
+      ) : (
+        <div className="game-container">
+          <div className="game-left">
+            <ImageDisplay currentImage={gameState.currentImage} />
+            <GameOutput messages={gameState.gameOutput} />
+            <CommandPrompt onCommand={handleCommand} />
+          </div>
+          <div className="game-center">
+            <PlayerStats 
+              player={gameState.player} 
+              statsRevealed={gameState.statsRevealed}
+              memoryFragments={gameState.memoryFragments}
+              unlockedStats={gameState.unlockedStats}
+              onPurchase={handleStatUnlock}
+            />
+            <DungeonMap dungeon={gameState.dungeon} playerPosition={gameState.playerPosition} />
+          </div>
+          <div className="game-right">
+            <Inventory items={gameState.inventory} />
+            <Journal entries={gameState.journalEntries} />
+          </div>
+          <Help isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+          <Combat 
+            isOpen={isCombatOpen} 
+            onClose={() => setIsCombatOpen(false)}
+            player={gameState.player}
+            enemy={currentEnemy}
+            onCombatEnd={handleCombatEnd}
+          />
+          <DebugMenu
+            isOpen={showDebugMenu}
+            onClose={() => setShowDebugMenu(false)}
+            player={gameState.player}
+            setPlayer={(player) => setGameState(prev => ({ ...prev, player }))}
+            dungeon={gameState.dungeon}
+            setDungeon={(dungeon) => setGameState(prev => ({ ...prev, dungeon }))}
+            memoryFragments={gameState.memoryFragments}
+            setMemoryFragments={(fragments) => setGameState(prev => ({ ...prev, memoryFragments: fragments }))}
+            discoveredTreasures={new Set()}
+            setDiscoveredTreasures={(discoveredTreasures) => setGameState(prev => ({ ...prev, discoveredTreasures }))}
+          />
+          <AchievementUI 
+            isOpen={isAchievementsOpen}
+            onClose={() => setIsAchievementsOpen(false)}
+            stats={gameState.stats}
+            unlockedAchievements={gameState.unlockedAchievements}
+          />
+          <AchievementNotification 
+            achievement={achievementNotification}
+            onDismiss={() => setAchievementNotification(null)}
+          />
+          {activePuzzle && (
+            <PuzzleUI 
+              puzzle={activePuzzle}
+              onClose={() => setActivePuzzle(null)}
+              onComplete={(fragments) => {
+                setMemoryFragments(prev => prev + fragments);
+                setActivePuzzle(null);
+              }}
+            />
+          )}
+        </div>
+      )}
+    </>
   );
 }
 

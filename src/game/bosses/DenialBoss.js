@@ -1,5 +1,5 @@
 export const DenialBoss = {
-  name: 'The Mirror Keeper',
+  name: 'The Eternal Mirror',
   health: 80,
   maxHealth: 80,
   attack: 10,
@@ -8,11 +8,11 @@ export const DenialBoss = {
   description: 'A figure of shifting reflections, reality seems to bend around it',
   
   dialogue: [
-    "Your eyes deceive you...",
-    "Reality is what we wish it to be...",
-    "Look closer, nothing is as it seems...",
+    "System Error: Reality Not Found",
+    "LOAD \"REALITY\", 8, 1... ERROR",
+    "Attempting to restore previous save state..."
   ],
-  deathQuote: "The mirrors... finally show... truth...",
+  deathQuote: "The reflection finally shows the truth...",
 
   // Simplified mechanics for first boss
   specialAbilities: {
@@ -54,13 +54,13 @@ export const DenialBoss = {
   ],
 
   roomDescription: {
-    base: "A hall of mirrors stretches before you, each reflection slightly different from the last.",
+    base: "A hall of corrupted pixels stretches before you, each glitch slightly different from the last.",
     features: [
-      "Mirrors of various sizes line the walls",
-      "Your reflection doesn't quite match your movements",
-      "Shadows dance strangely across the floor"
+      "Screen artifacts dance across the walls",
+      "Your sprite doesn't quite match your movements",
+      "Error messages flash in and out of existence"
     ],
-    atmosphere: "The air shimmers with an otherworldly quality."
+    atmosphere: "The air crackles with digital static."
   },
 
   // Crystal-specific behaviors

@@ -68,12 +68,26 @@ export class Puzzle {
   }
 
   getHint() {
-    throw new Error('getHint must be implemented by puzzle');
+    if (this.attempts === 0) {
+      return this.hints[0];
+    } else if (this.attempts === 1) {
+      return "The system struggles to maintain coherence...";
+    } else {
+      return "Fatal error imminent...";
+    }
   }
 
   getReward() {
     const baseReward = this.difficulty * 10;
     const attemptPenalty = Math.max(0, this.attempts - 1) * 5;
     return Math.max(5, baseReward - attemptPenalty);
+  }
+
+  onFail() {
+    this.attempts++;
+    if (this.attempts >= this.maxAttempts) {
+      return "CRITICAL_SYSTEM_FAILURE: Memory corruption detected...";
+    }
+    return null;
   }
 } 
