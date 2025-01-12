@@ -18,7 +18,7 @@ const Inventory = ({ items }) => {
 
   return (
     <div className="inventory-container">
-      <h2>Inventory</h2>
+      <h2 className="inventory-title">Inventory</h2>
       {items.length === 0 ? (
         <div className="inventory-empty">No items</div>
       ) : (

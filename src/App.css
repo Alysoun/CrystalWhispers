@@ -1,6 +1,9 @@
 .game-container {
   display: flex;
   height: 100vh;
+  padding: 20px;
+  gap: 20px;
+  overflow: hidden;
   background-color: #1a1a1a;
   color: #fff;
 }
@@ -9,28 +12,110 @@
   flex: 3;
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  border-right: 1px solid #333;
   height: 100%;
   overflow: hidden;
+  border-right: 1px solid #333;
+  min-width: 500px;
+}
+
+.game-center {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  gap: 15px;
+  min-width: 300px;
+  border-right: 1px solid #333;
 }
 
 .game-right {
   flex: 2;
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  min-width: 400px;
-  max-width: 800px;
+  height: 100%;
+  overflow: hidden;
+  gap: 15px;
+  min-width: 300px;
 }
 
-@media (max-width: 768px) {
+/* Future columns can be added as:
+.game-column-4 {
+  flex: 2;
+  min-width: 300px;
+}
+
+.game-column-5 {
+  flex: 2;
+  min-width: 300px;
+} */
+
+.game-output {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.player-stats-container {
+  flex: 0 0 auto;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.dungeon-map-container {
+  flex: 3;
+  min-height: 350px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.inventory-container {
+  flex: 2;
+  min-height: 200px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.journal-container {
+  flex: 2;
+  min-height: 200px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 1400px) {
   .game-container {
-    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
   }
-  
-  .game-right {
-    min-width: unset;
-    max-width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .game-container {
+    flex-wrap: wrap;
+  }
+
+  .game-left {
+    flex: 100%;
+    min-width: 100%;
+  }
+
+  .game-center, .game-right {
+    flex: 1;
+    min-width: 350px;
   }
 } 

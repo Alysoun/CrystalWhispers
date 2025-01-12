@@ -42,6 +42,22 @@ const parseCommand = (input) => {
     return { command: 'look', target };
   }
 
+  // Add puzzle-specific commands
+  if (input.match(/^examine puzzle$/i)) {
+    return {
+      command: 'examine',
+      target: 'puzzle'
+    };
+  }
+
+  if (input.match(/^solve puzzle (.+)$/i)) {
+    return {
+      command: 'solve',
+      target: 'puzzle',
+      answer: input.match(/^solve puzzle (.+)$/i)[1]
+    };
+  }
+
   return { command, target };
 };
 

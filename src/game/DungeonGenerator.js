@@ -1,4 +1,8 @@
 import { getRandomInt } from '../utils/helpers';
+import { getBossForLevel } from './bosses/GriefBosses';
+import { TreasurePool } from './treasures/TreasurePool';
+import { PuzzlePool } from './puzzles/PuzzlePool';
+import { MirrorSequence } from './puzzles/puzzles/MirrorSequence';
 
 class FloorTheme {
   constructor(level) {
@@ -373,101 +377,209 @@ class FloorTheme {
 }
 
 class Room {
-  constructor(id, x, y, width, height, theme) {
+  constructor(id, x, y, width, height, theme, dungeon) {
     this.id = id;
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.theme = theme;
+    this.dungeon = dungeon;
     this.connections = new Map();
     this.items = [];
     this.features = [];
     this.discovered = false;
-    this.generated = false;
+    this.contentGenerated = false;
     this.knownExit = false;
     
-    // Store persistent description elements
-    this.roomSize = '';
-    this.roomAtmosphere = '';
-    this.roomAmbience = '';
-    this.roomFeatures = [];
+    // Initialize room description elements
+    const description = theme.generateRoomDescription();
+    this.description = description;
+    this.roomSize = theme.getRandomSize();
+    this.roomAtmosphere = theme.getRandomAtmosphere();
+    this.roomAmbience = theme.getRandomAmbience();
+    this.roomFeatures = theme.getRandomFeatures(3); // Get 3 random features
+
+    // Initialize pools
+    this.treasurePool = new TreasurePool();
+    this.puzzlePool = new PuzzlePool();
   }
 
   generateContent() {
-    if (!this.generated) {
-      // Generate persistent room description elements
-      this.roomSize = this.theme.getRandomSize();
-      this.roomAtmosphere = this.theme.getRandomAtmosphere();
-      this.roomAmbience = this.theme.getRandomAmbience();
+    if (!this.contentGenerated) {
+      // Calculate distance from start room
+      const startRoom = Array.from(this.dungeon.rooms.values()).find(r => r.id === 0);
+      const distanceFromStart = Math.abs(this.x - startRoom.x) + Math.abs(this.y - startRoom.y);
+      const isFarFromStart = distanceFromStart > 15; // Adjust this value as needed
+
+      const totalRooms = this.dungeon.rooms.size;
+      const minimums = {
+        combat: Math.floor(totalRooms * 0.4),
+        treasure: 1,
+        puzzle: 2,
+        boss: 1
+      };
       
-      // Get all available features
-      const allFeatures = [...this.theme.currentTheme.features];
-      
-      // Shuffle the features array
-      for (let i = allFeatures.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [allFeatures[i], allFeatures[j]] = [allFeatures[j], allFeatures[i]];
+      const maximums = {
+        combat: Math.ceil(totalRooms * 0.6), // At most 60% combat rooms
+        treasure: 2,
+        puzzle: 5,
+        boss: 1
+      };
+
+      // Get current counts of each room type
+      const counts = {
+        combat: Array.from(this.dungeon.rooms.values()).filter(r => r.roomType === 'combat').length,
+        treasure: Array.from(this.dungeon.rooms.values()).filter(r => r.roomType === 'treasure').length,
+        puzzle: Array.from(this.dungeon.rooms.values()).filter(r => r.roomType === 'puzzle').length,
+        boss: Array.from(this.dungeon.rooms.values()).filter(r => r.roomType === 'boss').length,
+      };
+
+      // Determine what room types are still needed
+      const needed = {
+        combat: minimums.combat - counts.combat > 0,
+        treasure: minimums.treasure - counts.treasure > 0,
+        puzzle: minimums.puzzle - counts.puzzle > 0,
+        boss: minimums.boss - counts.boss > 0
+      };
+
+      // Determine what room types are still allowed
+      const allowed = {
+        combat: counts.combat < maximums.combat,
+        treasure: counts.treasure < maximums.treasure,
+        puzzle: counts.puzzle < maximums.puzzle,
+        boss: counts.boss < maximums.boss
+      };
+
+      // If we need any specific room type, prioritize that
+      if (needed.boss && isFarFromStart) {
+        this.roomType = 'boss';
+      } else if (needed.treasure) {
+        this.roomType = 'treasure';
+      } else if (needed.puzzle) {
+        this.roomType = 'puzzle';
+      } else if (needed.combat) {
+        this.roomType = 'combat';
+      } else {
+        // Otherwise, randomly select from allowed types
+        const roomTypeRoll = Math.random() * 100;
+        
+        if (allowed.combat && roomTypeRoll < 60) {
+          this.roomType = 'combat';
+        } else if (allowed.puzzle && roomTypeRoll < 75) {
+          this.roomType = 'puzzle';
+        } else if (allowed.treasure && roomTypeRoll < 85) {
+          this.roomType = 'treasure';
+        } else {
+          this.roomType = 'normal';
+        }
       }
-      
-      // Take 2-3 random features
-      const numFeatures = getRandomInt(2, 3);
-      this.roomFeatures = allFeatures.slice(0, numFeatures);
-      
-      // Create initial items based on features
+
+      console.log(`Room ${this.id} assigned type: ${this.roomType}`);
+
+      // Generate appropriate content based on room type
+      switch (this.roomType) {
+        case 'combat':
+          this.enemyType = this.generateEnemy();
+          this.description += '\n\nThere is a hostile presence here...';
+          break;
+        case 'treasure':
+          this.treasure = this.generateTreasure();
+          this.description += '\n\nSomething valuable catches your eye...';
+          break;
+        case 'puzzle':
+          this.generatePuzzle();
+          // Puzzle description is added in generatePuzzle()
+          break;
+        case 'boss':
+          this.enemyType = this.generateBossEnemy();
+          this.description += '\n\nA powerful entity awaits...';
+          break;
+        default:
+          this.generateNormalContent();
+      }
+
+      // Create items based on room features
       this.createItemsFromFeatures();
-      
-      this.generated = true;
+      this.contentGenerated = true;
     }
   }
 
+  generateEnemy() {
+    // Basic enemy types for now
+    const enemies = [
+      {
+        name: 'Shadow Remnant',
+        health: 30,
+        maxHealth: 30,
+        attack: 5,
+        defense: 2,
+        experience: 20
+      },
+      {
+        name: 'Memory Fragment',
+        health: 20,
+        maxHealth: 20,
+        attack: 8,
+        defense: 1,
+        experience: 15
+      },
+      {
+        name: 'Forgotten Echo',
+        health: 40,
+        maxHealth: 40,
+        attack: 4,
+        defense: 3,
+        experience: 25
+      }
+    ];
+
+    return enemies[Math.floor(Math.random() * enemies.length)];
+  }
+
+  generateBossEnemy() {
+    const boss = getBossForLevel(this.dungeon.level);
+    if (!boss) {
+      console.error('No boss defined for this level!');
+      return null;
+    }
+    return boss;
+  }
+
   getFullDescription() {
-    if (!this.generated) {
+    if (!this.contentGenerated) {
       this.generateContent();
     }
 
     let description = [];
 
-    // Room description
-    description.push(`A ${this.roomSize}, ${this.roomAtmosphere} space opens before you.`);
-
-    // Ambience
-    if (this.roomAmbience) {
-      description.push(this.roomAmbience + '.');
-    }
+    // Base room description
+    description.push(this.description);
 
     // Features with interactable items
-    if (this.roomFeatures && this.roomFeatures.length > 0) {
+    if (this.roomFeatures.length > 0) {
       description.push('\nIn this room:');
       this.roomFeatures.forEach(feature => {
-        let modifiedFeature = feature;
-        
-        // Find any items that are part of this feature
         const featureItems = this.items.filter(item => item.feature === feature);
-
         if (featureItems.length > 0) {
+          let featureText = feature;
           featureItems.forEach(item => {
-            const itemName = item.name;
-            if (!modifiedFeature.includes(`<item>${itemName}</item>`)) {
-              const regex = new RegExp(`\\b${itemName}\\b`, 'gi');
-              modifiedFeature = modifiedFeature.replace(regex, `<item>${itemName}</item>`);
-            }
+            const regex = new RegExp(`\\b${item.name}\\b`, 'gi');
+            featureText = featureText.replace(regex, `<item>${item.name}</item>`);
           });
-          description.push(`  - ${modifiedFeature}`);
+          description.push(`  - ${featureText}`);
         } else {
-          // Skip features that had items that were taken
-          const itemKey = Object.keys(this.theme.currentTheme.featureItems || {})
-            .find(key => feature.toLowerCase().includes(key.toLowerCase()));
-          
-          if (!itemKey) {
-            // Only show features that never had items
-            description.push(`  - ${feature}`);
-          }
+          description.push(`  - ${feature}`);
         }
       });
     }
 
-    // Loose items (not part of features)
+    // If this is a puzzle room, add a hint about interaction
+    if (this.puzzle && !this.puzzle.solved && !this.puzzle.destroyed) {
+      description.push('\nThere seems to be a puzzle here. You can <command>examine puzzle</command> to investigate it more closely.');
+    }
+
+    // Loose items
     const looseItems = this.items.filter(item => !item.feature);
     if (looseItems.length > 0) {
       description.push('\nYou can see:');
@@ -490,12 +602,16 @@ class Room {
   discover() {
     if (!this.discovered) {
       this.discovered = true;
-      if (!this.generated) {
-        this.generateContent();
-      }
       
+      // Generate room content if not already generated
+      if (!this.contentGenerated) {
+        this.generateContent();
+        this.contentGenerated = true;
+      }
+
+      // Mark connected rooms as having known exits
       this.connections.forEach(({ room: connectedRoom }) => {
-        connectedRoom.partiallyDiscover();
+        connectedRoom.knownExit = true;
       });
     }
   }
@@ -511,17 +627,31 @@ class Room {
 
     // For each feature in the room
     this.roomFeatures.forEach(feature => {
-      // Check each feature item definition
-      Object.entries(this.theme.currentTheme.featureItems || {}).forEach(([key, itemDef]) => {
-        // Check if this feature matches the item's associated feature text
-        if (itemDef.feature === feature || feature.toLowerCase().includes(key.toLowerCase())) {
-          // Create a new item based on the definition
-          this.items.push({
-            ...itemDef,
-            feature: feature
-          });
-        }
-      });
+      // Check if this feature should generate an item
+      if (this.theme.currentTheme.featureItems) {
+        Object.entries(this.theme.currentTheme.featureItems).forEach(([key, itemDef]) => {
+          if (feature.toLowerCase().includes(key.toLowerCase())) {
+            // Create a new item based on the definition
+            const item = {
+              ...itemDef,
+              feature: feature,
+              id: `item_${this.id}_${key}`,
+              discovered: false
+            };
+            this.items.push(item);
+          }
+        });
+      }
+    });
+
+    // After creating items, store which features are tied to which items
+    this.items.forEach(item => {
+      const relatedFeature = this.roomFeatures.find(feature => 
+        feature.toLowerCase().includes(item.name.toLowerCase())
+      );
+      if (relatedFeature) {
+        item.feature = relatedFeature;
+      }
     });
   }
 
@@ -561,6 +691,101 @@ class Room {
       y: this.y + this.height/2
     };
   }
+
+  generateTreasure() {
+    // Rarity chances
+    const roll = Math.random();
+    let rarity;
+    if (roll < 0.60) rarity = 'common';
+    else if (roll < 0.85) rarity = 'uncommon';
+    else if (roll < 0.95) rarity = 'rare';
+    else rarity = 'legendary';
+
+    return this.treasurePool.getRandomTreasure(rarity);
+  }
+
+  generatePuzzle() {
+    const difficulty = Math.min(5, Math.ceil(this.theme.level / 2));
+    this.puzzle = this.puzzlePool.getRandomPuzzle(difficulty);
+    
+    if (this.puzzle) {
+      // Add a subtle hint about the puzzle to the room's base description
+      this.description += '\n\nSomething about this room feels particularly enigmatic...';
+      
+      // Add puzzle-specific features that hint at interaction
+      const puzzleFeature = this.puzzle.getFeature();
+      if (puzzleFeature) {
+        this.roomFeatures = this.roomFeatures.filter(f => !f.includes('puzzle'));
+        this.roomFeatures.push(puzzleFeature);
+      }
+
+      // Add puzzle hint to room features
+      this.roomFeatures.push('There seems to be a puzzle here. Type "examine puzzle" to investigate it more closely.');
+    }
+  }
+
+  generateNormalContent() {
+    // Add random event to normal rooms occasionally
+    if (Math.random() < 0.3) {
+      const event = this.theme.getRandomEvent();
+      if (event) {
+        this.description += `\n\n${event}`;
+      }
+    }
+  }
+
+  examinePuzzle() {
+    if (this.puzzle && !this.puzzle.solved) {
+      return {
+        type: 'puzzle',
+        content: this.puzzle.getDescription(),
+        puzzle: this.puzzle
+      };
+    } else if (this.puzzle && this.puzzle.solved) {
+      return {
+        type: 'message',
+        content: 'You\'ve already solved this puzzle.'
+      };
+    }
+    return {
+      type: 'message',
+      content: 'There\'s no puzzle to examine here.'
+    };
+  }
+
+  removeItem(item) {
+    // Remove the item from the items array
+    this.items = this.items.filter(i => i !== item);
+
+    // Remove any features that were associated with this item
+    this.roomFeatures = this.roomFeatures.filter(feature => {
+      // Check for direct feature matches
+      if (feature.toLowerCase().includes(item.name.toLowerCase())) {
+        return false;
+      }
+      // Check for feature matches using the item's feature property
+      if (item.feature && feature === item.feature) {
+        return false;
+      }
+      // Check for matches in featureItems keys
+      const featureItemKey = Object.keys(this.theme.featureItems).find(key => 
+        key.toLowerCase().includes(item.name.toLowerCase())
+      );
+      if (featureItemKey && feature.includes(featureItemKey)) {
+        return false;
+      }
+      return true;
+    });
+
+    // Also update the room's description if it contains mention of the item
+    if (this.description) {
+      const lines = this.description.split('\n');
+      this.description = lines.filter(line => 
+        !line.toLowerCase().includes(item.name.toLowerCase()) &&
+        !line.toLowerCase().includes(item.feature)
+      ).join('\n');
+    }
+  }
 }
 
 class Dungeon {
@@ -571,7 +796,7 @@ class Dungeon {
     this.level = level;
     this.rooms = new Map();
     this.currentRoomId = 0;
-    this.nextRoomId = 0; // Add this to track room IDs
+    this.nextRoomId = 0;
     this.theme = this.generateTheme();
     this.generateDungeon();
   }
@@ -585,7 +810,17 @@ class Dungeon {
     const centerX = Math.floor(this.width / 2);
     const centerY = Math.floor(this.height / 2);
     const ROOM_SIZE = 5;
-    const startRoom = new Room(this.getNextRoomId(), centerX, centerY, ROOM_SIZE, ROOM_SIZE, this.theme);
+    
+    const startRoom = new Room(
+      this.getNextRoomId(), 
+      centerX, 
+      centerY, 
+      ROOM_SIZE, 
+      ROOM_SIZE, 
+      this.theme,
+      this
+    );
+    
     this.rooms.set(startRoom.id, startRoom);
 
     // Generate additional rooms
@@ -623,10 +858,18 @@ class Dungeon {
       const newY = parentRoom.y + (dy * ROOM_SPACING);
 
       if (this.isValidPosition(newX, newY, roomSize) && !this.hasOverlap(newX, newY, roomSize)) {
-        const newRoom = new Room(newRoomId, newX, newY, roomSize, roomSize, this.theme);
+        const newRoom = new Room(
+          newRoomId, 
+          newX, 
+          newY, 
+          roomSize, 
+          roomSize, 
+          this.theme,
+          this
+        );
         this.rooms.set(newRoomId, newRoom);
         
-        // Create bidirectional connections with proper opposite directions
+        // Create bidirectional connections
         const oppositeDir = this.getOppositeDirection(dir);
         parentRoom.connectTo(newRoom, dir);
         newRoom.connectTo(parentRoom, oppositeDir);

@@ -1,0 +1,80 @@
+.combat-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.combat-content {
+  background-color: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.combat-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.combat-stats {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: #00ff00;
+  font-family: monospace;
+}
+
+.combat-log {
+  background-color: #2a2a2a;
+  padding: 10px;
+  border-radius: 4px;
+  height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+  color: #fff;
+  scroll-behavior: smooth;
+}
+
+.combat-message {
+  margin: 5px 0;
+  white-space: pre-wrap;
+}
+
+.combat-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.combat-controls button {
+  background-color: #333;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+  padding: 10px;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+.combat-controls button:hover:not(:disabled) {
+  background-color: #444;
+}
+
+.combat-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 

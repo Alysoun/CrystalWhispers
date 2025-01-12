@@ -1,0 +1,41 @@
+.enemy-display {
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+}
+
+.enemy-art {
+  font-family: monospace;
+  white-space: pre;
+  margin: 0;
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.enemy-name {
+  margin-top: 10px;
+  font-size: 1.2em;
+  color: #00ff00;
+}
+
+.enemy-display.healthy .enemy-art {
+  color: #fff;
+}
+
+.enemy-display.injured .enemy-art {
+  color: #ffff00;
+}
+
+.enemy-display.wounded .enemy-art {
+  color: #ffa500;
+}
+
+.enemy-display.critical .enemy-art {
+  color: #ff4500;
+}
+
+.enemy-display.dead .enemy-art {
+  color: #ff0000;
+} 

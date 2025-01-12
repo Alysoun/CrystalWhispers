@@ -80,6 +80,16 @@ function Help({ isOpen, onClose }) {
               </div>
             </div>
           </div>
+
+          <div className="command-section">
+            <h3>Game Features</h3>
+            <div className="command-grid">
+              <div className="command">
+                <span className="command-name">achievements (a)</span>
+                <span className="command-desc">View your achievements</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

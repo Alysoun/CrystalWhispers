@@ -1,0 +1,179 @@
+.player-stats {
+  background-color: #1a1a1a;
+  padding: 15px;
+  border-radius: 8px;
+  color: #00ff00;
+}
+
+/* Basic stats view */
+.player-stats.basic {
+  text-align: center;
+}
+
+.player-stats.basic .stat-bar-container {
+  margin: 20px auto;
+  width: 80%;
+}
+
+.stat-hint {
+  color: #666;
+  font-style: italic;
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+/* Detailed stats view */
+.player-stats.detailed .stat-row {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  gap: 10px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+  gap: 10px;
+}
+
+.stat-label {
+  min-width: 100px;
+  text-align: right;
+}
+
+.stat-value {
+  color: #fff;
+}
+
+.stat-bar-container {
+  flex-grow: 1;
+  height: 20px;
+  background-color: #333;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.health-bar {
+  background-color: #ff0000;
+}
+
+.exp-bar {
+  background-color: #0088ff;
+}
+
+.stat-text {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  line-height: 20px;
+  font-size: 14px;
+  z-index: 2;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+h2 {
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.stat-row.locked {
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stat-row.locked:hover {
+  opacity: 0.8;
+  background-color: rgba(196, 167, 231, 0.1);
+  border-radius: 4px;
+}
+
+.unlock-cost {
+  color: #c4a7e7;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+/* Add a subtle glow animation for locked stats */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.6; }
+}
+
+.stat-row.locked {
+  animation: pulse 2s infinite;
+}
+
+.unlock-numbers {
+  font-size: 0.8em;
+  cursor: pointer;
+  color: #888;
+  margin-left: 10px;
+  transition: color 0.3s ease;
+}
+
+.unlock-numbers:hover {
+  color: #c4a7e7;
+}
+
+/* Different styling for stats locked by progression vs fragments */
+.stat-row.progression-locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stat-row.progression-locked .unlock-cost {
+  color: #666;
+}
+
+.fragments-counter {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #333;
+}
+
+.fragment-value {
+  color: #c4a7e7 !important; /* Use the crystal/fragment color */
+}
+
+/* Optional: Add a small crystal icon */
+.fragments-counter .stat-label::before {
+  content: "✧";
+  margin-right: 5px;
+  color: #c4a7e7;
+}
+
+.fragment-change {
+  margin-left: 10px;
+  font-size: 0.9em;
+  opacity: 0.8;
+  animation: fadeOut 2s forwards;
+}
+
+.fragment-change.positive {
+  color: #4CAF50;
+}
+
+.fragment-change.negative {
+  color: #f44336;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { opacity: 0; }
+} 

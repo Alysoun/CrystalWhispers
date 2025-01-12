@@ -1,0 +1,94 @@
+.memories-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.memories-content {
+  background-color: #1a1a1a;
+  border: 2px solid #4a4a4a;
+  border-radius: 8px;
+  padding: 20px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.memory-category {
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #2a2a2a;
+  border-radius: 6px;
+}
+
+.memory-category h3 {
+  color: #c4a7e7;
+  margin-bottom: 10px;
+  font-size: 1.4em;
+}
+
+.memory-category p {
+  color: #b4b4b4;
+  margin-bottom: 15px;
+}
+
+.upgrades-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.upgrade-item {
+  background-color: #333;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #4a4a4a;
+  transition: all 0.3s ease;
+}
+
+.upgrade-item:hover {
+  border-color: #c4a7e7;
+  transform: translateY(-2px);
+}
+
+.upgrade-item h4 {
+  color: #eee;
+  margin-bottom: 8px;
+}
+
+.upgrade-item p {
+  color: #aaa;
+  font-size: 0.9em;
+  margin-bottom: 12px;
+}
+
+.upgrade-item button {
+  width: 100%;
+  padding: 8px;
+  background-color: #4a4a4a;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upgrade-item button:hover:not(:disabled) {
+  background-color: #c4a7e7;
+}
+
+.upgrade-item button:disabled {
+  background-color: #333;
+  color: #666;
+  cursor: not-allowed;
+} 

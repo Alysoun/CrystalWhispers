@@ -8,10 +8,11 @@
   flex-direction: column;
 }
 
-.inventory-title {
+h2.inventory-title {
   color: #0f0;
   margin-bottom: 10px;
   font-family: 'Courier New', monospace;
+  font-size: 1.2em;
 }
 
 .inventory-list {
