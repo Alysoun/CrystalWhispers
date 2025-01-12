@@ -1,95 +1,85 @@
 // Permanent upgrades obtained through playing
 export const Memories = {
   categories: {
-    STRENGTH: {
-      name: "Remembered Strength",
-      description: "Memories of being stronger",
+    combat: {
+      name: "Combat Prowess",
+      description: "Enhance your fighting abilities",
       upgrades: {
-        DETERMINATION: {
-          name: "Determination",
-          description: "Each victory makes you stronger",
-          maxLevel: 10,
-          effect: (level) => ({
-            attackBonus: level * 2
-          }),
-          cost: (level) => 100 * Math.pow(1.5, level)
+        strength: {
+          name: "Strength",
+          description: "Increase your base attack damage",
+          maxLevel: 5,
+          cost: (level) => Math.floor(50 * Math.pow(1.5, level)),
+          effect: (level) => ({ 
+            attack: level * 2 
+          })
         },
-        RESILIENCE: {
+        defense: {
           name: "Resilience",
-          description: "Memories of enduring hardship",
-          maxLevel: 10,
-          effect: (level) => ({
-            healthBonus: level * 10
-          }),
-          cost: (level) => 100 * Math.pow(1.5, level)
-        },
-        TECHNIQUE: {
-          name: "Combat Technique",
-          description: "Memories of fighting more effectively",
+          description: "Improve your defensive capabilities",
           maxLevel: 5,
-          effect: (level) => ({
-            criticalChance: level * 5 // percentage
-          }),
-          cost: (level) => 150 * Math.pow(1.8, level)
+          cost: (level) => Math.floor(50 * Math.pow(1.5, level)),
+          effect: (level) => ({ 
+            defense: level * 1.5 
+          })
+        },
+        health: {
+          name: "Vitality",
+          description: "Increase your maximum health",
+          maxLevel: 5,
+          cost: (level) => Math.floor(75 * Math.pow(1.5, level)),
+          effect: (level) => ({ 
+            maxHealth: level * 10 
+          })
         }
       }
     },
-    INSIGHT: {
-      name: "Gained Insight",
-      description: "Understanding gained through experience",
+    exploration: {
+      name: "Exploration Skills",
+      description: "Improve your ability to navigate and survive",
       upgrades: {
-        RECOGNITION: {
-          name: "Pattern Recognition",
-          description: "Enemy tells become more obvious",
-          maxLevel: 5,
-          effect: (level) => ({
-            enemyTellDuration: 1 + (level * 0.2)
-          }),
-          cost: (level) => 150 * Math.pow(2, level)
-        },
-        PREPARATION: {
-          name: "Better Preparation",
-          description: "Start each run with bonus items",
+        mapping: {
+          name: "Memory Mapping",
+          description: "Reveal more of the map when discovering new rooms",
           maxLevel: 3,
-          effect: (level) => ({
-            startingItems: level
-          }),
-          cost: (level) => 200 * Math.pow(2, level)
+          cost: (level) => Math.floor(100 * Math.pow(2, level)),
+          effect: (level) => ({ 
+            mapReveal: level + 1 
+          })
         },
-        AWARENESS: {
-          name: "Spatial Awareness",
-          description: "Reveals more of the map when discovering new rooms",
+        retention: {
+          name: "Memory Retention",
+          description: "Keep more fragments when dying",
           maxLevel: 3,
-          effect: (level) => ({
-            mapReveal: level + 1
-          }),
-          cost: (level) => 175 * Math.pow(2, level)
+          cost: (level) => Math.floor(150 * Math.pow(2, level)),
+          effect: (level) => ({ 
+            fragmentRetention: 0.2 + (level * 0.1) 
+          })
         }
       }
     },
-    SURVIVAL: {
-      name: "Will to Survive",
-      description: "Memories of perseverance",
+    puzzle: {
+      name: "Puzzle Mastery",
+      description: "Enhance your puzzle-solving abilities",
       upgrades: {
-        RECOVERY: {
-          name: "Quick Recovery",
-          description: "Chance to heal after combat",
-          maxLevel: 5,
-          effect: (level) => ({
-            healChance: level * 10, // percentage
-            healAmount: 5 + (level * 3)
-          }),
-          cost: (level) => 175 * Math.pow(1.8, level)
+        insight: {
+          name: "Puzzle Insight",
+          description: "Gain better hints and more attempts at puzzles",
+          maxLevel: 3,
+          cost: (level) => Math.floor(100 * Math.pow(1.8, level)),
+          effect: (level) => ({ 
+            puzzleAttempts: level + 1,
+            hintQuality: level 
+          })
         },
-        ADAPTATION: {
-          name: "Adaptation",
-          description: "Gain temporary defense when hit",
-          maxLevel: 5,
-          effect: (level) => ({
-            tempDefense: level * 2,
-            duration: 2
-          }),
-          cost: (level) => 150 * Math.pow(1.7, level)
+        protection: {
+          name: "Mental Protection",
+          description: "Take less damage from failed puzzle attempts",
+          maxLevel: 3,
+          cost: (level) => Math.floor(75 * Math.pow(1.8, level)),
+          effect: (level) => ({ 
+            puzzleDamageReduction: level * 0.25 
+          })
         }
       }
     }
@@ -132,9 +122,11 @@ export const Memories = {
   },
 
   canPurchaseUpgrade(category, upgrade, currentLevel, fragments) {
-    const upgradeInfo = this.categories[category].upgrades[upgrade];
+    const upgradeInfo = this.categories[category]?.upgrades[upgrade];
+    if (!upgradeInfo) return false;
+
     return (
-      currentLevel < upgradeInfo.maxLevel &&
+      currentLevel < upgradeInfo.maxLevel && 
       fragments >= upgradeInfo.cost(currentLevel)
     );
   },
@@ -144,14 +136,11 @@ export const Memories = {
       return null;
     }
 
-    const upgradeInfo = this.categories[category].upgrades[upgrade];
-    const cost = upgradeInfo.cost(currentLevel);
-    const effect = upgradeInfo.effect(currentLevel + 1);
-
+    const cost = this.categories[category].upgrades[upgrade].cost(currentLevel);
     return {
+      success: true,
       newLevel: currentLevel + 1,
-      remainingFragments: fragments - cost,
-      effect
+      remainingFragments: fragments - cost
     };
   }
 }; 

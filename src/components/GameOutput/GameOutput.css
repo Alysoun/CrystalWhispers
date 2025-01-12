@@ -34,23 +34,69 @@
   color: #f44336;
 }
 
-.interactable-item {
+.command-text {
   color: #00ff00;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.interactable-command {
+.command-text:hover {
+  text-decoration: underline;
+  filter: brightness(120%);
+}
+
+.item-text {
+  position: relative;
+  cursor: pointer;
   color: #00ff00;
-  font-weight: bold;
-  text-decoration: underline;
-  cursor: help;
+  z-index: 1;
 }
 
-.interactable-item:hover {
+.item-text:hover {
   text-decoration: underline;
   filter: brightness(120%);
+  z-index: 1000;
 }
 
-.interactable-command:hover {
-  filter: brightness(120%);
+.tooltip {
+  display: none;
+  position: absolute;
+  background: #1a1a1a;
+  border: 1px solid #00ff00;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  z-index: 1;
+}
+
+.item-text {
+  position: relative;
+}
+
+.item-text:hover .tooltip {
+  display: block;
+  z-index: 1001;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltip-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltip-command {
+  color: #00ff00;
+  cursor: pointer;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.tooltip-command:hover {
+  background: #002200;
 } 

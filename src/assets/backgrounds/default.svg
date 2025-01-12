@@ -1,0 +1,22 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simple room outline with a dreamy glow -->
+  <rect x="20" y="20" width="360" height="260" 
+    fill="none" 
+    stroke="#003300" 
+    stroke-width="1"
+    filter="url(#roomGlow)"
+  />
+  
+  <!-- Floor line -->
+  <line x1="20" y1="220" x2="380" y2="220" 
+    stroke="#002200" 
+    stroke-width="1" 
+  />
+
+  <defs>
+    <filter id="roomGlow">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feComposite in="blur" operator="over" />
+    </filter>
+  </defs>
+</svg> 

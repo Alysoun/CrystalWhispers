@@ -6,7 +6,8 @@ const VALID_COMMANDS = {
   go: ['go', 'walk', 'move'],
   save: ['save', 'savegame'],
   load: ['load', 'loadgame'],
-  help: ['help', 'h', '?']
+  help: ['help', 'h', '?'],
+  use: ['use', 'apply']
 };
 
 const DIRECTIONS = {
@@ -39,15 +40,15 @@ const parseCommand = (input) => {
 
   // Handle look/examine commands
   if (VALID_COMMANDS.look.includes(command)) {
-    return { command: 'look', target };
-  }
-
-  // Add puzzle-specific commands
-  if (input.match(/^examine puzzle$/i)) {
-    return {
-      command: 'examine',
-      target: 'puzzle'
-    };
+    // Special case for puzzles
+    if (target === 'puzzle') {
+      return {
+        command: 'examine',
+        target: 'puzzle'
+      };
+    } else {
+      return { command: 'look', target };
+    }
   }
 
   if (input.match(/^solve puzzle (.+)$/i)) {
@@ -83,14 +84,14 @@ function findItem(itemName, items) {
 }
 
 const handleExamine = (args, gameState) => {
-  const target = args.join(" ").toLowerCase();
+  const target = Array.isArray(args) ? args.join(" ").toLowerCase() : args.toLowerCase();
   
   if (target === "puzzle") {
-    const currentRoom = gameState.currentRoom;
+    const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
     if (currentRoom.puzzle) {
       // Trigger puzzle UI
       gameState.setPuzzleActive(currentRoom.puzzle);
-      return `Examining the puzzle...`;
+      return `You begin examining the puzzle more closely...`;
     } else {
       return `There is no puzzle here to examine.`;
     }

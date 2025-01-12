@@ -20,6 +20,10 @@ import { Achievements } from './game/Achievements';
 import './App.css';
 import SplashScreen from './components/SplashScreen/SplashScreen';
 import { Story } from './game/Story';
+import PuzzleUI from './components/PuzzleUI/PuzzleUI';
+import MemoriesUI from './components/MemoriesUI/MemoriesUI';
+import { Memories } from './game/Memories';
+import { soundManager } from './utils/SoundManager';
 
 function App() {
   const [gameState, setGameState] = useState(null);
@@ -44,7 +48,11 @@ function App() {
   // Add state for active puzzle
   const [activePuzzle, setActivePuzzle] = useState(null);
 
-  const initializeGame = () => {
+  // Add new state
+  const [showMemoriesUI, setShowMemoriesUI] = useState(false);
+  const [permanentUpgrades, setPermanentUpgrades] = useState({});
+
+  const initializeGame = (existingUpgrades = {}) => {
     const minRooms = 15;
     const maxRooms = 30;
     const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
@@ -52,6 +60,23 @@ function App() {
     const startingRoom = dungeon.rooms.get(0);
     startingRoom.discovered = true;
     startingRoom.createItemsFromFeatures();
+    
+    // Create player with permanent upgrades applied
+    const player = new Player();
+    // Safely apply upgrades
+    Object.entries(existingUpgrades || {}).forEach(([category, upgrades]) => {
+      // Check if category exists
+      if (Memories.categories[category]) {
+        Object.entries(upgrades).forEach(([upgrade, level]) => {
+          // Check if upgrade exists in category
+          const upgradeInfo = Memories.categories[category].upgrades[upgrade];
+          if (upgradeInfo) {
+            const effect = upgradeInfo.effect(level);
+            player.applyUpgrade(category, effect);
+          }
+        });
+      }
+    });
     
     setGameState({
       currentLevel: 1,
@@ -67,7 +92,7 @@ function App() {
       currentImage: null,
       journalEntries: [],
       dungeon,
-      player: new Player(),
+      player,
       statsRevealed: false,
       stats: {
         roomsDiscovered: 0,
@@ -88,7 +113,8 @@ function App() {
         defense: false      // Purchasable
       },
       memoryFragments: 0,
-      setPuzzleActive: () => {}
+      permanentUpgrades: existingUpgrades || {},
+      isDead: false
     });
     setShowSplash(false);
   };
@@ -191,8 +217,13 @@ function App() {
   // Combat victory
   const handleCombatEnd = (result) => {
     setIsCombatOpen(false);
+    setCurrentEnemy(null);
     
-    if (result === 'victory') {
+    // Update room state after combat
+    const currentRoom = gameState.currentRoom;
+    currentRoom.handleCombatEnd(result);
+    
+    if (result.victory) {
       const expGained = currentEnemy.experience;
       const oldLevel = gameState.player.level;
       
@@ -223,23 +254,18 @@ function App() {
           `Experience gained: ${currentEnemy.experience}`,
         ].join('\n'), null, true);
       }
-    } else if (result === 'defeat') {
-      addToOutput([
-        'You have been defeated...',
-        'Game Over'
-      ].join('\n'), null, true);
-      addJournalEntry('Defeated in combat');
-      // Handle player death here - maybe add restart/reload functionality
-    } else if (result === 'flee') {
-      addToOutput([
-        'You fled from combat!',
-        '',
-        'Type "look" to examine your surroundings.'
-      ].join('\n'), null, true);
-      addJournalEntry('Fled from combat');
+
+      // Update stats
+      setGameState(prev => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          combatsWon: prev.stats.combatsWon + 1
+        }
+      }));
+    } else if (result.fled) {
+      addToOutput('You managed to escape!');
     }
-    
-    setCurrentEnemy(null);
   };
 
   const handleStatUnlock = (statType, cost) => {
@@ -282,6 +308,7 @@ function App() {
 
   // Fragment collection
   const handleFragmentGain = (amount) => {
+    soundManager.play('collect_fragment');
     updateStats({
       totalFragments: gameState.stats.totalFragments + amount
     });
@@ -298,7 +325,36 @@ function App() {
     });
   };
 
+  const handlePlayerDeath = () => {
+    // Calculate memories to keep (20% of current)
+    const memoriesToKeep = Math.floor(gameState.memoryFragments * 0.2);
+    
+    // Save permanent upgrades and kept memories
+    setGameState(prev => ({
+      ...prev,
+      memoryFragments: memoriesToKeep,
+      permanentUpgrades: prev.permanentUpgrades || {},
+      isDead: true
+    }));
+    
+    addToOutput([
+      "Everything fades to darkness...",
+      "But your memories remain, albeit fragmented...",
+      `(Kept ${memoriesToKeep} memory fragments)`,
+      "\nType 'continue' to return to the Memory Nexus"
+    ].join('\n'));
+    
+    // Show the MemoriesUI
+    setShowMemoriesUI(true);
+  };
+
   const handleCommand = (input) => {
+    // Add new command for continuing after death
+    if (gameState.isDead && input.toLowerCase() === 'continue') {
+      setShowMemoriesUI(true);
+      return;
+    }
+
     const { command, target, answer } = parseCommand(input);
     const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
 
@@ -378,10 +434,21 @@ function App() {
             return;
           }
           
-          setGameState(prev => ({
-            ...prev,
-            inventory: [...prev.inventory, itemToTake]
-          }));
+          // Instead of adding to inventory, convert to memory fragments
+          if (itemToTake.memoryValue) {
+            setGameState(prev => ({
+              ...prev,
+              memoryFragments: prev.memoryFragments + itemToTake.memoryValue
+            }));
+            
+            addToOutput([
+              `You reach for the ${itemToTake.name}...`,
+              itemToTake.memoryText || "The object fades away, leaving behind fragments of memory...",
+              `(+${itemToTake.memoryValue} memory fragments)`
+            ].join('\n'));
+            
+            addJournalEntry(`Recovered memory from ${itemToTake.name}`);
+          }
           
           const removed = currentRoom.removeItem(itemToTake);
           if (removed) {
@@ -460,7 +527,8 @@ function App() {
           } else if (currentRoom.puzzle.solved) {
             addToOutput("You've already solved this puzzle.");
           } else {
-            addToOutput(currentRoom.puzzle.getDescription());
+            setActivePuzzle(currentRoom.puzzle);
+            addToOutput("You begin examining the puzzle...");
           }
         } else {
           addToOutput("There's nothing like that to examine here.");
@@ -485,6 +553,7 @@ function App() {
           const result = currentRoom.puzzle.checkSolution(answer, gameState.player);
           handlePuzzleSolve(currentRoom.puzzle, result);
           if (result.success) {
+            soundManager.play('puzzle_solve');
             handleFragmentGain(result.reward);
             addToOutput([
               "That's correct!",
@@ -523,8 +592,70 @@ function App() {
         setIsAchievementsOpen(true);
         break;
 
+      case 'use':
+        const [itemName, withTarget] = target.split(' with ');
+        const itemToUse = findItem(itemName, gameState.inventory);
+        const targetItem = findItem(withTarget, currentRoom.items);
+        
+        if (!itemToUse) {
+          addToOutput("You don't have that item.");
+          return;
+        }
+        
+        if (!targetItem) {
+          addToOutput("You don't see that here to use the item with.");
+          return;
+        }
+        
+        if (itemToUse.useWith) {
+          const result = itemToUse.useWith(targetItem);
+          if (result.success) {
+            addToOutput(result.message);
+            result.effect();
+            // Remove the token after use
+            setGameState(prev => ({
+              ...prev,
+              inventory: prev.inventory.filter(item => item.id !== itemToUse.id)
+            }));
+          } else {
+            addToOutput(result.message);
+          }
+        } else {
+          addToOutput("That item can't be used with other items.");
+        }
+        break;
+
       default:
         addToOutput("I don't understand that command.", input);
+    }
+  };
+
+  const handlePurchaseUpgrade = (category, upgrade) => {
+    const currentLevel = permanentUpgrades[category]?.[upgrade] || 0;
+    const result = Memories.purchaseUpgrade(
+      category,
+      upgrade,
+      currentLevel,
+      gameState.memoryFragments
+    );
+    
+    if (result) {
+      soundManager.play('purchase');
+      setGameState(prev => ({
+        ...prev,
+        memoryFragments: result.remainingFragments,
+        permanentUpgrades: {
+          ...prev.permanentUpgrades,
+          [category]: {
+            ...prev.permanentUpgrades?.[category],
+            [upgrade]: result.newLevel
+          }
+        }
+      }));
+      
+      addJournalEntry(`Upgraded ${category} - ${upgrade} to level ${result.newLevel}`);
+    } else {
+      soundManager.play('error');
     }
   };
 
@@ -545,7 +676,7 @@ function App() {
       ) : (
         <div className="game-container">
           <div className="game-left">
-            <ImageDisplay currentImage={gameState.currentImage} />
+            <ImageDisplay currentRoom={gameState.currentRoom} />
             <GameOutput messages={gameState.gameOutput} />
             <CommandPrompt onCommand={handleCommand} />
           </div>
@@ -603,6 +734,20 @@ function App() {
               }}
             />
           )}
+          <MemoriesUI 
+            isOpen={showMemoriesUI}
+            onClose={() => {
+              setShowMemoriesUI(false);
+              if (gameState.isDead) {
+                // Reset the game but keep permanent upgrades
+                initializeGame(permanentUpgrades);
+              }
+            }}
+            currentMemories={gameState.inventory}
+            permanentUpgrades={permanentUpgrades}
+            memoryFragments={gameState.memoryFragments}
+            onPurchaseUpgrade={handlePurchaseUpgrade}
+          />
         </div>
       )}
     </>

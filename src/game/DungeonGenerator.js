@@ -6,37 +6,57 @@ import { MirrorSequence } from './puzzles/puzzles/MirrorSequence';
 
 class FloorTheme {
   constructor(level) {
+    this.level = Number(level) || 1;
+    
     this.themes = {
       1: {
-        name: 'Memory Banks',
-        sizes: ['8-bit', 'pixelated', 'low-res', 'glitching', '16-color'],
+        name: 'The Unchanging Halls',
+        sizes: ['familiar', 'distorted', 'unchanging', 'preserved', 'perfect'],
         atmospheres: [
-          'softly humming', 'gently flickering', 'faintly buzzing', 
-          'quietly processing', 'steadily running', 'dimly glowing'
+          'eerily peaceful', 'unnaturally still', 'frozen in time', 
+          'strangely pristine', 'impossibly perfect', 'deceptively calm'
         ],
         details: [
-          'Scan lines ripple across the walls.',
-          'The resolution seems to shift and change.',
-          'Pixels reorganize themselves when you look away.',
-          'Code fragments scroll by in the air.',
-          'The cursor blinks patiently in the corner.',
-          'Loading screens appear in impossible places.'
+          'The walls seem to resist any change.',
+          'Time seems to stand completely still here.',
+          'Everything remains in a perfect state.',
+          'Nothing shows any sign of age or wear.',
+          'The air feels thick with suspended moments.',
+          'Reflections shimmer with strange certainty.'
         ],
         features: [
-          'An old save file floats impossibly in the air.',
-          'A command prompt blinks endlessly.',
-          'Sprites animate in impossible patterns.',
-          'A high score table updates itself.',
-          'Loading bars progress without end.',
-          'Corrupted pixels form familiar shapes.'
+          'A clock whose hands never move.',
+          'A mirror that only shows happy memories.',
+          'A window that always shows a perfect summer day.',
+          'Family portraits where everyone is always smiling.',
+          'Fresh flowers that never wilt.',
+          'A table perpetually set for dinner guests.',
+          'A music box playing a familiar lullaby.',
+          'A rocking chair gently swaying on its own.',
+          'A child\'s toy that winds itself up.',
+          'A bookshelf where the stories keep changing.',
+          'A fireplace with eternal flames that give no heat.',
+          'A grandfather clock striking the same hour endlessly.',
+          'A chess set mid-game with no players.',
+          'A tea set that stays eternally warm.',
+          'A crystal chandelier casting impossible shadows.',
+          'A piano that plays soft melodies by itself.',
+          'A cabinet of curiosities that rearranges itself.',
+          'A tapestry showing scenes from your memories.',
+          'A fountain whose water flows upward.',
+          'A collection of photographs that change when unobserved.',
+          'A kaleidoscope showing impossible patterns.',
+          'A snow globe containing a perfect winter day.',
+          'A sundial casting shadows that tell different times.',
+          'An hourglass where sand flows both ways.',
         ],
         events: [
           'A memory flickers at the edge of your vision.',
           'The sound of familiar laughter echoes distantly.',
-          'Shadows of people who aren\'t there dance across the walls.',
+          'Voices carry on conversations as if nothing has changed.',
           'Time seems to skip like a broken record.',
-          'The room briefly appears as it once was.',
-          'A door opens to somewhere that can\'t exist.'
+          'The room refuses to acknowledge any change.',
+          'Reality bends to match your preferred memories.'
         ],
         ambience: [
           'The air feels thick with forgotten memories',
@@ -63,99 +83,152 @@ class FloorTheme {
           'Your memories seem more real than reality'
         ],
         featureItems: {
-          'A perfectly preserved scene stands frozen in time': {
-            name: 'memory crystal',
-            description: 'A delicate crystal sphere that seems to capture a moment in time. Within its depths, you see fleeting images of happiness.',
-            canTake: true,
-            aliases: ['crystal', 'preserved crystal', 'sphere'],
-            examine: 'The crystal shows different scenes each time you look: a family dinner, children playing, someone reading by firelight. The images feel achingly familiar.'
-          },
-          'Family portraits hang on walls': {
-            name: 'portrait',
-            description: 'A family portrait whose subjects seem to shift when viewed from different angles.',
-            canTake: false,
-            aliases: ['painting', 'family portrait', 'picture'],
-            examine: 'The faces in the portrait are blurred, yet somehow familiar. They seem to change expressions when you look away.'
-          },
-          'chair': {
-            name: 'chair',
-            description: 'A comfortable-looking armchair that seems to belong to another time and place.',
-            canTake: false,
-            aliases: ['armchair', 'comfortable chair', 'rocking chair'],
-            examine: 'The chair feels warm, as if someone just stood up from it. You recognize it, but can\'t quite place from where.'
-          },
-          'mirror': {
+          mirror: {
             name: 'mirror',
-            description: 'An ornate mirror that shows impossible reflections.',
+            description: 'A mirror that only shows happy memories.',
             canTake: false,
-            aliases: ['looking glass', 'reflection'],
-            examine: 'In the mirror, the room appears different - warmer, lived-in, full of life. For a moment, you see someone familiar in the reflection.'
+            aliases: ['mirror', 'reflection'],
+            examine: 'The reflection shows only joyful moments from your past.'
           },
-          'A table is set for guests': {
-            name: 'place setting',
-            description: 'Fine china and silverware, perfectly arranged, gathering no dust.',
-            canTake: true,
-            aliases: ['dishes', 'silverware', 'china'],
-            examine: 'The plates are still warm, as if dinner was just served. You recognize the pattern on the china from somewhere...'
-          },
-          'A music box sits on a shelf': {
-            name: 'music box',
-            description: 'A delicate wooden box with a brass key.',
-            canTake: true,
-            aliases: ['box', 'wooden box'],
-            examine: 'When wound, it plays a melody you\'ve known all your life, though you can\'t remember learning it.',
-            use: 'The music box plays a haunting lullaby. For a moment, the room seems to shift around you.'
-          },
-          'A leather-bound journal rests on a side table': {
-            name: 'journal',
-            description: 'A worn journal with blank pages that sometimes show writing.',
-            canTake: true,
-            aliases: ['diary', 'book', 'leather book'],
-            examine: 'The pages appear blank at first, but as you watch, familiar handwriting fades in and out, telling stories you almost remember.',
-            read: 'The writing is difficult to make out, but you catch glimpses: "...happy times..." "...wish you were here..." "...please remember..."'
-          },
-          'A pocket watch hangs from a hook': {
-            name: 'pocket watch',
-            description: 'An antique gold pocket watch that never tells the same time twice.',
-            canTake: true,
-            aliases: ['watch', 'timepiece', 'gold watch'],
-            examine: 'The watch face shows impossible times, and the second hand sometimes moves backwards. It feels important somehow.',
-            use: 'The watch ticks irregularly in your hand. Time seems to flow strangely around you.'
-          },
-          'A child\'s toy lies forgotten in a corner': {
-            name: 'toy',
-            description: 'A well-loved stuffed animal that seems to change appearance.',
-            canTake: true,
-            aliases: ['stuffed animal', 'plush toy', 'stuffed toy'],
-            examine: 'Each time you look at it, the toy seems different, yet each version feels deeply familiar. It brings comfort you don\'t understand.'
-          },
-          'photograph': {
-            name: 'photograph',
-            description: 'A sepia-toned photograph that changes its image when you blink.',
-            canTake: true,
-            aliases: ['photo', 'picture', 'sepia photo'],
-            examine: 'The photograph shows different scenes each time you look: a birthday party, a wedding, a quiet morning. All feel like memories you can\'t quite grasp.',
-            feature: 'An old photograph floats impossibly in mid-air'
-          },
-          'portrait': {
-            name: 'portrait',
-            description: 'A portrait that seems to shift and change as you look at it.',
-            canTake: false
-          },
-          'chair': {
-            name: 'chair',
-            description: 'A comfortable-looking armchair that seems to belong to another time and place.',
-            canTake: false
-          },
-          'mirror': {
-            name: 'mirror',
-            description: 'The mirror shows reflections that shouldn\'t be possible.',
-            canTake: false
-          },
-          'table': {
+          table: {
             name: 'table',
-            description: 'An elegantly set table, waiting for guests who will never arrive.',
-            canTake: false
+            description: 'A table perpetually set for dinner guests.',
+            canTake: false,
+            aliases: ['dining table', 'set table'],
+            examine: 'The table settings are pristine, as if waiting for guests who never arrive.'
+          },
+          clock: {
+            name: 'clock',
+            description: 'A clock whose hands refuse to move.',
+            canTake: false,
+            aliases: ['timepiece', 'wall clock'],
+            examine: 'The hands are frozen, yet you can almost hear phantom ticking.'
+          },
+          window: {
+            name: 'window',
+            description: 'A window showing an eternal summer day.',
+            canTake: false,
+            aliases: ['glass', 'pane'],
+            examine: 'Through the glass, you see a perfect day that never ends.'
+          },
+          portraits: {
+            name: 'portraits',
+            description: 'Family portraits with ever-smiling faces.',
+            canTake: false,
+            aliases: ['pictures', 'paintings'],
+            examine: 'The faces in the portraits seem to follow you with their unchanging smiles.'
+          },
+          flowers: {
+            name: 'flowers',
+            description: 'Fresh flowers in eternal bloom.',
+            canTake: false,
+            aliases: ['bouquet', 'vase'],
+            examine: "The flowers look freshly cut, yet you sense they've been here forever."
+          },
+          'music box': {
+            name: 'music box',
+            description: 'A delicate music box playing a hauntingly familiar tune.',
+            canTake: false,
+            aliases: ['box', 'musical box'],
+            examine: 'The melody seems to change with your memories, yet remains familiar.'
+          },
+          'rocking chair': {
+            name: 'rocking chair',
+            description: 'An old rocking chair moving to an unseen presence.',
+            canTake: false,
+            aliases: ['chair'],
+            examine: 'The chair rocks with the same rhythm as a long-forgotten comfort.'
+          },
+          toy: {
+            name: 'toy',
+            description: 'A mechanical toy that winds itself up periodically.',
+            canTake: false,
+            aliases: ['mechanical toy', 'wind-up toy'],
+            examine: 'The toy seems to respond to your presence, as if remembering past play.'
+          },
+          bookshelf: {
+            name: 'bookshelf',
+            description: 'A bookshelf filled with ever-changing stories.',
+            canTake: false,
+            aliases: ['shelf', 'books'],
+            examine: 'Each time you look, the titles are different, yet oddly familiar.'
+          },
+          fireplace: {
+            name: 'fireplace',
+            description: 'A fireplace with dancing flames that emit no heat.',
+            canTake: false,
+            aliases: ['hearth', 'fire'],
+            examine: 'The flames move in patterns that seem to tell stories from your past.'
+          },
+          'chess set': {
+            name: 'chess set',
+            description: 'A chess game frozen mid-play, pieces moved by phantom players.',
+            canTake: false,
+            aliases: ['chess', 'chess pieces'],
+            examine: 'The position of the pieces reminds you of a game long forgotten.'
+          },
+          'tea set': {
+            name: 'tea set',
+            description: 'A fine porcelain tea set, steam eternally rising.',
+            canTake: false,
+            aliases: ['teapot', 'cups'],
+            examine: 'The tea inside stays perfectly hot, waiting for guests who never arrive.'
+          },
+          chandelier: {
+            name: 'chandelier',
+            description: 'A crystal chandelier casting ever-shifting shadows.',
+            canTake: false,
+            aliases: ['light', 'crystals'],
+            examine: 'The shadows it casts seem to dance to the rhythm of remembered moments.'
+          },
+          piano: {
+            name: 'piano',
+            description: 'A grand piano that plays gentle melodies without a pianist.',
+            canTake: false,
+            aliases: ['grand piano', 'keys'],
+            examine: 'The keys move to play a song you remember from childhood.'
+          },
+          tapestry: {
+            name: 'tapestry',
+            description: 'A woven tapestry showing scenes from your memories.',
+            canTake: false,
+            aliases: ['hanging', 'weaving'],
+            examine: 'The scenes in the tapestry shift and change as you watch.'
+          },
+          fountain: {
+            name: 'fountain',
+            description: 'A fountain with water that defies gravity.',
+            canTake: false,
+            aliases: ['water feature', 'basin'],
+            examine: 'The water flows upward, forming patterns that remind you of better times.'
+          },
+          kaleidoscope: {
+            name: 'kaleidoscope',
+            description: 'A mysterious kaleidoscope showing impossible patterns.',
+            canTake: false,
+            aliases: ['scope', 'viewer'],
+            examine: 'Looking through it reveals fragments of memories, endlessly recombining.'
+          },
+          'snow globe': {
+            name: 'snow globe',
+            description: 'A snow globe containing an eternal winter scene.',
+            canTake: false,
+            aliases: ['globe', 'snowglobe'],
+            examine: 'The snow falls endlessly, preserving a perfect moment in time.'
+          },
+          hourglass: {
+            name: 'hourglass',
+            description: 'An hourglass where sand flows in both directions.',
+            canTake: false,
+            aliases: ['timer', 'sandglass'],
+            examine: 'The sand defies gravity, flowing both up and down in an endless cycle.'
+          },
+          sundial: {
+            name: 'sundial',
+            description: 'A sundial casting shadows that tell different times.',
+            canTake: false,
+            aliases: ['sundial', 'timepiece'],
+            examine: 'The shadows move independently of the sun, each telling a different hour.'
           }
         }
       },
@@ -296,7 +369,8 @@ class FloorTheme {
         ]
       }
     };
-    this.currentTheme = this.themes[level] || this.themes[1];
+
+    this.currentTheme = this.themes[this.level] || this.themes[1];
   }
 
   generateRoomDescription(room) {
@@ -307,7 +381,7 @@ class FloorTheme {
     
     // If room has a puzzle, add it to description without command tags
     if (room.puzzle) {
-      description.push("There seems to be a puzzle here. Type 'examine puzzle' to investigate it more closely.");
+      description.push("A series of mirrors arranged in a mysterious pattern. You can <command>examine puzzle</command> to take a closer look, but be careful - failure could be catastrophic.");
     }
 
     // List room features
@@ -376,6 +450,8 @@ class Room {
     this.contentGenerated = false;
     this.knownExit = false;
     this.featureItems = new Map();
+    this.cleared = false;
+    this.enemyState = null;
     
     // Initialize room description elements
     this.description = this.generateBaseDescription();
@@ -472,7 +548,11 @@ class Room {
       // Generate appropriate content based on room type
       switch (this.roomType) {
         case 'combat':
-          this.enemyType = this.generateEnemy();
+          if (!this.cleared && !this.enemyState) {
+            this.enemy = this.generateEnemy();
+          } else if (this.enemyState) {
+            this.enemy = this.enemyState;
+          }
           this.description += '\n\nThere is a hostile presence here...';
           break;
         case 'treasure':
@@ -557,15 +637,11 @@ class Room {
         if (featureItems.length > 0) {
           let featureText = feature;
           featureItems.forEach(item => {
-            // Make sure we're marking the item name as interactable
-            const itemName = item.name.toLowerCase();
-            const featureLower = feature.toLowerCase();
-            if (featureLower.includes(itemName)) {
-              featureText = featureText.replace(
-                new RegExp(`\\b${item.name}\\b`, 'gi'),
-                `<item>${item.name}</item>`
-              );
-            }
+            // Only wrap the item name itself in tags
+            featureText = featureText.replace(
+              new RegExp(`\\b${item.name}\\b`, 'gi'),
+              `<item>${item.name}</item>`
+            );
           });
           description.push(`  - ${featureText}`);
         } else {
@@ -595,6 +671,11 @@ class Room {
       description.push(`  - ${direction}: ${state}`);
     });
 
+    // Add combat encounter only if room isn't cleared
+    if (this.roomType === 'combat' && !this.cleared && (this.enemy || this.enemyState)) {
+      description.push('\nThere is a hostile presence here...');
+    }
+
     return description.join('\n');
   }
 
@@ -622,33 +703,69 @@ class Room {
   }
 
   createItemsFromFeatures() {
-    if (!this.items) {
-      this.items = [];
-    }
-    if (!this.featureItems) {
-      this.featureItems = new Map();
-    }
+    if (!this.roomFeatures) return;
 
-    this.roomFeatures.forEach(feature => {
-      // Check each feature item definition for a match
-      Object.entries(this.theme.currentTheme.featureItems).forEach(([key, itemDef]) => {
-        // Check if the feature contains the key or vice versa
-        if (feature.toLowerCase().includes(key.toLowerCase()) || 
-            key.toLowerCase().includes(feature.toLowerCase())) {
-          const item = {
-            ...itemDef,
-            feature: feature,
-            id: `item_${this.id}_${key}`,
-            discovered: false
-          };
-          this.items.push(item);
-          
-          // Store reference to feature items
-          const featureItems = this.featureItems.get(feature) || [];
-          featureItems.push(item);
-          this.featureItems.set(feature, featureItems);
-        }
-      });
+    console.log('Room features:', this.roomFeatures);
+    this.items = this.roomFeatures.map(feature => {
+      // Extract the basic item type from the feature text
+      const itemTypes = {
+        'mirror that only shows': 'mirror',
+        'table perpetually set': 'table',
+        'clock whose hands': 'clock',
+        'window that always shows': 'window',
+        'portraits where everyone': 'portraits',
+        'flowers that never': 'flowers',
+        'music box playing': 'music box',
+        'rocking chair gently': 'rocking chair',
+        'child\'s toy that winds': 'toy',
+        'bookshelf where': 'bookshelf',
+        'fireplace with eternal': 'fireplace',
+        'chess set mid-game': 'chess set',
+        'tea set that stays': 'tea set',
+        'crystal chandelier casting': 'chandelier',
+        'piano that plays': 'piano',
+        'tapestry showing scenes': 'tapestry',
+        'fountain whose water': 'fountain',
+        'kaleidoscope showing': 'kaleidoscope',
+        'snow globe containing': 'snow globe',
+        'hourglass where sand': 'hourglass',
+        'sundial casting shadows': 'sundial'
+      };
+      
+      // Find matching item type
+      const itemType = Object.entries(itemTypes)
+        .find(([key, _]) => feature.toLowerCase().includes(key.toLowerCase()));
+      
+      console.log('Creating item from feature:', feature, itemType);
+      
+      if (itemType) {
+        const [_, type] = itemType;
+        // Get the item definition from featureItems in the current theme
+        const definition = this.theme.currentTheme.featureItems[type] || {
+          name: type,
+          description: feature,
+          canTake: false
+        };
+        
+        return {
+          ...definition,
+          id: type,  // Use the matched type directly
+          feature: feature
+        };
+      }
+      return null;
+    }).filter(Boolean);
+
+    console.log('Created items:', this.items);
+
+    // Store feature-item relationships
+    this.featureItems = new Map();
+    this.items.forEach(item => {
+      if (item.feature) {
+        const featureItems = this.featureItems.get(item.feature) || [];
+        featureItems.push(item);
+        this.featureItems.set(item.feature, featureItems);
+      }
     });
   }
 
@@ -706,7 +823,7 @@ class Room {
     this.puzzle = this.puzzlePool.getRandomPuzzle(difficulty);
     
     if (this.puzzle) {
-      // Add a subtle hint about the puzzle to the room's base description
+      // Add a subtle hint about the puzzle to the room's description
       this.description += '\n\nSomething about this room feels particularly enigmatic...';
       
       // Add puzzle-specific features that hint at interaction
@@ -715,9 +832,6 @@ class Room {
         this.roomFeatures = this.roomFeatures.filter(f => !f.includes('puzzle'));
         this.roomFeatures.push(puzzleFeature);
       }
-
-      // Add puzzle hint to room features
-      this.roomFeatures.push('There seems to be a puzzle here. Type "examine puzzle" to investigate it more closely.');
     }
   }
 
@@ -796,6 +910,19 @@ class Room {
       return true;
     }
     return false;
+  }
+
+  handleCombatEnd(result) {
+    if (result.victory) {
+      this.cleared = true;
+      this.enemyState = null;
+    } else if (result.fled) {
+      this.enemyState = {
+        ...this.enemy,
+        health: this.enemy.health
+      };
+    }
+    this.enemy = null;
   }
 }
 

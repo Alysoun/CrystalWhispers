@@ -1,44 +1,31 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import './ImageDisplay.css';
+import RoomRenderer from '../../utils/RoomRenderer.js';
 
-const ASCII_ART = {
-  wolf: `
-    /\\___/\\
-   (  o o  )
-   (  =^=  )
-    (---)
-     | |
-    _| |_
-  `,
-  key: `
-    .---.
-    |   |
-    |   |
-    |   |
-    '---'
-    |   |
-    |   |
-    |   |
-    '---'
-  `,
-  note: `
-   ___________
-  |           |
-  |  Dear...  |
-  |  ~~~~~~~~ |
-  |  ~~~~~~~~ |
-  |___________|
-  `
-};
+const ImageDisplay = ({ currentRoom }) => {
+  const canvasRef = useRef(null);
+  const rendererRef = useRef(null);
 
-const ImageDisplay = ({ currentImage }) => {
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    
+    if (!rendererRef.current) {
+      rendererRef.current = new RoomRenderer(canvasRef.current);
+    }
+    
+    if (currentRoom) {
+      rendererRef.current.renderRoom(currentRoom);
+    }
+  }, [currentRoom]);
+
   return (
     <div className="image-display">
-      {currentImage ? (
-        <pre className="ascii-art">{ASCII_ART[currentImage] || 'No image available'}</pre>
-      ) : (
-        <div className="no-image">Exploring...</div>
-      )}
+      <canvas 
+        ref={canvasRef}
+        width={400}
+        height={300}
+        className="room-canvas"
+      />
     </div>
   );
 };

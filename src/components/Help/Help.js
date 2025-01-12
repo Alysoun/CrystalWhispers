@@ -1,8 +1,14 @@
 import React from 'react';
 import './Help.css';
+import { soundManager } from '../../utils/SoundManager';
 
 function Help({ isOpen, onClose }) {
   if (!isOpen) return null;
+
+  const handleSoundToggle = () => {
+    soundManager.initializeAudio();
+    soundManager.toggleMute();
+  };
 
   return (
     <div className="help-overlay">
@@ -57,6 +63,10 @@ function Help({ isOpen, onClose }) {
                 <span className="command-desc">Pick up an item</span>
               </div>
               <div className="command">
+                <span className="command-name">use [item] with [target]</span>
+                <span className="command-desc">Use an item with another item</span>
+              </div>
+              <div className="command">
                 <span className="command-name">inventory (i)</span>
                 <span className="command-desc">Check your inventory</span>
               </div>
@@ -90,6 +100,15 @@ function Help({ isOpen, onClose }) {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="sound-controls">
+          <button 
+            onClick={handleSoundToggle}
+            className="sound-toggle"
+          >
+            {soundManager.muted ? '🔇 Sound Off' : '🔊 Sound On'}
+          </button>
         </div>
       </div>
     </div>

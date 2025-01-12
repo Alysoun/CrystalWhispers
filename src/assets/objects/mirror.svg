@@ -1,0 +1,22 @@
+<svg width="80" height="120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="10" width="60" height="100" 
+    fill="none" 
+    stroke="#00ff00" 
+    stroke-width="1"
+    filter="url(#mirrorGlow)"
+  />
+  <!-- Reflection effect -->
+  <rect x="15" y="15" width="50" height="90" 
+    fill="none" 
+    stroke="#00ff00" 
+    stroke-width="0.5"
+    opacity="0.3"
+  />
+  
+  <defs>
+    <filter id="mirrorGlow">
+      <feGaussianBlur stdDeviation="1" />
+      <feComposite operator="over" />
+    </filter>
+  </defs>
+</svg> 

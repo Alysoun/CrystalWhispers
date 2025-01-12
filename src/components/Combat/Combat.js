@@ -17,7 +17,12 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
   // Reset combat log when a new combat starts
   useEffect(() => {
     if (isOpen && enemy) {
-      setCombatLog([`A ${enemy.name} appears before you!`]);
+      // Initialize enemy if needed
+      if (!enemy.maxHealth) enemy.maxHealth = 30;
+      if (!enemy.health) enemy.health = enemy.maxHealth;
+      if (!enemy.attack) enemy.attack = 2;
+      
+      setCombatLog(['A Shadow Remnant appears before you!']);
       setCurrentTurn('player');
     }
   }, [isOpen, enemy]);
@@ -27,17 +32,18 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
   };
 
   const handleAttack = () => {
-    const damage = Math.floor(Math.random() * player.attack) + 1;
+    // Ensure we have valid attack values
+    const attackPower = player.attack || 5;
+    const damage = Math.floor(Math.random() * attackPower) + 1;
     enemy.health -= damage;
-    addToCombatLog(`You attack the ${enemy.name} for ${damage} damage!`);
+    addToCombatLog(`You attack the Shadow Remnant for ${damage} damage!`);
     
     if (enemy.health <= 0) {
-      addToCombatLog(`The ${enemy.name} has been defeated!`);
+      addToCombatLog(`The Shadow Remnant has been defeated!`);
       onCombatEnd('victory');
       return;
     }
 
-    // Enemy turn
     handleEnemyTurn();
   };
 
@@ -65,16 +71,17 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
 
   const handleEnemyTurn = () => {
     setCurrentTurn('enemy');
-    const damage = Math.floor(Math.random() * enemy.attack) + 1;
+    const enemyAttack = enemy.attack || 2;
+    const damage = Math.floor(Math.random() * enemyAttack) + 1;
     
     if (player.defending) {
       const reducedDamage = Math.floor(damage / 2);
       player.health -= reducedDamage;
-      addToCombatLog(`The ${enemy.name} attacks! Your defense reduces the damage to ${reducedDamage}!`);
+      addToCombatLog(`The Shadow Remnant attacks! Your defense reduces the damage to ${reducedDamage}!`);
       player.defending = false;
     } else {
       player.health -= damage;
-      addToCombatLog(`The ${enemy.name} attacks for ${damage} damage!`);
+      addToCombatLog(`The Shadow Remnant attacks for ${damage} damage!`);
     }
 
     if (player.health <= 0) {
@@ -84,42 +91,6 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
     }
 
     setCurrentTurn('player');
-  };
-
-  const handleBossAction = () => {
-    const currentPhase = getCurrentPhase(boss.health);
-    const availableAbilities = currentPhase.activeAbilities;
-
-    // Check for crystal-modified abilities
-    const crystalAbilities = boss.activeCrystals?.flatMap(crystal => 
-      Object.keys(boss.crystalBehaviors[crystal]?.modifiedAbilities || {})
-    ) || [];
-
-    const allAbilities = [...availableAbilities, ...crystalAbilities];
-    
-    // Choose and execute an ability
-    const selectedAbility = chooseAbility(allAbilities);
-    executeAbility(selectedAbility);
-  };
-
-  const executeAbility = (ability) => {
-    switch(ability) {
-      case 'mirrorImage':
-        // Normal mirror image behavior
-        break;
-      case 'aggressiveReflection':
-        // DEFIANCE crystal behavior - images attack
-        break;
-      case 'splittingImage':
-        // RESILIENCE crystal behavior - images multiply
-        break;
-      case 'perfectMimicry':
-        // REFLECTION crystal behavior - copies player
-        break;
-      case 'realityBend':
-        // CHALLENGE crystal behavior - changes arena
-        break;
-    }
   };
 
   if (!isOpen) return null;
@@ -135,7 +106,7 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
               Player HP: {player.health}/{player.maxHealth}
             </div>
             <div className="enemy-stats">
-              {enemy.name} HP: {enemy.health}/{enemy.maxHealth}
+              Shadow Remnant HP: {enemy.health}/{enemy.maxHealth}
             </div>
           </div>
         </div>

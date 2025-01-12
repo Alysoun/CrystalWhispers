@@ -3,6 +3,7 @@ import { BrokenMirror } from './items/BrokenMirror';
 import { ChildsLocket } from './items/ChildsLocket';
 import { OldDiary } from './items/OldDiary';
 import { MusicBox } from './items/MusicBox';
+import { AcceptanceToken } from './items/AcceptanceToken';
 // ... import other treasures
 
 export class TreasurePool {
