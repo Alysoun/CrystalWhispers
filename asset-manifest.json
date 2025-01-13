@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/CrystalWhispers/static/css/main.ea0d2a25.css",
-    "main.js": "/CrystalWhispers/static/js/main.95987c5a.js",
+    "main.js": "/CrystalWhispers/static/js/main.d5c536c3.js",
     "static/js/478.979a85ee.chunk.js": "/CrystalWhispers/static/js/478.979a85ee.chunk.js",
     "index.html": "/CrystalWhispers/index.html",
     "main.ea0d2a25.css.map": "/CrystalWhispers/static/css/main.ea0d2a25.css.map",
-    "main.95987c5a.js.map": "/CrystalWhispers/static/js/main.95987c5a.js.map",
+    "main.d5c536c3.js.map": "/CrystalWhispers/static/js/main.d5c536c3.js.map",
     "478.979a85ee.chunk.js.map": "/CrystalWhispers/static/js/478.979a85ee.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ea0d2a25.css",
-    "static/js/main.95987c5a.js"
+    "static/js/main.d5c536c3.js"
   ]
 }
