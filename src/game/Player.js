@@ -9,9 +9,9 @@ export default class Player {
     this.level = 1;
     this.experience = 0;
     this.healAfterCombat = 0;
-    this.potions = [];
+    this.potions = this.potions || [];
     this.temporaryEffects = {};
-    this.upgrades = {};
+    this.upgrades = this.upgrades || {};
   }
 
   gainExperience(amount) {

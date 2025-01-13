@@ -264,8 +264,11 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
               {potion.name}
             </button>
           ))}
-          {/* Show empty slots */}
-          {Array(player.getPotionCapacity() - player.potions.length).fill(0).map((_, i) => (
+          {/* Show empty slots - use a fallback for potion capacity */}
+          {Array(
+            (player.getPotionCapacity?.() || 2) - // Try to use the method, fallback to 2
+            (player.potions?.length || 0)
+          ).fill(0).map((_, i) => (
             <div key={`empty-${i}`} className="potion-slot empty">
               Empty Slot
             </div>
