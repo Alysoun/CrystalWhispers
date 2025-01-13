@@ -12,6 +12,8 @@ function PuzzleUI({ puzzle, onClose, onComplete }) {
     }
     return puzzle;
   });
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [hasSkipped, setHasSkipped] = useState(false);
 
   const handleSubmit = () => {
     const result = currentPuzzle.checkSolution(input);
@@ -35,6 +37,24 @@ function PuzzleUI({ puzzle, onClose, onComplete }) {
       return () => clearTimeout(timer);
     }
   }, [showSequence]);
+
+  useEffect(() => {
+    if (puzzle.timeLimit) {
+      // Add Timekeeper's Eye bonus time
+      const timekeeperLevel = player.upgrades?.puzzleMaster?.timekeeperEye || 0;
+      const extraTime = timekeeperLevel * 5; // 5 seconds per level
+      setTimeLeft(puzzle.timeLimit + extraTime);
+    }
+  }, [puzzle]);
+
+  const handleSkipPuzzle = () => {
+    const canSkip = player.upgrades?.puzzleMaster?.perfectClarity && !hasSkipped;
+    if (canSkip) {
+      setHasSkipped(true);
+      onComplete(Math.floor(puzzle.reward * 0.5)); // Get 50% of reward for skipping
+      onClose();
+    }
+  };
 
   return (
     <div className="puzzle-overlay">
@@ -99,6 +119,13 @@ function PuzzleUI({ puzzle, onClose, onComplete }) {
           )}
         </div>
       </div>
+      
+      {/* Add skip button if player has Perfect Clarity */}
+      {player.upgrades?.puzzleMaster?.perfectClarity && !hasSkipped && (
+        <button onClick={handleSkipPuzzle} className="skip-puzzle-btn">
+          Skip Puzzle (Perfect Clarity)
+        </button>
+      )}
     </div>
   );
 }

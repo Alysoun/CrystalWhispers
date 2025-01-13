@@ -9,6 +9,9 @@ export default class Player {
     this.level = 1;
     this.experience = 0;
     this.healAfterCombat = 0;
+    this.potions = [];
+    this.temporaryEffects = {};
+    this.upgrades = {};
   }
 
   gainExperience(amount) {
@@ -48,5 +51,45 @@ export default class Player {
 
   isDead() {
     return this.health <= 0;
+  }
+
+  getPotionCapacity() {
+    const potionBeltLevel = this.upgrades?.survival?.potionBelt || 0;
+    return 2 + potionBeltLevel; // Base 2 slots + 1 per level
+  }
+
+  addPotion(potion) {
+    if (this.potions.length < this.getPotionCapacity()) {
+      this.potions.push(potion);
+      return true;
+    }
+    return false;
+  }
+
+  usePotion(index) {
+    if (index >= 0 && index < this.potions.length) {
+      const potion = this.potions[index];
+      const message = potion.effect(this);
+      this.potions.splice(index, 1);
+      return { success: true, message };
+    }
+    return { success: false, message: "No potion in that slot" };
+  }
+
+  updateEffects() {
+    if (this.temporaryEffects.duration > 0) {
+      this.temporaryEffects.duration--;
+      if (this.temporaryEffects.duration === 0) {
+        this.temporaryEffects = {};
+      }
+    }
+  }
+
+  getTotalAttack() {
+    return this.attack + (this.temporaryEffects.attackBonus || 0);
+  }
+
+  getTotalDefense() {
+    return this.defense + (this.temporaryEffects.defenseBonus || 0);
   }
 } 

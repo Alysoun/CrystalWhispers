@@ -77,4 +77,33 @@
 .combat-controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.potion-slots {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.potion-slot {
+  padding: 5px 10px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background: #333;
+  color: white;
+  cursor: pointer;
+}
+
+.potion-slot.empty {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.potion-slot:not(.empty):hover {
+  background: #444;
+}
+
+.potion-slot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 } 

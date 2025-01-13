@@ -5,8 +5,46 @@ import './Combat.css';
 function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
   const [combatLog, setCombatLog] = useState([]);
   const [currentTurn, setCurrentTurn] = useState('player');
+  const [hasUsedInitiativeReroll, setHasUsedInitiativeReroll] = useState(false);
+  const [turnCounter, setTurnCounter] = useState(0);
   const [ambushState, setAmbushState] = useState(null);
   const combatLogRef = useRef(null);
+
+  // Define getCombatModifiers first
+  const getCombatModifiers = () => {
+    const modifiers = {
+      critChance: 0,
+      attackBonus: 0,
+      counterChance: 0,
+      bonusActionAvailable: false
+    };
+
+    // Apply precision strike
+    const precisionLevel = player.upgrades?.combat?.precisionStrike || 0;
+    modifiers.critChance = precisionLevel * 0.05;
+
+    // Apply adrenaline rush when below 25% health
+    const adrenalineLevel = player.upgrades?.combat?.adrenalineRush || 0;
+    if (player.health <= player.maxHealth * 0.25) {
+      modifiers.attackBonus += adrenalineLevel * 3;
+    }
+
+    // Apply riposte
+    const riposteLevel = player.upgrades?.combat?.riposte || 0;
+    modifiers.counterChance = riposteLevel * 0.1;
+
+    // Check for bonus action from strategist's mind
+    const strategistLevel = player.upgrades?.tactical?.strategistMind || 0;
+    if (strategistLevel > 0) {
+      const interval = 5 - strategistLevel;
+      modifiers.bonusActionAvailable = (turnCounter % interval === 0);
+    }
+
+    return modifiers;
+  };
+
+  // Then calculate modifiers
+  const modifiers = getCombatModifiers();
 
   // Auto-scroll combat log to bottom when new messages are added
   useEffect(() => {
@@ -25,6 +63,7 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
       
       setCombatLog(['A Shadow Remnant appears before you!']);
       setCurrentTurn('player');
+      setAmbushState(null);
     }
   }, [isOpen, enemy]);
 
@@ -48,15 +87,25 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
   };
 
   const handleAttack = () => {
-    const attackPower = player.attack || 5;
-    const damage = Math.floor(Math.random() * attackPower) + 1;
+    const modifiers = getCombatModifiers();
+    const attackPower = player.attack + modifiers.attackBonus;
+    let damage = Math.floor(Math.random() * attackPower) + 1;
+
+    // Check for critical hit
+    const critRoll = Math.random();
+    const isCrit = critRoll < modifiers.critChance;
+    if (isCrit) {
+      damage *= 2;
+      addToCombatLog("Critical Hit!");
+    }
+
     enemy.health -= damage;
-    addToCombatLog(`You attack the Shadow Remnant for ${damage} damage!`);
+    addToCombatLog(`You attack the ${enemy.name} for ${damage} damage!`);
     
     if (enemy.health <= 0) {
-        addToCombatLog(`The Shadow Remnant has been defeated!`);
-        onCombatEnd({ victory: true });
-        return;
+      addToCombatLog(`The ${enemy.name} has been defeated!`);
+      onCombatEnd({ victory: true });
+      return;
     }
 
     handleEnemyTurn();
@@ -86,26 +135,65 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
 
   const handleEnemyTurn = () => {
     setCurrentTurn('enemy');
+    const modifiers = getCombatModifiers();
     const enemyAttack = enemy.attack || 2;
     const damage = Math.floor(Math.random() * enemyAttack) + 1;
     
     if (player.defending) {
       const reducedDamage = Math.floor(damage / 2);
       player.health -= reducedDamage;
-      addToCombatLog(`The Shadow Remnant attacks! Your defense reduces the damage to ${reducedDamage}!`);
+      addToCombatLog(`The ${enemy.name} attacks! Your defense reduces the damage to ${reducedDamage}!`);
       player.defending = false;
     } else {
       player.health -= damage;
-      addToCombatLog(`The Shadow Remnant attacks for ${damage} damage!`);
+      addToCombatLog(`The ${enemy.name} attacks for ${damage} damage!`);
+
+      // Check for riposte
+      const riposteRoll = Math.random();
+      if (riposteRoll < modifiers.counterChance) {
+        const counterDamage = Math.floor(player.attack * 0.5);
+        enemy.health -= counterDamage;
+        addToCombatLog(`You counter-attack for ${counterDamage} damage!`);
+
+        if (enemy.health <= 0) {
+          addToCombatLog(`The ${enemy.name} has been defeated!`);
+          onCombatEnd({ victory: true });
+          return;
+        }
+      }
     }
 
-    if (player.health <= 0) {
-        addToCombatLog("You have been defeated!");
-        onCombatEnd({ defeat: true });
-        return;
+    // Check for Last Stand
+    if (player.health === 1 && player.upgrades?.survival?.lastStand) {
+      addToCombatLog("Last Stand activates! You're temporarily invulnerable!");
+      player.health = 1;  // Ensure health stays at 1
+    } else if (player.health <= 0) {
+      addToCombatLog("You have been defeated!");
+      onCombatEnd({ defeat: true });
+      return;
     }
 
+    setTurnCounter(prev => prev + 1);
     setCurrentTurn('player');
+  };
+
+  // Add initiative reroll button if available
+  const handleInitiativeReroll = () => {
+    if (!hasUsedInitiativeReroll && player.upgrades?.tactical?.battlefieldControl) {
+      setCurrentTurn(Math.random() < 0.5 ? 'player' : 'enemy');
+      setHasUsedInitiativeReroll(true);
+      addToCombatLog("You've rerolled combat initiative!");
+    }
+  };
+
+  const handleUsePotion = (index) => {
+    const result = player.usePotion(index);
+    if (result.success) {
+      addToCombatLog(result.message);
+      handleEnemyTurn();
+    } else {
+      addToCombatLog(result.message);
+    }
   };
 
   if (!isOpen) return null;
@@ -133,10 +221,55 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
         </div>
 
         <div className="combat-controls">
-          <button onClick={handleAttack} disabled={currentTurn !== 'player'}>Attack</button>
-          <button onClick={handleDefend} disabled={currentTurn !== 'player'}>Defend</button>
-          <button onClick={handleRun} disabled={currentTurn !== 'player'}>Run</button>
-          <button onClick={handleUseItem} disabled={currentTurn !== 'player'}>Use Item</button>
+          <button onClick={handleAttack} disabled={currentTurn !== 'player'}>
+            Attack {modifiers.critChance > 0 && `(${Math.round(modifiers.critChance * 100)}% Crit)`}
+          </button>
+          <button onClick={handleDefend} disabled={currentTurn !== 'player'}>
+            Defend
+          </button>
+          <button onClick={handleRun} disabled={currentTurn !== 'player'}>
+            Run
+          </button>
+          
+          {/* Show initiative reroll button if available */}
+          {player.upgrades?.tactical?.battlefieldControl && !hasUsedInitiativeReroll && (
+            <button onClick={handleInitiativeReroll} className="tactical-btn">
+              Reroll Initiative
+            </button>
+          )}
+          
+          {/* Show bonus action indicator if available */}
+          {modifiers.bonusActionAvailable && (
+            <div className="bonus-action-indicator">
+              Bonus Action Available!
+            </div>
+          )}
+
+          {/* Show adrenaline rush indicator when active */}
+          {player.health <= player.maxHealth * 0.25 && player.upgrades?.combat?.adrenalineRush && (
+            <div className="adrenaline-rush-indicator">
+              Adrenaline Rush Active! (+{player.upgrades.combat.adrenalineRush * 3} Attack)
+            </div>
+          )}
+        </div>
+
+        <div className="potion-slots">
+          {player.potions.map((potion, index) => (
+            <button 
+              key={index}
+              onClick={() => handleUsePotion(index)}
+              disabled={currentTurn !== 'player'}
+              className="potion-slot"
+            >
+              {potion.name}
+            </button>
+          ))}
+          {/* Show empty slots */}
+          {Array(player.getPotionCapacity() - player.potions.length).fill(0).map((_, i) => (
+            <div key={`empty-${i}`} className="potion-slot empty">
+              Empty Slot
+            </div>
+          ))}
         </div>
       </div>
     </div>

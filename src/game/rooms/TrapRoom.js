@@ -1,93 +1,118 @@
 import { Room } from './Room';
 
-export class TrapRoom extends Room {
+export class TrapRoom {
   constructor(id, x, y, width, height, theme, dungeon) {
-    super(id, x, y, width, height, theme, dungeon);
-    this.roomType = 'trap';
-    this.trapType = this.generateTrapType();
+    this.id = id;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.theme = theme;
+    this.dungeon = dungeon;
     this.isDisarmed = false;
+    
+    this.trapType = this.generateTrapType();
   }
 
   generateTrapType() {
-    const traps = [
+    const trapTypes = [
       {
-        name: 'Memory Surge',
-        description: 'Crackling energy fills the room, threatening to overload your systems...',
+        name: "Pressure Plate",
+        description: "A suspicious plate in the floor",
+        difficulty: 1,
+        damage: 10,
+        effect: (player) => {
+          player.takeDamage(10);
+          return "The pressure plate triggers, dealing 10 damage!";
+        },
+        disarmMethods: ["lockpick", "strength", "agility"]
+      },
+      {
+        name: "Poison Dart",
+        description: "Small holes line the walls",
         difficulty: 2,
+        damage: 15,
         effect: (player) => {
-          if (!this.isDisarmed) {
-            player.health -= Math.floor(player.maxHealth * 0.2);
-            return 'The surge damages your systems!';
-          }
-          return 'The trap has been disarmed.';
+          player.takeDamage(15);
+          return "Poison darts shoot from the walls, dealing 15 damage!";
         },
-        disarmMethod: 'TIMING',
-        fragments: 50
+        disarmMethods: ["perception", "agility", "intelligence"]
       },
       {
-        name: 'Data Corruption',
-        description: 'Corrupted code streams down the walls, attempting to infect your memory...',
+        name: "Magical Rune",
+        description: "A glowing rune pulses ominously",
         difficulty: 3,
+        damage: 20,
         effect: (player) => {
-          if (!this.isDisarmed) {
-            player.memoryFragments = Math.max(0, player.memoryFragments - 10);
-            return 'The corruption consumes some of your fragments!';
-          }
-          return 'The trap has been disarmed.';
+          player.takeDamage(20);
+          return "The magical rune explodes, dealing 20 damage!";
         },
-        disarmMethod: 'PATTERN',
-        fragments: 75
-      },
-      {
-        name: 'Recursive Loop',
-        description: 'The room seems to fold in on itself, threatening to trap you in an endless cycle...',
-        difficulty: 4,
-        effect: (player) => {
-          if (!this.isDisarmed) {
-            player.stunned = true;
-            return 'You become trapped in the loop!';
-          }
-          return 'The trap has been disarmed.';
-        },
-        disarmMethod: 'SEQUENCE',
-        fragments: 100
+        disarmMethods: ["intelligence", "wisdom", "arcana"]
       }
     ];
 
-    return traps[Math.floor(Math.random() * traps.length)];
-  }
-
-  attemptDisarm(method, input) {
-    if (this.isDisarmed) return { success: false, message: 'This trap is already disarmed.' };
-
-    switch (this.trapType.disarmMethod) {
-      case 'TIMING':
-        const success = Math.random() < 0.5;
-        return {
-          success,
-          message: success ? 'You successfully interrupt the surge!' : 'Your timing was off...',
-          fragments: success ? this.trapType.fragments : 0
-        };
-
-      case 'PATTERN':
-        return {
-          success: input === this.trapType.pattern,
-          message: input === this.trapType.pattern ? 
-            'The corruption dissipates!' : 'The pattern was incorrect...',
-          fragments: input === this.trapType.pattern ? this.trapType.fragments : 0
-        };
-
-      default:
-        return { success: false, message: 'Unknown disarm method.' };
-    }
+    const index = Math.floor(Math.random() * trapTypes.length);
+    return trapTypes[index];
   }
 
   getDescription() {
-    return [
-      this.trapType.description,
-      this.isDisarmed ? 
-        'The trap has been successfully disarmed.' :
-        'The trap is still active and dangerous!'
-    ].join('\n');
+    return this.isDisarmed 
+      ? `A disarmed ${this.trapType.name} trap.`
+      : this.trapType.description;
+  }
+
+  trigger() {
+    if (this.isDisarmed) {
+      return {
+        triggered: false,
+        message: "The trap has been disarmed."
+      };
+    }
+
+    return {
+      triggered: true,
+      message: this.trapType.description,
+      damage: this.trapType.damage
+    };
+  }
+
+  attemptDisarm(method, input, player) {
+    if (this.isDisarmed) {
+      return { 
+        success: false, 
+        message: "This trap is already disarmed." 
+      };
+    }
+
+    if (!this.trapType.disarmMethods.includes(method)) {
+      return {
+        success: false,
+        message: `You can't disarm this trap using ${method}.`,
+        damage: this.trapType.damage / 2
+      };
+    }
+
+    // Base success chance
+    let successChance = 0.5;
+
+    // Add bonus from Safe Passage upgrade
+    const safePassageLevel = player?.upgrades?.explorer?.safePassage || 0;
+    successChance += safePassageLevel * 0.15;
+
+    const roll = Math.random();
+    if (roll < successChance) {
+      this.isDisarmed = true;
+      return {
+        success: true,
+        message: "You successfully disarm the trap!",
+        fragments: Math.floor(Math.random() * 20) + 10 // 10-30 fragments
+      };
+    }
+
+    return {
+      success: false,
+      message: "You fail to disarm the trap!",
+      damage: Math.floor(this.trapType.damage / 2)
+    };
   }
 } 

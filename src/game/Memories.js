@@ -67,54 +67,137 @@ export const Memories = {
           effect: (level) => ({ 
             damageReduction: level * 0.1 
           })
-        }
-      }
-    },
-    exploration: {
-      name: "Explorer's Insight",
-      description: "Improve your exploration abilities",
-      upgrades: {
-        perception: {
-          name: "Perception",
-          description: "Better chance to find hidden treasures",
-          maxLevel: 3,
-          cost: (level) => Math.floor(200 * Math.pow(2.5, level)),
+        },
+        precisionStrike: {
+          name: "Precision Strike",
+          description: "Increases your chance to deal critical hits",
+          maxLevel: 5,
+          cost: (level) => Math.floor(200 * Math.pow(2.3, level)),
           effect: (level) => ({ 
-            treasureChance: 0.1 + (level * 0.15)
+            critChance: level * 0.05  // 5% per level
           })
         },
-        retention: {
-          name: "Memory Retention",
-          description: "Retain more memory fragments upon death",
-          maxLevel: 5,
-          cost: (level) => Math.floor(300 * Math.pow(1.5, level)),
-          effect: (level) => ({
-            retentionBonus: level * 0.1  // Each level reduces loss by 10% (up to 50% at max)
+        adrenalineRush: {
+          name: "Adrenaline Rush",
+          description: "Boost attack when at low health",
+          maxLevel: 3,
+          cost: (level) => Math.floor(250 * Math.pow(2, level)),
+          effect: (level) => ({ 
+            lowHealthAttackBonus: level * 3  // +3 attack when below 25% HP
+          })
+        },
+        riposte: {
+          name: "Riposte",
+          description: "Chance to counterattack after being hit",
+          maxLevel: 4,
+          cost: (level) => Math.floor(300 * Math.pow(1.8, level)),
+          effect: (level) => ({ 
+            counterChance: level * 0.1  // 10% per level
           })
         }
       }
     },
-    puzzle: {
+    explorer: {
+      name: "Explorer's Insight",
+      description: "Master the art of dungeon exploration",
+      upgrades: {
+        treasureMagnet: {
+          name: "Treasure Magnet",
+          description: "Increases fragments found in chests",
+          maxLevel: 4,
+          cost: (level) => Math.floor(150 * Math.pow(2.2, level)),
+          effect: (level) => ({ 
+            fragmentBonus: level * 0.2  // 20% more per level
+          })
+        },
+        mapAwareness: {
+          name: "Map Awareness",
+          description: "Reveals nearby rooms on the map",
+          maxLevel: 3,
+          cost: (level) => Math.floor(250 * Math.pow(1.9, level)),
+          effect: (level) => ({ 
+            mapRevealRadius: level  // +1 room radius per level
+          })
+        },
+        safePassage: {
+          name: "Safe Passage",
+          description: "Reduced chance of traps triggering",
+          maxLevel: 3,
+          cost: (level) => Math.floor(200 * Math.pow(1.7, level)),
+          effect: (level) => ({ 
+            trapAvoidanceChance: level * 0.15  // 15% per level
+          })
+        }
+      }
+    },
+    puzzleMaster: {
       name: "Puzzle Mastery",
       description: "Enhance your puzzle-solving abilities",
       upgrades: {
-        insight: {
-          name: "Puzzle Insight",
-          description: "Gain better hints and more attempts at puzzles",
+        timekeeperEye: {
+          name: "Timekeeper's Eye",
+          description: "Increases time limit for timed puzzles",
           maxLevel: 3,
-          cost: (level) => Math.floor(100 * Math.pow(1.8, level)),
+          cost: (level) => Math.floor(150 * Math.pow(1.8, level)),
           effect: (level) => ({ 
-            puzzleAttempts: level + 1,
-            hintQuality: level 
+            extraPuzzleTime: level * 5  // +5 seconds per level
           })
         },
-        protection: {
-          name: "Mental Protection",
-          description: "Take less damage from failed puzzle attempts",
+        perfectClarity: {
+          name: "Perfect Clarity",
+          description: "Skip one puzzle without penalty",
+          maxLevel: 1,
+          cost: () => 500,
+          effect: () => ({ 
+            skipPuzzle: true
+          })
+        }
+      }
+    },
+    survival: {
+      name: "Survival Instinct",
+      description: "Master the art of staying alive",
+      upgrades: {
+        lastStand: {
+          name: "Last Stand",
+          description: "Grants temporary invincibility at 1 HP",
+          maxLevel: 1,
+          cost: () => 250,
+          effect: () => ({ 
+            invincibilityTurns: 1
+          })
+        },
+        potionBelt: {
+          name: "Potion Belt",
+          description: "Carry more potions",
           maxLevel: 3,
-          cost: (level) => Math.floor(75 * Math.pow(1.8, level)),
+          cost: (level) => Math.floor(200 * Math.pow(1.6, level)),
           effect: (level) => ({ 
-            puzzleDamageReduction: level * 0.25 
+            extraPotions: level  // +1 potion per level
+          })
+        }
+      }
+    },
+    tactical: {
+      name: "Tactical Mastery",
+      description: "Advanced combat strategies",
+      upgrades: {
+        battlefieldControl: {
+          name: "Battlefield Control",
+          description: "Reroll combat initiative once per battle",
+          maxLevel: 1,
+          cost: () => 400,
+          effect: () => ({ 
+            rerollInitiative: true
+          })
+        },
+        strategistMind: {
+          name: "Strategist's Mind",
+          description: "Gain bonus actions in combat",
+          maxLevel: 3,
+          cost: (level) => Math.floor(300 * Math.pow(2, level)),
+          effect: (level) => ({ 
+            bonusActionInterval: 5 - level  // Every 5/4/3 turns
           })
         }
       }

@@ -580,6 +580,31 @@ function App() {
       
         if (canMove) {
           const nextRoom = gameState.dungeon.rooms.get(nextRoomId);
+          
+          // Handle trap check before movement
+          if (nextRoom.trap && !nextRoom.trap.disarmed) {
+            const trapResult = nextRoom.handleTrapTrigger();
+            if (trapResult.triggered) {
+              addToOutput(trapResult.message);
+              if (trapResult.damage) {
+                setGameState(prev => ({
+                  ...prev,
+                  player: {
+                    ...prev.player,
+                    health: Math.max(0, prev.player.health - trapResult.damage)
+                  }
+                }));
+                addToOutput(`You take ${trapResult.damage} damage from the trap!`);
+              }
+            } else {
+              addToOutput(trapResult.message);
+            }
+          }
+
+          // Discover and generate loot with bonuses
+          nextRoom.discover();
+          nextRoom.generateLoot();
+          
           handleRoomDiscovery(nextRoom);
           nextRoom.discover();
       
