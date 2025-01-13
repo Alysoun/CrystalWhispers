@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './PlayerStats.css';
 
-function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, unlockedStats }) {
+function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, unlockedStats = {} }) {
+  // Add default value for player
+  if (!player) return null;  // Early return if no player
+
   // Track previous fragments value for change display
   const [prevFragments, setPrevFragments] = useState(memoryFragments);
   const [showChange, setShowChange] = useState(false);
@@ -27,8 +30,9 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
     );
   };
 
-  const expNeeded = player.level * 100;
-  const expPercentage = (player.experience / expNeeded) * 100;
+  // Calculate exp needed only if player exists
+  const expNeeded = player?.level ? player.level * 100 : 100;
+  const expPercentage = player?.experience ? (player.experience / expNeeded) * 100 : 0;
   
   // Cost for each stat reveal - adjusted for permanent progression
   const statCosts = {
@@ -49,18 +53,18 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
     }
   };
 
-  // Render health bar with conditional numbers
+  // Render health bar with defensive checks
   const renderHealthBar = () => (
     <div className="stat-row">
       <span className="stat-label">Health:</span>
       <div className="stat-bar-container">
         <div 
           className="stat-bar health-bar" 
-          style={{ width: `${(player.health / player.maxHealth) * 100}%` }}
+          style={{ width: `${((player?.health || 0) / (player?.maxHealth || 100)) * 100}%` }}
         ></div>
         {unlockedStats.healthNumbers && (
           <span className="stat-text" style={{ zIndex: 1 }}>
-            {`${player.health}/${player.maxHealth}`}
+            {`${player?.health || 0}/${player?.maxHealth || 100}`}
           </span>
         )}
       </div>
@@ -116,7 +120,7 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
       {unlockedStats.attack ? (
         <div className="stat-row">
           <span className="stat-label">Attack:</span>
-          <span className="stat-value">{player.attackPower}</span>
+          <span className="stat-value">{player.attack}</span>
         </div>
       ) : (
         <div className="stat-row locked" onClick={() => onPurchase('attack', statCosts.attack)}>

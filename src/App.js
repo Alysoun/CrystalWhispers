@@ -172,10 +172,39 @@ function App() {
   };
 
   const handleLoadGame = () => {
-    const loadedState = loadGame();
-    if (loadedState) {
-      setGameState(loadedState);
-      setShowSplash(false);
+    try {
+      const loadedState = loadGame();
+      if (loadedState) {
+        // Create new Player instance and copy over saved properties
+        const newPlayer = new Player();
+        Object.assign(newPlayer, loadedState.player);
+        loadedState.player = newPlayer;
+
+        // Make sure all discovered rooms have their items initialized
+        loadedState.dungeon.rooms.forEach(room => {
+          if (room.discovered && (!room.items || room.items.length === 0)) {
+            room.createItemsFromFeatures();
+          }
+        });
+
+        // Ensure stats object is properly initialized
+        loadedState.stats = {
+          ...initialGameState.stats,  // Start with default stats
+          ...loadedState.stats        // Override with saved stats
+        };
+        
+        setGameState(loadedState);
+        setShowSplash(false);
+        const currentRoom = loadedState.dungeon.rooms.get(loadedState.dungeon.currentRoomId);
+        addToOutput("Game loaded successfully.");
+        addToOutput(currentRoom.getFullDescription());
+        addJournalEntry("Game loaded");
+      } else {
+        addToOutput("No saved game found.");
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      addToOutput("Failed to load game.");
     }
   };
 
@@ -283,77 +312,71 @@ function App() {
 
   // Combat victory
   const handleCombatEnd = (result) => {
-    console.log('Combat ended with result:', result);
-    setIsCombatOpen(false);
-    setCurrentEnemy(null);
-    
-    // Update room state after combat
-    const currentRoom = gameState.currentRoom;
-    currentRoom.handleCombatEnd(result);
-    
-    if (result.victory) {
-      const expGained = currentEnemy.experience;
-      console.log('Experience to gain:', expGained);
-      console.log('Current player before exp:', gameState.player);
-      
-      // Update player state with experience
-      setGameState(prev => {
-        const player = prev.player;
-        const oldLevel = player.level;
-        console.log('Old level:', oldLevel);
-        player.gainExperience(expGained);
-        console.log('Player after gainExperience:', player);
-        
-        return {
-          ...prev,
-          player: player,
-          stats: {
-            ...prev.stats,
-            combatsWon: prev.stats.combatsWon + 1
-          }
-        };
-      });
-      
-      // Clear screen and show only combat results
-      addToOutput([
-        `You defeated the ${currentEnemy.name}!`,
-        `Experience gained: ${expGained}`,
-        gameState.player.level > oldLevel ?
-          `Level Up! You are now level ${gameState.player.level}!` : '',
-        '',
-        'Type "look" to examine your surroundings.'
-      ].filter(line => line !== '').join('\n'), null, true);
+    // Change to handle result as an object or string
+    const victory = result === 'victory' || result.victory;
+    const fled = result === 'flee' || result.fled;
 
-      addJournalEntry(`Defeated ${currentEnemy.name} (+${expGained} exp)`);
-      
-      if (currentEnemy.name === 'Mirror Keeper') {
-        setGameState(prev => ({
-          ...prev,
-          statsRevealed: true
-        }));
-        addToOutput([
-          `You defeated the ${currentEnemy.name}!`,
-          'As the mirror shatters, you begin to see yourself more clearly...',
-          'Your understanding of your own capabilities has deepened.',
-          `Experience gained: ${currentEnemy.experience}`,
-        ].join('\n'), null, true);
-      }
+    if (victory) {
+        soundManager.play('victory');
+        const enemy = currentEnemy;
+        setCurrentEnemy(null);
+        setIsCombatOpen(false);
 
-      // Update stats
-      setGameState(prev => ({
-        ...prev,
-        stats: {
-          ...prev.stats,
-          combatsWon: prev.stats.combatsWon + 1
-        }
-      }));
-    } else if (result.fled) {
-      addToOutput("You managed to escape!", "flee");
-    } else if (gameState.player.health <= 0) {
-      // Handle death
-      setShowMemoriesUI(true);
-      Memories.unlockMemories();
-      addToOutput("You have fallen...", "death");
+        // Get current room and mark it as cleared
+        const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
+        currentRoom.cleared = true;
+        currentRoom.enemy = null;
+
+        // Update player stats and handle experience gain
+        setGameState(prev => {
+            const newPlayer = new Player();
+            Object.assign(newPlayer, {
+                maxHealth: prev.player.maxHealth,
+                health: prev.player.health,
+                attack: prev.player.attack,
+                defense: prev.player.defense,
+                level: prev.player.level,
+                experience: prev.player.experience,
+                healAfterCombat: prev.player.healAfterCombat
+            });
+            
+            const expResult = newPlayer.gainExperience(enemy.experience);
+            
+            const messages = [
+                `You defeated the ${enemy.name}!`,
+                `Gained ${enemy.experience} experience points.`
+            ];
+
+            if (expResult.levelsGained > 0) {
+                messages.push(`Level Up! You are now level ${expResult.newLevel}!`);
+                addJournalEntry(`Reached level ${expResult.newLevel}`);
+            }
+
+            if (newPlayer.healAfterCombat) {
+                messages.push(`Recovered ${newPlayer.healAfterCombat} HP.`);
+            }
+
+            addToOutput(messages.filter(Boolean).join('\n'));
+            addJournalEntry(`Defeated ${enemy.name} (+${enemy.experience} XP)`);
+
+            return {
+                ...prev,
+                player: newPlayer,
+                stats: {
+                    ...prev.stats,
+                    enemiesDefeated: (prev.stats.enemiesDefeated || 0) + 1
+                }
+            };
+        });
+    } else if (fled) {
+        addToOutput("You managed to escape!");
+        setIsCombatOpen(false);
+        setCurrentEnemy(null);
+    } else {
+        // Only handle death if not victory and not fled
+        setIsCombatOpen(false);
+        setCurrentEnemy(null);
+        handlePlayerDeath();
     }
   };
 
@@ -481,27 +504,48 @@ function App() {
     startingRoom.discovered = true;
     startingRoom.createItemsFromFeatures();
 
-    console.log('Created new dungeon:', newDungeon);
+    // Create new player and apply all permanent upgrades
+    const newPlayer = new Player();
+    
+    // Preserve experience and level from previous run
+    newPlayer.experience = gameState.player.experience;
+    newPlayer.level = gameState.player.level;
+    
+    // Safely apply all permanent upgrades to the new player
+    Object.entries(gameState.permanentUpgrades || {}).forEach(([category, upgrades]) => {
+        if (Memories.categories[category] && upgrades) {  // Check if category exists
+            Object.entries(upgrades).forEach(([upgrade, level]) => {
+                const upgradeInfo = Memories.categories[category]?.upgrades?.[upgrade];
+                if (upgradeInfo) {  // Check if upgrade exists
+                    const effect = upgradeInfo.effect(level);
+                    
+                    // Apply the effects to the player
+                    if (effect.attackBonus) newPlayer.attack += effect.attackBonus;
+                    if (effect.defenseBonus) newPlayer.defense += effect.defenseBonus;
+                    if (effect.healAfterCombat) newPlayer.healAfterCombat = (newPlayer.healAfterCombat || 0) + effect.healAfterCombat;
+                    if (effect.healthBonus) {
+                        newPlayer.maxHealth += effect.healthBonus;
+                        newPlayer.health = newPlayer.maxHealth;  // Start with full health
+                    }
+                }
+            });
+        }
+    });
 
     // Reset game state but keep memories and permanent upgrades
-    setGameState(prev => {
-        console.log('Previous state:', prev);
-        const newState = {
-            ...initialGameState,  // Reset to initial state
-            memoryFragments: prev.memoryFragments,  // Keep remaining fragments
-            permanentUpgrades: prev.permanentUpgrades,  // Keep upgrades
-            stats: prev.stats,  // Keep statistics
-            unlockedStats: prev.unlockedStats,  // Keep unlocked stats
-            discoveredTreasures: prev.discoveredTreasures,
-            unlockedAchievements: prev.unlockedAchievements,
-            player: new Player(),  // Create fresh player
-            dungeon: newDungeon,
-            currentRoom: newDungeon.rooms.get(newDungeon.currentRoomId),
-            isDead: false
-        };
-        console.log('New state:', newState);
-        return newState;
-    });
+    setGameState(prev => ({
+        ...initialGameState,  // Reset to initial state
+        memoryFragments: prev.memoryFragments,  // Keep remaining fragments
+        permanentUpgrades: prev.permanentUpgrades,  // Keep upgrades
+        stats: prev.stats,  // Keep statistics
+        unlockedStats: prev.unlockedStats,  // Keep unlocked stats
+        discoveredTreasures: prev.discoveredTreasures,
+        unlockedAchievements: prev.unlockedAchievements,
+        player: newPlayer,  // Use the player with applied upgrades
+        dungeon: newDungeon,
+        currentRoom: newDungeon.rooms.get(newDungeon.currentRoomId),
+        isDead: false
+    }));
 
     setShowMemoriesUI(false);
     addToOutput("You awaken in a new memory...");
@@ -832,14 +876,7 @@ function App() {
   };
 
   const handlePurchaseUpgrade = async (category, upgrade) => {
-    // Add debug logs
     console.log('Attempting to purchase:', category, upgrade);
-    console.log('Current state:', {
-        memoryFragments: gameState.memoryFragments,
-        permanentUpgrades: gameState.permanentUpgrades,
-        isDead: gameState.isDead
-    });
-
     const currentLevel = gameState.permanentUpgrades[category]?.[upgrade] || 0;
     const result = Memories.purchaseUpgrade(
         category,
@@ -851,17 +888,41 @@ function App() {
     if (result) {
         console.log('Purchase successful:', result);
         soundManager.play('purchase');
-        setGameState(prev => ({
-            ...prev,
-            memoryFragments: result.remainingFragments,
-            permanentUpgrades: {
-                ...prev.permanentUpgrades,
-                [category]: {
-                    ...prev.permanentUpgrades?.[category],
-                    [upgrade]: result.newLevel
+        
+        // Apply starter equipment effects immediately
+        if (category === 'starter') {
+            const effect = Memories.categories.starter.upgrades[upgrade].effect();
+            setGameState(prev => ({
+                ...prev,
+                memoryFragments: result.remainingFragments,
+                permanentUpgrades: {
+                    ...prev.permanentUpgrades,
+                    [category]: {
+                        ...prev.permanentUpgrades?.[category],
+                        [upgrade]: result.newLevel
+                    }
+                },
+                player: {
+                    ...prev.player,
+                    attack: prev.player.attack + (effect.attackBonus || 0),
+                    defense: prev.player.defense + (effect.defenseBonus || 0),
+                    healAfterCombat: (prev.player.healAfterCombat || 0) + (effect.healAfterCombat || 0)
                 }
-            }
-        }));
+            }));
+        } else {
+            // Handle normal upgrades as before
+            setGameState(prev => ({
+                ...prev,
+                memoryFragments: result.remainingFragments,
+                permanentUpgrades: {
+                    ...prev.permanentUpgrades,
+                    [category]: {
+                        ...prev.permanentUpgrades?.[category],
+                        [upgrade]: result.newLevel
+                    }
+                }
+            }));
+        }
         
         addJournalEntry(`Upgraded ${category} - ${upgrade} to level ${result.newLevel}`);
         return result;

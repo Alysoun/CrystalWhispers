@@ -48,16 +48,15 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
   };
 
   const handleAttack = () => {
-    // Ensure we have valid attack values
     const attackPower = player.attack || 5;
     const damage = Math.floor(Math.random() * attackPower) + 1;
     enemy.health -= damage;
     addToCombatLog(`You attack the Shadow Remnant for ${damage} damage!`);
     
     if (enemy.health <= 0) {
-      addToCombatLog(`The Shadow Remnant has been defeated!`);
-      onCombatEnd('victory');
-      return;
+        addToCombatLog(`The Shadow Remnant has been defeated!`);
+        onCombatEnd({ victory: true });
+        return;
     }
 
     handleEnemyTurn();
@@ -72,11 +71,11 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
   const handleRun = () => {
     const escapeChance = Math.random();
     if (escapeChance > 0.3) {
-      addToCombatLog("You successfully flee from combat!");
-      onCombatEnd('flee');
+        addToCombatLog("You successfully flee from combat!");
+        onCombatEnd({ fled: true });
     } else {
-      addToCombatLog("You failed to escape!");
-      handleEnemyTurn();
+        addToCombatLog("You failed to escape!");
+        handleEnemyTurn();
     }
   };
 
@@ -101,9 +100,9 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
     }
 
     if (player.health <= 0) {
-      addToCombatLog("You have been defeated!");
-      onCombatEnd('defeat');
-      return;
+        addToCombatLog("You have been defeated!");
+        onCombatEnd({ defeat: true });
+        return;
     }
 
     setCurrentTurn('player');

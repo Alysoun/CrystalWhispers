@@ -1,10 +1,55 @@
 // Permanent upgrades obtained through playing
 export const Memories = {
   categories: {
+    starter: {
+      name: "Starter Equipment",
+      description: "Basic equipment to help you survive longer",
+      upgrades: {
+        trainingBlade: {
+          name: "Training Blade",
+          description: "A basic blade that grants +2 attack",
+          maxLevel: 1,
+          cost: () => 50,
+          effect: () => ({ 
+            attackBonus: 2,
+            oneTime: true 
+          })
+        },
+        leatherArmor: {
+          name: "Leather Armor",
+          description: "Basic protection that reduces damage taken by 1",
+          maxLevel: 1,
+          cost: () => 75,
+          effect: () => ({ 
+            defenseBonus: 1,
+            oneTime: true 
+          })
+        },
+        healingCharm: {
+          name: "Healing Charm",
+          description: "Regenerate 1 HP after each combat",
+          maxLevel: 1,
+          cost: () => 100,
+          effect: () => ({ 
+            healAfterCombat: 1,
+            oneTime: true 
+          })
+        }
+      }
+    },
     combat: {
       name: "Combat Mastery",
       description: "Enhance your combat abilities",
       upgrades: {
+        vitality: {
+          name: "Vitality",
+          description: "Increase your maximum health",
+          maxLevel: 5,
+          cost: (level) => Math.floor(125 * Math.pow(2.0, level)),
+          effect: (level) => ({ 
+            healthBonus: level * 10  // +10 HP per level
+          })
+        },
         strength: {
           name: "Strength",
           description: "Increase damage dealt in combat",

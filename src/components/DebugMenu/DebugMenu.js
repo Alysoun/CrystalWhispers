@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Player from '../../game/Player';
 import { Dungeon } from '../../game/DungeonGenerator';
 import { getBossForLevel } from '../../game/bosses/GriefBosses';
 import './DebugMenu.css';
@@ -19,45 +20,70 @@ function DebugMenu({
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
 
+  const clonePlayer = (originalPlayer) => {
+    const newPlayer = new Player();
+    Object.assign(newPlayer, {
+      maxHealth: originalPlayer.maxHealth,
+      health: originalPlayer.health,
+      attack: originalPlayer.attack,
+      defense: originalPlayer.defense,
+      level: originalPlayer.level,
+      experience: originalPlayer.experience,
+      healAfterCombat: originalPlayer.healAfterCombat
+    });
+    return newPlayer;
+  };
+
   const debugActions = {
     player: [
       {
         name: 'Max Health',
         action: () => {
-          player.health = player.maxHealth;
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          newPlayer.health = newPlayer.maxHealth;
+          setPlayer(newPlayer);
         }
       },
       {
         name: 'Level Up',
         action: () => {
-          player.levelUp();
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          const expNeeded = (newPlayer.level * 100) - newPlayer.experience;
+          const expResult = newPlayer.gainExperience(expNeeded + 1);
+          setPlayer(newPlayer);
         }
       },
       {
         name: 'Add Experience',
         action: () => {
-          player.gainExperience(50);
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          const expResult = newPlayer.gainExperience(100);
+          setPlayer(newPlayer);
         }
       },
       {
         name: 'Add Stats',
         action: () => {
-          player.strength += 5;
-          player.agility += 5;
-          player.vitality += 5;
-          player.updateStats();
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          newPlayer.attack += 5;
+          newPlayer.defense += 5;
+          setPlayer(newPlayer);
         }
       },
       {
-        name: 'Add Combat Buffs',
+        name: 'Heal',
         action: () => {
-          player.addEffect('strength', 0.5, 10);
-          player.addEffect('defense', 0.5, 10);
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          newPlayer.health = newPlayer.maxHealth;
+          setPlayer(newPlayer);
+        }
+      },
+      {
+        name: 'Take Damage',
+        action: () => {
+          const newPlayer = clonePlayer(player);
+          newPlayer.takeDamage(10);
+          setPlayer(newPlayer);
         }
       }
     ],
