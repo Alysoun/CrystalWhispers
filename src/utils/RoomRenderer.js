@@ -461,8 +461,8 @@ export default class RoomRenderer {
   }
 
   renderRoom(room) {
-    console.log('RoomRenderer.renderRoom called with:', room);
-    console.log('Room items:', room.items);
+    // console.log('RoomRenderer.renderRoom called with:', room);
+    // console.log('Room items:', room.items);
     
     this.currentRoom = room;
     if (!room || !room.items) return;
@@ -481,7 +481,7 @@ export default class RoomRenderer {
     
     // Draw each object in the room
     room.items.forEach(item => {
-      console.log('Rendering item:', item);
+      // console.log('Rendering item:', item);
       const position = this.getItemPosition(item.id);
       
       // Apply hover effect if this is the hovered item

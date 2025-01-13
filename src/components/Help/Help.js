@@ -10,6 +10,20 @@ function Help({ isOpen, onClose }) {
     soundManager.toggleMute();
   };
 
+  const HELP_TEXT = {
+    basic: [
+      // ... existing help text ...
+    ],
+    advanced: [
+      // ... existing advanced commands ...
+      {
+        command: 'memories (mem, m)',
+        description: 'Access your crystallized memories and permanent upgrades',
+        unlockCondition: 'Unlocked after first death'
+      }
+    ]
+  };
+
   return (
     <div className="help-overlay">
       <div className="help-modal">

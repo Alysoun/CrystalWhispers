@@ -24,6 +24,50 @@ import PuzzleUI from './components/PuzzleUI/PuzzleUI';
 import MemoriesUI from './components/MemoriesUI/MemoriesUI';
 import { Memories } from './game/Memories';
 import { soundManager } from './utils/SoundManager';
+import TrapUI from './components/TrapUI/TrapUI';
+
+// Define initial game state
+const initialGameState = {
+  player: new Player(),
+  dungeon: new Dungeon(50, 50, Math.floor(Math.random() * 15) + 15),
+  inventory: [],
+  gameOutput: [],
+  journalEntries: [],
+  memoryFragments: 0,
+  permanentUpgrades: {},
+  unlockedStats: {},
+  stats: {
+    roomsExplored: 0,
+    itemsCollected: 0,
+    puzzlesSolved: 0,
+    enemiesDefeated: 0,
+    deaths: 0,
+    perfectPuzzles: 0,
+    totalFragments: 0,
+    helpUsed: false
+  },
+  isDead: false,
+  playerPosition: { x: 25, y: 25 },  // Starting position
+  discoveredTreasures: new Set(),
+  unlockedAchievements: new Set()
+};
+
+const generateDungeon = (level = 1) => {
+  const minRooms = 15;
+  const maxRooms = 30;
+  const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
+  const newDungeon = new Dungeon(50, 50, numRooms);
+  
+  // Set starting room as discovered
+  const startingRoom = newDungeon.rooms.get(0);
+  startingRoom.discovered = true;
+  startingRoom.createItemsFromFeatures();
+  
+  // Set dungeon level
+  newDungeon.level = level;
+  
+  return newDungeon;
+};
 
 function App() {
   const [gameState, setGameState] = useState(null);
@@ -51,6 +95,9 @@ function App() {
   // Add new state
   const [showMemoriesUI, setShowMemoriesUI] = useState(false);
   const [permanentUpgrades, setPermanentUpgrades] = useState({});
+
+  // Add state for trap UI
+  const [activeTrap, setActiveTrap] = useState(null);
 
   const initializeGame = (existingUpgrades = {}, seed = null) => {
     const minRooms = 15;
@@ -160,11 +207,19 @@ function App() {
     }));
   };
 
-  const addToOutput = (message, command, clearScreen = false) => {
-    setGameState(prev => ({
-      ...prev,
-      gameOutput: clearScreen ? [message] : [...prev.gameOutput, message]
-    }));
+  const addToOutput = (message, input = '', clearScreen = false) => {
+    setGameState(prev => {
+      // Clear screen if requested
+      const currentOutput = clearScreen ? [] : prev.gameOutput;
+      
+      return {
+        ...prev,
+        gameOutput: [
+          ...currentOutput,
+          ...(Array.isArray(message) ? message : [message])
+        ].slice(-MAX_MESSAGES)
+      };
+    });
   };
 
   // Function to update stats and check achievements
@@ -360,39 +415,113 @@ function App() {
   };
 
   const handlePlayerDeath = () => {
-    // Calculate memories to keep (20% of current)
-    const memoriesToKeep = Math.floor(gameState.memoryFragments * 0.2);
+    console.log('Player death triggered');
+    
+    // Calculate retention bonus from upgrades
+    const retentionLevel = gameState.permanentUpgrades?.exploration?.retention || 0;
+    const retentionBonus = retentionLevel * 0.1;  // 10% per level
+    const baseRetention = 0.2;  // Base 20% retention
+    const totalRetention = baseRetention + retentionBonus;
+    
+    // Calculate memories to keep (20% base + retention bonus)
+    const memoriesToKeep = Math.floor(gameState.memoryFragments * totalRetention);
+    
+    console.log('Death memory calculation:', {
+        original: gameState.memoryFragments,
+        retentionLevel,
+        retentionBonus,
+        totalRetention,
+        kept: memoriesToKeep
+    });
     
     // Save permanent upgrades and kept memories
-    setGameState(prev => ({
-      ...prev,
-      memoryFragments: memoriesToKeep,
-      permanentUpgrades: prev.permanentUpgrades || {},
-      isDead: true
-    }));
+    setGameState(prev => {
+        console.log('Death state update:', {
+            memoryFragments: memoriesToKeep,
+            permanentUpgrades: prev.permanentUpgrades,
+            isDead: true
+        });
+        return {
+            ...prev,
+            memoryFragments: memoriesToKeep,
+            permanentUpgrades: prev.permanentUpgrades || {},
+            isDead: true,
+            stats: {
+                ...prev.stats,
+                deaths: (prev.stats.deaths || 0) + 1
+            }
+        };
+    });
     
+    // Update death message to show retention bonus if any
+    const retentionMessage = retentionBonus > 0 
+        ? `\n(Memory Retention bonus: +${retentionBonus * 100}%)`
+        : '';
+        
     addToOutput([
-      "Everything fades to darkness...",
-      "But your memories remain, albeit fragmented...",
-      `(Kept ${memoriesToKeep} memory fragments)`,
-      "\nType 'continue' to return to the Memory Nexus"
+        "Everything fades to darkness...",
+        "But your memories remain, albeit fragmented...",
+        `(Kept ${memoriesToKeep} memory fragments)${retentionMessage}`,
+        "\nType 'continue' to return to the Memory Nexus"
     ].join('\n'));
     
-    // Show the MemoriesUI
     setShowMemoriesUI(true);
+  };
+
+  // Add this new function to handle continuing after death
+  const handleContinue = () => {
+    console.log('Handling continue after death');
+    
+    // Create new dungeon using the existing Dungeon class
+    const newDungeon = new Dungeon(50, 50, Math.floor(Math.random() * 15) + 15);
+    newDungeon.level = 1;  // Reset to level 1
+    
+    // Set starting room as discovered
+    const startingRoom = newDungeon.rooms.get(0);
+    startingRoom.discovered = true;
+    startingRoom.createItemsFromFeatures();
+
+    console.log('Created new dungeon:', newDungeon);
+
+    // Reset game state but keep memories and permanent upgrades
+    setGameState(prev => {
+        console.log('Previous state:', prev);
+        const newState = {
+            ...initialGameState,  // Reset to initial state
+            memoryFragments: prev.memoryFragments,  // Keep remaining fragments
+            permanentUpgrades: prev.permanentUpgrades,  // Keep upgrades
+            stats: prev.stats,  // Keep statistics
+            unlockedStats: prev.unlockedStats,  // Keep unlocked stats
+            discoveredTreasures: prev.discoveredTreasures,
+            unlockedAchievements: prev.unlockedAchievements,
+            player: new Player(),  // Create fresh player
+            dungeon: newDungeon,
+            currentRoom: newDungeon.rooms.get(newDungeon.currentRoomId),
+            isDead: false
+        };
+        console.log('New state:', newState);
+        return newState;
+    });
+
+    setShowMemoriesUI(false);
+    addToOutput("You awaken in a new memory...");
+    addJournalEntry("Began new exploration");
   };
 
   const handleCommand = async (input) => {
     // Add new command for continuing after death
     if (gameState.isDead && input.toLowerCase() === 'continue') {
-      setShowMemoriesUI(true);
-      return;
+        handleContinue();
+        return;
     }
 
-    const { command, target, answer } = parseCommand(input);
+    const { type, target } = parseCommand(input);
+    console.log('Parsed command:', type, 'target:', target);
+
+    // Get current room from gameState
     const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
 
-    switch (command) {
+    switch (type) {
       case 'go':
         const direction = target;
         let canMove = false;
@@ -485,58 +614,33 @@ function App() {
 
       case 'take':
         console.log('Take command initiated for:', target);
-        const item = currentRoom.items.find(i => 
-          i.name === target || 
-          (i.aliases && i.aliases.includes(target))
-        );
-        
-        if (item) {
-          console.log('Found item:', item);
-          const result = currentRoom.removeItem(item);
-          console.log('Remove result:', result);
-          if (result.success) {
-            addToOutput(result.message, input);
-            // Create new room while preserving prototype methods
-            const updatedRoom = Object.assign(
-              Object.create(Object.getPrototypeOf(currentRoom)),
-              currentRoom,
-              {
-                items: [...currentRoom.items],
-                description: currentRoom.description,
-                roomFeatures: [...currentRoom.roomFeatures]
-              }
-            );
-            console.log('Updated room items:', updatedRoom.items);
-            
-            // Add updated room description after item is taken
-            addToOutput(updatedRoom.getFullDescription(), null, true);
-            
-            if (result.fragments) {
-              setGameState(prev => ({
-                ...prev,
-                memoryFragments: prev.memoryFragments + result.fragments,
-                dungeon: {
-                  ...prev.dungeon,
-                  currentRoom: updatedRoom,
-                  rooms: new Map(prev.dungeon.rooms).set(currentRoom.id, updatedRoom)
-                }
-              }));
-              addJournalEntry(`Acquired ${item.name} (+${result.fragments} fragments)`);
-              console.log('GameState updated with fragments');
-            } else {
-              setGameState(prev => ({
-                ...prev,
-                dungeon: {
-                  ...prev.dungeon,
-                  currentRoom: updatedRoom,
-                  rooms: new Map(prev.dungeon.rooms).set(currentRoom.id, updatedRoom)
-                }
-              }));
-              addJournalEntry(`Removed ${item.name}`);
-              console.log('GameState updated without fragments');
-            }
-          }
+        const result = currentRoom.takeItem(target);
+        console.log('Take result:', result);
+
+        if (!result.success) {
+            addToOutput(result.message);
+            return;
         }
+
+        // Update game state and show new room description
+        setGameState(prev => ({
+            ...prev,
+            dungeon: {
+                ...prev.dungeon,
+                rooms: new Map(prev.dungeon.rooms).set(currentRoom.id, currentRoom)
+            },
+            memoryFragments: prev.memoryFragments + result.fragments
+        }));
+
+        addToOutput(result.message);
+        // Add journal entry for the taken item
+        if (result.fragments) {
+            addJournalEntry(`Acquired ${result.item.name} (+${result.fragments} fragments)`);
+        } else {
+            addJournalEntry(`Acquired ${result.item.name}`);
+        }
+        // Clear screen and show new room description
+        addToOutput(result.description, '', true);
         return;
 
       case 'inventory':
@@ -595,19 +699,33 @@ function App() {
         break;
 
       case 'examine':
-        if (target === 'puzzle' && currentRoom.puzzle) {
-          if (currentRoom.puzzle.destroyed) {
-            addToOutput("The puzzle lies in ruins, beyond any hope of solving.");
-          } else if (currentRoom.puzzle.solved) {
-            addToOutput("You've already solved this puzzle.");
-          } else {
-            setActivePuzzle(currentRoom.puzzle);
-            addToOutput("You begin examining the puzzle...");
-          }
-        } else {
-          addToOutput("There's nothing like that to examine here.");
+        console.log('Examine command initiated for:', target);
+        
+        if (!target) {
+          addToOutput("What do you want to examine?");
+          return;
         }
-        break;
+
+        if (target === 'puzzle' && currentRoom.puzzle) {
+          const puzzleResult = currentRoom.examinePuzzle();
+          addToOutput(puzzleResult.content);
+          return;
+        }
+
+        const examineResult = currentRoom.examineItem(target);
+        console.log('Examine result:', examineResult);
+
+        addToOutput(examineResult.message);
+        
+        if (examineResult.fragments) {
+          setGameState(prev => ({
+            ...prev,
+            memoryFragments: prev.memoryFragments + examineResult.fragments
+          }));
+          addToOutput(`You gain ${examineResult.fragments} memory fragments from the examination.`);
+          addJournalEntry(`Found ${examineResult.fragments} fragments examining ${target}`);
+        }
+        return;
 
       case 'solve':
         if (target === 'puzzle') {
@@ -699,43 +817,94 @@ function App() {
         }
         break;
 
+      case 'memories':
+        if (gameState.stats?.deaths > 0) {
+          setShowMemoriesUI(true);
+          addToOutput("Opening memories interface... (Purchases only available after death)");
+        } else {
+          addToOutput("You don't have access to memories yet. Perhaps death will teach you...");
+        }
+        return;
+
       default:
         addToOutput("I don't understand that command.", input);
     }
   };
 
-  const handlePurchaseUpgrade = (category, upgrade) => {
-    const currentLevel = permanentUpgrades[category]?.[upgrade] || 0;
+  const handlePurchaseUpgrade = async (category, upgrade) => {
+    // Add debug logs
+    console.log('Attempting to purchase:', category, upgrade);
+    console.log('Current state:', {
+        memoryFragments: gameState.memoryFragments,
+        permanentUpgrades: gameState.permanentUpgrades,
+        isDead: gameState.isDead
+    });
+
+    const currentLevel = gameState.permanentUpgrades[category]?.[upgrade] || 0;
     const result = Memories.purchaseUpgrade(
-      category,
-      upgrade,
-      currentLevel,
-      gameState.memoryFragments
+        category,
+        upgrade,
+        currentLevel,
+        gameState.memoryFragments
     );
     
     if (result) {
-      soundManager.play('purchase');
-      setGameState(prev => ({
-        ...prev,
-        memoryFragments: result.remainingFragments,
-        permanentUpgrades: {
-          ...prev.permanentUpgrades,
-          [category]: {
-            ...prev.permanentUpgrades?.[category],
-            [upgrade]: result.newLevel
-          }
-        }
-      }));
-      
-      addJournalEntry(`Upgraded ${category} - ${upgrade} to level ${result.newLevel}`);
+        console.log('Purchase successful:', result);
+        soundManager.play('purchase');
+        setGameState(prev => ({
+            ...prev,
+            memoryFragments: result.remainingFragments,
+            permanentUpgrades: {
+                ...prev.permanentUpgrades,
+                [category]: {
+                    ...prev.permanentUpgrades?.[category],
+                    [upgrade]: result.newLevel
+                }
+            }
+        }));
+        
+        addJournalEntry(`Upgraded ${category} - ${upgrade} to level ${result.newLevel}`);
+        return result;
     } else {
-      soundManager.play('error');
+        console.log('Purchase failed');
+        soundManager.play('error');
+        return null;
     }
   };
 
   // Add method to set puzzle active
   const setPuzzleActive = (puzzle) => {
     setActivePuzzle(puzzle);
+  };
+
+  // Add trap handling methods
+  const handleExamineTrap = (room) => {
+    if (room.trap && !room.trap.isDisarmed) {
+      setActiveTrap(room.trap);
+    }
+  };
+
+  const handleTrapDisarm = (method, input) => {
+    if (!currentRoom || !activeTrap) return;
+
+    const result = currentRoom.attemptDisarmTrap(method, input, player);
+    
+    if (result.success) {
+      addToGameLog(result.message);
+      if (result.fragments) {
+        setMemoryFragments(prev => prev + result.fragments);
+        addToGameLog(`You gained ${result.fragments} memory fragments!`);
+      }
+      setActiveTrap(null);
+    } else {
+      addToGameLog(result.message);
+      if (result.damage) {
+        addToGameLog(`You took ${result.damage} damage!`);
+      }
+      if (result.destroyed) {
+        setActiveTrap(null);
+      }
+    }
   };
 
   return (
@@ -786,9 +955,10 @@ function App() {
             setDungeon={(dungeon) => setGameState(prev => ({ ...prev, dungeon }))}
             memoryFragments={gameState.memoryFragments}
             setMemoryFragments={(fragments) => setGameState(prev => ({ ...prev, memoryFragments: fragments }))}
-            discoveredTreasures={new Set()}
-            setDiscoveredTreasures={(discoveredTreasures) => setGameState(prev => ({ ...prev, discoveredTreasures }))}
+            discoveredTreasures={gameState.discoveredTreasures || new Set()}
+            setDiscoveredTreasures={(treasures) => setGameState(prev => ({ ...prev, discoveredTreasures: treasures }))}
             initializeGame={initializeGame}
+            handlePlayerDeath={handlePlayerDeath}
           />
           <AchievementUI 
             isOpen={isAchievementsOpen}
@@ -813,37 +983,24 @@ function App() {
           <MemoriesUI 
             isOpen={showMemoriesUI}
             onClose={() => {
-              setShowMemoriesUI(false);
-              if (gameState.isDead) {
-                // Reset the game but keep permanent upgrades
-                initializeGame(permanentUpgrades);
-              }
+                setShowMemoriesUI(false);
+                if (gameState.isDead) {
+                    handleContinue();
+                }
             }}
-            currentMemories={[]}
+            currentMemories={gameState.memoryFragments}
             permanentUpgrades={gameState.permanentUpgrades}
             memoryFragments={gameState.memoryFragments}
-            onPurchaseUpgrade={(category, upgrade) => {
-              const result = Memories.purchaseUpgrade(
-                category, 
-                upgrade, 
-                gameState.permanentUpgrades[category]?.[upgrade] || 0,
-                gameState.memoryFragments
-              );
-              if (result) {
-                setGameState(prev => ({
-                  ...prev,
-                  memoryFragments: result.remainingFragments,
-                  permanentUpgrades: {
-                    ...prev.permanentUpgrades,
-                    [category]: {
-                      ...(prev.permanentUpgrades[category] || {}),
-                      [upgrade]: result.newLevel
-                    }
-                  }
-                }));
-              }
-            }}
+            onPurchaseUpgrade={handlePurchaseUpgrade}
+            allowPurchases={gameState.isDead}
           />
+          {activeTrap && (
+            <TrapUI
+              trap={activeTrap}
+              onAttemptDisarm={handleTrapDisarm}
+              onClose={() => setActiveTrap(null)}
+            />
+          )}
         </div>
       )}
     </>

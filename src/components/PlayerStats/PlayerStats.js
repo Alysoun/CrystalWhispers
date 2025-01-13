@@ -30,13 +30,13 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
   const expNeeded = player.level * 100;
   const expPercentage = (player.experience / expNeeded) * 100;
   
-  // Cost for each stat reveal
+  // Cost for each stat reveal - adjusted for permanent progression
   const statCosts = {
-    healthNumbers: 5, // Very cheap - early game purchase
-    experience: 15,   // First meaningful purchase
-    attack: 1250,      // Combat stats are more expensive
-    defense: 2500,
-    level: 10000
+    healthNumbers: 25,    // First milestone - basic info
+    level: 75,           // Second milestone - see progress
+    experience: 150,     // Understanding growth
+    attack: 500,        // Combat insight
+    defense: 1000       // Deep understanding
   };
 
   // Format stat name for display

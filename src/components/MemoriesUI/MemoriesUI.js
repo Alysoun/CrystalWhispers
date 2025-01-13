@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Memories } from '../../game/Memories';
 import './MemoriesUI.css';
 
@@ -8,30 +8,50 @@ function MemoriesUI({
   currentMemories, 
   permanentUpgrades, 
   memoryFragments,
-  onPurchaseUpgrade 
+  onPurchaseUpgrade,
+  allowPurchases = false
 }) {
-  if (!isOpen) return null;
+  const [purchaseInProgress, setPurchaseInProgress] = useState(false);
 
-  const renderUpgradeButton = (category, upgrade, currentLevel) => {
-    const upgradeInfo = Memories.categories[category].upgrades[upgrade];
-    const canPurchase = Memories.canPurchaseUpgrade(
-      category, 
-      upgrade, 
-      currentLevel || 0, 
-      memoryFragments
-    );
-    const cost = upgradeInfo.cost(currentLevel || 0);
+  const handlePurchase = async (categoryKey, upgradeKey) => {
+    if (purchaseInProgress) return;
+    
+    setPurchaseInProgress(true);
+    await onPurchaseUpgrade(categoryKey, upgradeKey);
+    
+    // Add a small delay before allowing next purchase
+    setTimeout(() => {
+      setPurchaseInProgress(false);
+    }, 500);
+  };
+
+  const renderUpgradeButton = (categoryKey, upgradeKey, currentLevel) => {
+    const upgrade = Memories.categories[categoryKey].upgrades[upgradeKey];
+    const cost = upgrade.cost(currentLevel);
+    const canAfford = memoryFragments >= cost;
+    
+    if (!allowPurchases) {
+      return (
+        <div className="upgrade-cost">
+          <span className={canAfford ? 'can-afford' : 'cannot-afford'}>
+            Cost: {cost} fragments {canAfford ? '(Available!)' : ''}
+          </span>
+        </div>
+      );
+    }
 
     return (
       <button
-        className={`upgrade-button ${canPurchase ? 'available' : 'locked'}`}
-        onClick={() => onPurchaseUpgrade(category, upgrade)}
-        disabled={!canPurchase}
+        className={`upgrade-button ${canAfford ? 'can-afford' : 'cannot-afford'}`}
+        onClick={() => handlePurchase(categoryKey, upgradeKey)}
+        disabled={!canAfford || purchaseInProgress}
       >
-        Upgrade ({cost} fragments)
+        {purchaseInProgress ? 'Processing...' : `Purchase (${cost} fragments)`}
       </button>
     );
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="memories-overlay">
@@ -67,7 +87,11 @@ function MemoriesUI({
                           <div className="upgrade-effect">
                             {Object.entries(effect).map(([stat, value]) => (
                               <div key={stat}>
-                                {stat}: {value}
+                                {stat === 'retentionBonus' ? (
+                                  `Memory Retention: +${Math.round(value * 100)}%`
+                                ) : (
+                                  `${stat}: ${value}`
+                                )}
                               </div>
                             ))}
                           </div>
@@ -81,21 +105,6 @@ function MemoriesUI({
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="current-memories">
-            <h3>Current Run Memories</h3>
-            <div className="memories-grid">
-              {currentMemories.map((memory, index) => (
-                <div key={index} className="memory-item">
-                  <h4>{memory.name}</h4>
-                  <p>{memory.description}</p>
-                  <div className="memory-value">
-                    Fragment Value: {memory.memoryValue}
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

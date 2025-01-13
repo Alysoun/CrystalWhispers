@@ -1,4 +1,5 @@
-import { Dungeon, Room } from '../game/DungeonGenerator';
+import { Room } from '../game/rooms/Room';
+import { Dungeon } from '../game/DungeonGenerator';
 
 const SAVE_KEY = 'crystal_whispers_save';
 
@@ -7,7 +8,7 @@ export const loadGame = () => {
     const savedState = JSON.parse(localStorage.getItem('gameState'));
     if (!savedState) return null;
 
-    // Create a complete new dungeon first
+    // Create a complete new dungeon
     const dungeon = new Dungeon(
       savedState.dungeon.width, 
       savedState.dungeon.height, 

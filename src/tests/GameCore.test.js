@@ -1,6 +1,7 @@
 import { Dungeon } from '../game/DungeonGenerator';
 import { Player } from '../game/Player';
 import { Memories } from '../game/Memories';
+import { TimeRiddle } from '../game/puzzles/TimeRiddle';
 
 describe('Core Game Functionality', () => {
   let dungeon;
@@ -35,5 +36,43 @@ describe('Core Game Functionality', () => {
     const moveResult = player.move(connection.direction, startRoom, dungeon);
     expect(moveResult.success).toBe(true);
     expect(moveResult.newRoom.discovered).toBe(true);
+  });
+
+  test('Trap Room Generation and Interaction', () => {
+    const dungeon = new Dungeon(50, 50, 20);
+    const player = new Player();
+    
+    // Find a trap room
+    const trapRoom = Array.from(dungeon.rooms.values())
+      .find(room => room.roomType === 'trap');
+    
+    if (trapRoom) {
+      expect(trapRoom.trap).toBeDefined();
+      expect(trapRoom.trap.trapType).toBeDefined();
+      
+      // Test trap disarm attempt
+      const result = trapRoom.attemptDisarmTrap('TIMING', null, player);
+      expect(result).toHaveProperty('success');
+      expect(result).toHaveProperty('message');
+      
+      if (!result.success) {
+        // Verify trap effect was applied
+        expect(player.health).toBeLessThan(player.maxHealth);
+      }
+    }
+  });
+
+  test('Time Riddle Puzzle Mechanics', () => {
+    const puzzle = new TimeRiddle();
+    expect(puzzle.sequence).toBeDefined();
+    expect(puzzle.solution).toBeDefined();
+    
+    // Test incorrect solution
+    const wrongResult = puzzle.validateSolution('wrong answer');
+    expect(wrongResult).toBe(false);
+    
+    // Test correct solution
+    const correctResult = puzzle.validateSolution(puzzle.solution);
+    expect(correctResult).toBe(true);
   });
 }); 

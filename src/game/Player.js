@@ -39,27 +39,31 @@ export default class Player {
   }
 
   gainExperience(amount) {
-    console.log('gainExperience called with:', amount);
-    console.log('Current exp before gain:', this.experience);
     this.experience += amount;
-    const expNeeded = this.level * 100;
-    console.log('Exp needed for next level:', expNeeded);
-    console.log('Current exp after gain:', this.experience);
     
-    // Level up if enough experience
-    while (this.experience >= expNeeded) {
-      console.log('Leveling up!');
+    // Check for level up
+    const expNeeded = ExpScaling.getExpForNextLevel(this.level);
+    if (this.experience >= expNeeded) {
       this.levelUp();
     }
+    
+    return {
+      currentExp: this.experience,
+      expNeeded,
+      didLevelUp: this.experience >= expNeeded
+    };
   }
 
   levelUp() {
-    console.log('levelUp called');
-    console.log('Current level:', this.level);
     this.level++;
-    this.maxHealth += 5;
-    this.health = this.maxHealth;
-    console.log('New level:', this.level);
+    this.maxHealth += 10;
+    this.health = this.maxHealth; // Heal on level up
+    this.attackPower += 2;
+    this.defense += 1;
+    
+    // Reset experience to remainder
+    const prevLevelExp = ExpScaling.getExpForNextLevel(this.level - 1);
+    this.experience -= prevLevelExp;
   }
 
   addEffect(type, magnitude, duration) {
@@ -94,5 +98,25 @@ export default class Player {
 
   getTotalDefense() {
     return this.defense * (1 + this.getEffectBonus('defense'));
+  }
+
+  applyUpgrade(category, effect) {
+    this.upgrades[category] = this.upgrades[category] || {};
+    Object.entries(effect).forEach(([stat, value]) => {
+      switch(stat) {
+        case 'maxHealth':
+          this.maxHealth += value;
+          this.health = this.maxHealth;
+          break;
+        case 'attackPower':
+          this.attackPower += value;
+          break;
+        case 'defense':
+          this.defense += value;
+          break;
+        default:
+          this.upgrades[category][stat] = (this.upgrades[category][stat] || 0) + value;
+      }
+    });
   }
 } 

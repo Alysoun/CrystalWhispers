@@ -14,7 +14,8 @@ function DebugMenu({
   setMemoryFragments,
   discoveredTreasures,
   setDiscoveredTreasures,
-  initializeGame
+  initializeGame,
+  handlePlayerDeath
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
 
@@ -169,6 +170,14 @@ function DebugMenu({
       }
     ],
     combat: [
+      {
+        name: 'Kill Player',
+        action: () => {
+          player.health = 0;
+          setPlayer({ ...player });
+          handlePlayerDeath();
+        }
+      },
       {
         name: 'Spawn Boss',
         action: () => {

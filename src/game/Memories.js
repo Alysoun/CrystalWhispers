@@ -40,11 +40,11 @@ export const Memories = {
         },
         retention: {
           name: "Memory Retention",
-          description: "Keep more fragments when dying",
-          maxLevel: 3,
-          cost: (level) => Math.floor(300 * Math.pow(2.3, level)),
-          effect: (level) => ({ 
-            fragmentRetention: 0.2 + (level * 0.15)
+          description: "Retain more memory fragments upon death",
+          maxLevel: 5,
+          cost: (level) => Math.floor(300 * Math.pow(1.5, level)),
+          effect: (level) => ({
+            retentionBonus: level * 0.1  // Each level reduces loss by 10% (up to 50% at max)
           })
         }
       }
