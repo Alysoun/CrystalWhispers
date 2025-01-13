@@ -62,11 +62,17 @@ function DebugMenu({
     memories: [
       {
         name: 'Add 100 Fragments',
-        action: () => setMemoryFragments(0 + 100)
+        action: () => {
+          const currentFragments = Number(memoryFragments) || 0;
+          setMemoryFragments(currentFragments + 100);
+        }
       },
       {
         name: 'Add 1000 Fragments',
-        action: () => setMemoryFragments(0 + 1000)
+        action: () => {
+          const currentFragments = Number(memoryFragments) || 0;
+          setMemoryFragments(currentFragments + 1000);
+        }
       },
       {
         name: 'Unlock All Memory Upgrades',
@@ -207,11 +213,17 @@ function DebugMenu({
 
       <div className="debug-info">
         <h3>Current State:</h3>
+        <div className="debug-fragments">
+          <div>Current Memory Fragments: {Number(memoryFragments) || 0}</div>
+          <div>Raw value: {String(memoryFragments)}</div>
+          <div>Type: {typeof memoryFragments}</div>
+          <div>Is NaN: {isNaN(memoryFragments) ? 'true' : 'false'}</div>
+        </div>
         <pre>
           {JSON.stringify({
             playerLevel: player.level,
             health: `${player.health}/${player.maxHealth}`,
-            fragments: memoryFragments,
+            fragments: Number(memoryFragments) || 0,
             discoveredTreasures: discoveredTreasures.size,
             currentRoom: dungeon.currentRoomId
           }, null, 2)}

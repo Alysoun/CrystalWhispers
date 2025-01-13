@@ -13,9 +13,15 @@ const ImageDisplay = ({ currentRoom }) => {
       rendererRef.current = new RoomRenderer(canvasRef.current);
     }
     
+    const currentRenderer = rendererRef.current;
+    
     if (currentRoom) {
       rendererRef.current.renderRoom(currentRoom);
     }
+    
+    return () => {
+      currentRenderer.cleanup();
+    };
   }, [currentRoom]);
 
   return (

@@ -34,8 +34,9 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
   const statCosts = {
     healthNumbers: 5, // Very cheap - early game purchase
     experience: 15,   // First meaningful purchase
-    attack: 25,      // Combat stats are more expensive
-    defense: 25
+    attack: 1250,      // Combat stats are more expensive
+    defense: 2500,
+    level: 10000
   };
 
   // Format stat name for display
@@ -137,7 +138,7 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
 
       {!statsRevealed && (
         <div className="stat-hint">
-          Defeat the Mirror Keeper to begin understanding yourself...
+          Defeat the Mirror Keeper to begin understanding...
         </div>
       )}
     </div>

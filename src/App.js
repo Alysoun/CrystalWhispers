@@ -434,31 +434,20 @@ function App() {
             return;
           }
           
-          // Instead of adding to inventory, convert to memory fragments
-          if (itemToTake.memoryValue) {
+          const result = currentRoom.removeItem(itemToTake);
+          if (result.success) {
             setGameState(prev => ({
               ...prev,
-              memoryFragments: prev.memoryFragments + itemToTake.memoryValue
+              memoryFragments: prev.memoryFragments + result.fragments,
+              currentRoom: { ...prev.currentRoom }
             }));
-            
-            addToOutput([
-              `You reach for the ${itemToTake.name}...`,
-              itemToTake.memoryText || "The object fades away, leaving behind fragments of memory...",
-              `(+${itemToTake.memoryValue} memory fragments)`
-            ].join('\n'));
-            
-            addJournalEntry(`Recovered memory from ${itemToTake.name}`);
-          }
-          
-          const removed = currentRoom.removeItem(itemToTake);
-          if (removed) {
-            addToOutput(`You take the ${itemToTake.name}.`);
-            addJournalEntry(`Acquired ${itemToTake.name}`);
+            addToOutput(result.message);
+            addJournalEntry(`Acquired ${itemToTake.name} (+${result.fragments} fragments)`);
             if (itemToTake.isTreasure) {
               handleTreasureFound(itemToTake);
             }
           } else {
-            addToOutput("Something went wrong trying to take that item.");
+            addToOutput(result.message);
           }
         } else {
           addToOutput("You don't see that here.");

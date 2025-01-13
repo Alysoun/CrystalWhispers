@@ -42,7 +42,9 @@ export const MemoryCrystal = {
   calculateModifiers(activeCrystals) {
     // Count crystals of each type
     const crystalCounts = activeCrystals.reduce((counts, crystal) => {
-      counts[crystal] = (counts[crystal] || 0) + 1;
+      if (this.types[crystal]) { // Only count valid crystal types
+        counts[crystal] = (counts[crystal] || 0) + 1;
+      }
       return counts;
     }, {});
 
@@ -62,6 +64,8 @@ export const MemoryCrystal = {
 
     // Apply stacking effects for each crystal type
     return Object.entries(crystalCounts).reduce((mods, [crystalType, count]) => {
+      if (!this.types[crystalType]) return mods; // Skip invalid types
+      
       const crystalEffect = this.types[crystalType].effect(count);
       
       return {
@@ -121,4 +125,20 @@ export const MemoryCrystal = {
     if (completedRuns >= 5) crystals.push('CHALLENGE');
     return crystals;
   }
+};
+
+/**
+ * Calculates memory fragment gain based on level and base amount
+ * @param {number} level - Current level
+ * @param {number} baseAmount - Base amount of fragments
+ * @returns {number} - Final fragment amount after level scaling
+ */
+export const calculateFragmentGain = (level, baseAmount) => {
+  // Ensure valid inputs
+  const safeLevel = Math.max(1, level);
+  const safeBaseAmount = Math.max(0, baseAmount);
+  
+  // Scale fragments with level
+  const levelMultiplier = 1 + (safeLevel - 1) * 0.1; // 10% increase per level
+  return Math.floor(safeBaseAmount * levelMultiplier);
 }; 

@@ -88,7 +88,12 @@ class FloorTheme {
             description: 'A mirror that only shows happy memories.',
             canTake: false,
             aliases: ['mirror', 'reflection'],
-            examine: 'The reflection shows only joyful moments from your past.'
+            examine: 'The reflection shows only joyful moments from your past.',
+            onExamine: {
+              chance: 0.3,  // 30% chance to get fragments
+              fragments: { min: 2, max: 5 },
+              message: 'A fleeting memory surfaces as you gaze into the mirror...'
+            }
           },
           table: {
             name: 'table',
@@ -100,9 +105,18 @@ class FloorTheme {
           clock: {
             name: 'clock',
             description: 'A clock whose hands refuse to move.',
-            canTake: false,
+            canTake: true,
             aliases: ['timepiece', 'wall clock'],
-            examine: 'The hands are frozen, yet you can almost hear phantom ticking.'
+            examine: 'The hands are frozen at a significant moment. You could take it as a memory.',
+            onExamine: {
+              chance: 0.25,
+              fragments: { min: 1, max: 3 },
+              message: 'The phantom ticking stirs a distant memory...'
+            },
+            onTake: {
+              message: 'The clock face shimmers as you take it, its hands forever marking this moment...',
+              fragments: 20
+            }
           },
           window: {
             name: 'window',
@@ -121,16 +135,29 @@ class FloorTheme {
           flowers: {
             name: 'flowers',
             description: 'Fresh flowers in eternal bloom.',
-            canTake: false,
+            canTake: true,
             aliases: ['bouquet', 'vase'],
-            examine: "The flowers look freshly cut, yet you sense they've been here forever."
+            examine: "The flowers look freshly cut, yet you sense they've been here forever. You could take them with you.",
+            onTake: {
+              message: 'The flowers retain their perfect bloom as you gather them, their eternal spring now yours...',
+              fragments: 15
+            }
           },
           'music box': {
             name: 'music box',
             description: 'A delicate music box playing a hauntingly familiar tune.',
-            canTake: false,
+            canTake: true,
             aliases: ['box', 'musical box'],
-            examine: 'The melody seems to change with your memories, yet remains familiar.'
+            examine: 'The melody seems to change with your memories, yet remains familiar. You could take it with you.',
+            onTake: {
+              message: 'The music box plays a tune from your childhood as you pick it up...',
+              fragments: 30
+            },
+            onExamine: {
+              chance: 0.4,  // Higher chance since it's music-related
+              fragments: { min: 3, max: 6 },
+              message: 'The melody triggers a cascade of memories...'
+            }
           },
           'rocking chair': {
             name: 'rocking chair',
@@ -142,9 +169,13 @@ class FloorTheme {
           toy: {
             name: 'toy',
             description: 'A mechanical toy that winds itself up periodically.',
-            canTake: false,
+            canTake: true,
             aliases: ['mechanical toy', 'wind-up toy'],
-            examine: 'The toy seems to respond to your presence, as if remembering past play.'
+            examine: 'The toy seems to respond to your presence, as if remembering past play. You could take it as a memory.',
+            onTake: {
+              message: 'The toy whirs happily as you pick it up, reminding you of simpler times...',
+              fragments: 25
+            }
           },
           bookshelf: {
             name: 'bookshelf',
@@ -163,16 +194,24 @@ class FloorTheme {
           'chess set': {
             name: 'chess set',
             description: 'A chess game frozen mid-play, pieces moved by phantom players.',
-            canTake: false,
+            canTake: true,
             aliases: ['chess', 'chess pieces'],
-            examine: 'The position of the pieces reminds you of a game long forgotten.'
+            examine: 'The position of the pieces reminds you of a game long forgotten. You could take it as a memory.',
+            onTake: {
+              message: 'As you pick up the chess set, memories of past matches and strategies flood back...',
+              fragments: 20
+            }
           },
           'tea set': {
             name: 'tea set',
             description: 'A fine porcelain tea set, steam eternally rising.',
-            canTake: false,
+            canTake: true,
             aliases: ['teapot', 'cups'],
-            examine: 'The tea inside stays perfectly hot, waiting for guests who never arrive.'
+            examine: 'The tea inside stays perfectly hot, waiting for guests who never arrive. You could take it as a memory.',
+            onTake: {
+              message: 'As you pick up the tea set, the warmth of shared moments flows through you...',
+              fragments: 25
+            }
           },
           chandelier: {
             name: 'chandelier',
@@ -186,7 +225,12 @@ class FloorTheme {
             description: 'A grand piano that plays gentle melodies without a pianist.',
             canTake: false,
             aliases: ['grand piano', 'keys'],
-            examine: 'The keys move to play a song you remember from childhood.'
+            examine: 'The keys move to play a song you remember from childhood.',
+            onExamine: {
+              chance: 0.35,
+              fragments: { min: 2, max: 4 },
+              message: 'The familiar tune awakens forgotten memories...'
+            }
           },
           tapestry: {
             name: 'tapestry',
@@ -205,30 +249,68 @@ class FloorTheme {
           kaleidoscope: {
             name: 'kaleidoscope',
             description: 'A mysterious kaleidoscope showing impossible patterns.',
-            canTake: false,
+            canTake: true,
             aliases: ['scope', 'viewer'],
-            examine: 'Looking through it reveals fragments of memories, endlessly recombining.'
+            examine: 'Looking through it reveals fragments of memories, endlessly recombining. You could take it as a memory.',
+            onTake: {
+              message: 'The kaleidoscope shifts as you pick it up, showing glimpses of forgotten moments...',
+              fragments: 35
+            }
           },
           'snow globe': {
             name: 'snow globe',
-            description: 'A snow globe containing an eternal winter scene.',
-            canTake: false,
+            description: 'A snow globe containing a perfect winter scene.',
+            canTake: true,
             aliases: ['globe', 'snowglobe'],
-            examine: 'The snow falls endlessly, preserving a perfect moment in time.'
+            examine: 'The snow falls endlessly, preserving a perfect moment in time. You could take it with you.',
+            onTake: {
+              message: 'As you lift the snow globe, memories of winter days swirl like snowflakes...',
+              fragments: 25
+            }
           },
           hourglass: {
             name: 'hourglass',
             description: 'An hourglass where sand flows in both directions.',
-            canTake: false,
+            canTake: true,
             aliases: ['timer', 'sandglass'],
-            examine: 'The sand defies gravity, flowing both up and down in an endless cycle.'
+            examine: 'The sand defies gravity, flowing both up and down in an endless cycle. You could take it with you.',
+            onTake: {
+              message: 'As you grasp the hourglass, time seems to flow backwards for a moment...',
+              fragments: 30
+            }
+          },
+          'book': {
+            name: 'book',
+            description: 'A leather-bound book whose pages write themselves.',
+            canTake: true,
+            aliases: ['tome', 'journal'],
+            examine: 'The pages fill with your own memories as you watch. You could take it with you.',
+            onTake: {
+              message: "The book's pages flutter with stories from your past as you pick it up...",
+              fragments: 20
+            }
+          },
+          'locket': {
+            name: 'locket',
+            description: 'A silver locket showing different faces each time it opens.',
+            canTake: true,
+            aliases: ['pendant', 'necklace'],
+            examine: 'Each time the locket opens, it shows different cherished faces. You could take it as a memory.',
+            onTake: {
+              message: 'The locket warms in your hand, faces of loved ones flashing through its frame...',
+              fragments: 30
+            }
           },
           sundial: {
             name: 'sundial',
-            description: 'A sundial casting shadows that tell different times.',
-            canTake: false,
-            aliases: ['sundial', 'timepiece'],
-            examine: 'The shadows move independently of the sun, each telling a different hour.'
+            description: 'A sundial casting impossible shadows.',
+            canTake: true,
+            aliases: ['dial', 'time piece'],
+            examine: 'The shadows move independently of any light source. You could take this timepiece with you.',
+            onTake: {
+              message: "The sundial's shadow spins rapidly as you lift it, showing glimpses of times past...",
+              fragments: 15
+            }
           }
         }
       },
@@ -876,6 +958,21 @@ class Room {
     );
 
     if (index !== -1) {
+      const item = this.items[index];
+      const result = {
+        success: true,
+        message: '',
+        fragments: 0
+      };
+      
+      if (item.onTake) {
+        result.fragments = item.onTake.fragments;
+        result.message = [
+          item.onTake.message,
+          `The ${item.name} dissolves into ${item.onTake.fragments} memory fragments as you grasp it...`
+        ].join('\n');
+      }
+
       // If item is associated with a feature, update feature items
       if (itemToRemove.feature) {
         const featureItems = this.featureItems.get(itemToRemove.feature) || [];
@@ -884,32 +981,14 @@ class Room {
           featureItems.filter(item => item.name !== itemToRemove.name)
         );
 
-        // Update the room features to remove or modify the feature text
-        this.roomFeatures = this.roomFeatures.map(feature => {
-          if (feature === itemToRemove.feature) {
-            // If this was the only item in the feature, remove or modify the feature
-            const remainingItems = this.featureItems.get(feature) || [];
-            if (remainingItems.length === 0) {
-              // Remove feature entirely if it was just about the item
-              if (feature.toLowerCase().includes(itemToRemove.name.toLowerCase())) {
-                return null;
-              }
-              // Otherwise modify the feature to indicate item was taken
-              return feature.replace(
-                new RegExp(`\\b${itemToRemove.name}\\b.*?(?=\\.|$)`, 'i'),
-                'An empty hook remains'
-              );
-            }
-          }
-          return feature;
-        }).filter(Boolean); // Remove null entries
+        // Update the room features...
       }
 
       // Remove from items array
       this.items.splice(index, 1);
-      return true;
+      return result;
     }
-    return false;
+    return { success: false, message: "You can't take that.", fragments: 0 };
   }
 
   handleCombatEnd(result) {
@@ -923,6 +1002,39 @@ class Room {
       };
     }
     this.enemy = null;
+  }
+
+  examineItem(itemName) {
+    const item = this.items.find(i => 
+      i.name === itemName || 
+      (i.aliases && i.aliases.includes(itemName))
+    );
+    
+    if (item) {
+      const result = {
+        description: item.examine,
+        fragments: 0,
+        message: null
+      };
+      
+      // Check for examination reward
+      if (item.onExamine) {
+        const roll = Math.random();
+        if (roll < item.onExamine.chance) {
+          const fragmentAmount = Math.floor(
+            Math.random() * 
+            (item.onExamine.fragments.max - item.onExamine.fragments.min + 1) +
+            item.onExamine.fragments.min
+          );
+          result.fragments = fragmentAmount;
+          result.message = item.onExamine.message;
+        }
+      }
+      
+      return result;
+    }
+    
+    return null;
   }
 }
 

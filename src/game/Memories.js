@@ -2,58 +2,49 @@
 export const Memories = {
   categories: {
     combat: {
-      name: "Combat Prowess",
-      description: "Enhance your fighting abilities",
+      name: "Combat Mastery",
+      description: "Enhance your combat abilities",
       upgrades: {
         strength: {
           name: "Strength",
-          description: "Increase your base attack damage",
+          description: "Increase damage dealt in combat",
           maxLevel: 5,
-          cost: (level) => Math.floor(50 * Math.pow(1.5, level)),
+          cost: (level) => Math.floor(100 * Math.pow(2.2, level)),
           effect: (level) => ({ 
-            attack: level * 2 
+            damageBonus: level * 2 
           })
         },
-        defense: {
+        resilience: {
           name: "Resilience",
-          description: "Improve your defensive capabilities",
+          description: "Reduce damage taken in combat",
           maxLevel: 5,
-          cost: (level) => Math.floor(50 * Math.pow(1.5, level)),
+          cost: (level) => Math.floor(150 * Math.pow(2.1, level)),
           effect: (level) => ({ 
-            defense: level * 1.5 
-          })
-        },
-        health: {
-          name: "Vitality",
-          description: "Increase your maximum health",
-          maxLevel: 5,
-          cost: (level) => Math.floor(75 * Math.pow(1.5, level)),
-          effect: (level) => ({ 
-            maxHealth: level * 10 
+            damageReduction: level * 0.1 
           })
         }
       }
     },
     exploration: {
-      name: "Exploration Skills",
-      description: "Improve your ability to navigate and survive",
+      name: "Explorer's Insight",
+      description: "Improve your exploration abilities",
       upgrades: {
-        mapping: {
-          name: "Memory Mapping",
-          description: "Reveal more of the map when discovering new rooms",
+        perception: {
+          name: "Perception",
+          description: "Better chance to find hidden treasures",
           maxLevel: 3,
-          cost: (level) => Math.floor(100 * Math.pow(2, level)),
+          cost: (level) => Math.floor(200 * Math.pow(2.5, level)),
           effect: (level) => ({ 
-            mapReveal: level + 1 
+            treasureChance: 0.1 + (level * 0.15)
           })
         },
         retention: {
           name: "Memory Retention",
           description: "Keep more fragments when dying",
           maxLevel: 3,
-          cost: (level) => Math.floor(150 * Math.pow(2, level)),
+          cost: (level) => Math.floor(300 * Math.pow(2.3, level)),
           effect: (level) => ({ 
-            fragmentRetention: 0.2 + (level * 0.1) 
+            fragmentRetention: 0.2 + (level * 0.15)
           })
         }
       }
@@ -85,26 +76,34 @@ export const Memories = {
     }
   },
 
+  // Stats unlock costs
+  statUnlockCosts: {
+    healthNumbers: 50,
+    experience: 150,
+    attack: 250,
+    defense: 250
+  },
+
   // Memory Fragment earning events
   fragmentSources: {
     BOSS_DEFEAT: {
-      amount: 100,
+      amount: 500,
       message: "Boss defeated: Significant memory recovered"
     },
     ROOM_DISCOVERY: {
-      amount: 5,
+      amount: 25,
       message: "New area explored: Faint memory surfaces"
     },
     PUZZLE_SOLVE: {
-      amount: 25,
+      amount: 150,
       message: "Puzzle solved: Memory becomes clearer"
     },
     DEATH: {
-      amount: 20,
+      amount: 100,
       message: "Lesson learned: Memory crystallized"
     },
     SECRET_FIND: {
-      amount: 15,
+      amount: 75,
       message: "Secret discovered: Memory fragment recovered"
     }
   },

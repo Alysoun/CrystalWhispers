@@ -2,6 +2,10 @@ export default class RoomRenderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.hoveredItem = null;
+    
+    // Add mouse move listener
+    this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     
     // Define standard positions for items
     this.itemPositions = {
@@ -27,6 +31,36 @@ export default class RoomRenderer {
       hourglass: { x: 290, y: 150, width: 20, height: 40 },
       sundial: { x: 270, y: 170, width: 50, height: 50 }
     };
+  }
+
+  handleMouseMove(event) {
+    const rect = this.canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    
+    // Check if mouse is over any item
+    let foundItem = null;
+    if (this.currentRoom && this.currentRoom.items) {
+      for (const item of this.currentRoom.items) {
+        const pos = this.getItemPosition(item.id);
+        if (this.isPointInItem(x, y, pos)) {
+          foundItem = item;
+          break;
+        }
+      }
+    }
+    
+    if (this.hoveredItem !== foundItem) {
+      this.hoveredItem = foundItem;
+      this.canvas.style.cursor = foundItem ? 'pointer' : 'default';
+      // Redraw to show hover effect
+      this.renderRoom(this.currentRoom);
+    }
+  }
+  
+  isPointInItem(x, y, pos) {
+    return x >= pos.x && x <= pos.x + pos.width &&
+           y >= pos.y && y <= pos.y + pos.height;
   }
 
   drawBackground() {
@@ -427,6 +461,7 @@ export default class RoomRenderer {
   }
 
   renderRoom(room) {
+    this.currentRoom = room;
     if (!room || !room.items) return;
     console.log('Room items:', room.items);  // Debug log
 
@@ -446,6 +481,20 @@ export default class RoomRenderer {
     room.items.forEach(item => {
       console.log('Drawing item:', item.id);  // Debug log
       const position = this.getItemPosition(item.id);
+      
+      // Apply hover effect if this is the hovered item
+      if (this.hoveredItem === item) {
+        this.ctx.shadowColor = '#00ff00';
+        this.ctx.shadowBlur = 30;
+        this.ctx.strokeStyle = '#00ff00';
+        this.ctx.lineWidth = 3;
+      } else {
+        this.ctx.shadowColor = '#00ff00';
+        this.ctx.shadowBlur = 15;
+        this.ctx.strokeStyle = '#00ff00';
+        this.ctx.lineWidth = 2;
+      }
+
       switch(item.id) {
         case 'mirror':
           this.drawMirror(position.x, position.y, position.width, position.height);
@@ -512,6 +561,20 @@ export default class RoomRenderer {
           break;
       }
       
+      // Draw item name on hover
+      if (this.hoveredItem === item) {
+        this.ctx.save();
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.font = '14px monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(
+          item.name,
+          position.x + position.width/2,
+          position.y - 10
+        );
+        this.ctx.restore();
+      }
+
       this.applyDreamyEffect(position);
     });
   }
@@ -535,5 +598,10 @@ export default class RoomRenderer {
     );
     
     this.ctx.restore();
+  }
+
+  cleanup() {
+    // Remove event listener when component unmounts
+    this.canvas.removeEventListener('mousemove', this.handleMouseMove);
   }
 } 
