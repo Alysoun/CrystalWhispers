@@ -1,10 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import RoomRenderer from '../../utils/RoomRenderer';
 import './ImageDisplay.css';
-import RoomRenderer from '../../utils/RoomRenderer.js';
 
-const ImageDisplay = ({ currentRoom }) => {
+function ImageDisplay({ currentRoom }) {
   const canvasRef = useRef(null);
   const rendererRef = useRef(null);
+
+  const itemsKey = currentRoom?.items?.length || 0;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -13,16 +15,18 @@ const ImageDisplay = ({ currentRoom }) => {
       rendererRef.current = new RoomRenderer(canvasRef.current);
     }
     
-    const currentRenderer = rendererRef.current;
-    
     if (currentRoom) {
       rendererRef.current.renderRoom(currentRoom);
     }
-    
+  }, [currentRoom, itemsKey]);
+
+  useEffect(() => {
     return () => {
-      currentRenderer.cleanup();
+      if (rendererRef.current) {
+        rendererRef.current.cleanup();
+      }
     };
-  }, [currentRoom]);
+  }, []);
 
   return (
     <div className="image-display">
@@ -34,6 +38,6 @@ const ImageDisplay = ({ currentRoom }) => {
       />
     </div>
   );
-};
+}
 
 export default ImageDisplay; 

@@ -1,6 +1,3 @@
-import { Room } from './mocks/Room';
-import { Player } from './mocks/Player';
-
 describe('Item System', () => {
   test('Item Generation and Properties', () => {
     const room = new Room(0, 0, 0);

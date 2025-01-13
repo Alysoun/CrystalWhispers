@@ -86,27 +86,29 @@ function PlayerStats({ player, statsRevealed, memoryFragments = 0, onPurchase, u
 
       {renderHealthBar()}
 
-      {/* Level - visible after Mirror Keeper */}
-      {unlockedStats.level && (
+      {/* Level - unlockable */}
+      {unlockedStats.level ? (
         <div className="stat-row">
           <span className="stat-label">Level:</span>
-          <span className="stat-value">{player.level}</span>
+          <span className="stat-value">
+            {player.level}
+            {unlockedStats.experience && (
+              <span className="exp-info"> ({player.experience}/{player.level * 100} exp)</span>
+            )}
+          </span>
+        </div>
+      ) : (
+        <div className="stat-row locked" onClick={() => onPurchase('level', 15)}>
+          <span className="stat-label">Level:</span>
+          <span className="unlock-cost">15 fragments to unlock</span>
         </div>
       )}
 
-      {/* Experience - purchasable */}
-      {unlockedStats.experience ? (
-        <div className="stat-row">
+      {/* Experience - only show if level is unlocked but experience isn't */}
+      {unlockedStats.level && !unlockedStats.experience && (
+        <div className="stat-row locked" onClick={() => onPurchase('experience', 15)}>
           <span className="stat-label">Experience:</span>
-          <div className="stat-bar-container">
-            <div className="stat-bar exp-bar" style={{ width: `${expPercentage}%` }}></div>
-            <span className="stat-text">{`${player.experience}/${expNeeded}`}</span>
-          </div>
-        </div>
-      ) : (
-        <div className="stat-row locked" onClick={() => onPurchase('experience', statCosts.experience)}>
-          <span className="stat-label">Experience:</span>
-          <span className="unlock-cost">{statCosts.experience} fragments to unlock</span>
+          <span className="unlock-cost">15 fragments to unlock</span>
         </div>
       )}
 

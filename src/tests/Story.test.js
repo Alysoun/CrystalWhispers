@@ -1,6 +1,3 @@
-import { Story } from '../game/Story';
-import { Memories } from '../game/Memories';
-
 describe('Story and Progression', () => {
   test('Story Elements Present', () => {
     expect(Story.introduction).toBeDefined();

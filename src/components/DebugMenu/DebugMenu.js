@@ -13,7 +13,8 @@ function DebugMenu({
   memoryFragments,
   setMemoryFragments,
   discoveredTreasures,
-  setDiscoveredTreasures
+  setDiscoveredTreasures,
+  initializeGame
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
 
@@ -112,6 +113,22 @@ function DebugMenu({
       }
     ],
     dungeon: [
+      {
+        name: 'New Game with Seed',
+        action: () => {
+          const seed = prompt('Enter seed:');
+          if (seed) {
+            initializeGame({}, seed);
+          }
+        }
+      },
+      {
+        name: 'Reveal Map',
+        action: () => {
+          dungeon.rooms.forEach(room => room.discovered = true);
+          setDungeon({ ...dungeon });
+        }
+      },
       {
         name: 'Reveal All Rooms',
         action: () => {
@@ -218,6 +235,7 @@ function DebugMenu({
           <div>Raw value: {String(memoryFragments)}</div>
           <div>Type: {typeof memoryFragments}</div>
           <div>Is NaN: {isNaN(memoryFragments) ? 'true' : 'false'}</div>
+          <div>Dungeon Seed: {dungeon.seed}</div>
         </div>
         <pre>
           {JSON.stringify({
@@ -225,7 +243,8 @@ function DebugMenu({
             health: `${player.health}/${player.maxHealth}`,
             fragments: Number(memoryFragments) || 0,
             discoveredTreasures: discoveredTreasures.size,
-            currentRoom: dungeon.currentRoomId
+            currentRoom: dungeon.currentRoomId,
+            seed: dungeon.seed
           }, null, 2)}
         </pre>
       </div>

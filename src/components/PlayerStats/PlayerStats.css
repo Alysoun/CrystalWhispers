@@ -176,4 +176,10 @@ h2 {
   0% { opacity: 0.8; }
   90% { opacity: 0.8; }
   100% { opacity: 0; }
+}
+
+.exp-info {
+  color: #00ff00;
+  font-size: 0.9em;
+  margin-left: 5px;
 } 

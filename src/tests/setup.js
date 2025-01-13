@@ -34,12 +34,4 @@ window.AudioContext = jest.fn().mockImplementation(() => ({
     connect: () => {},
     gain: { value: 0 }
   })
-}));
-
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  clear: jest.fn()
-};
-global.localStorage = localStorageMock; 
+})); 

@@ -52,11 +52,16 @@ function App() {
   const [showMemoriesUI, setShowMemoriesUI] = useState(false);
   const [permanentUpgrades, setPermanentUpgrades] = useState({});
 
-  const initializeGame = (existingUpgrades = {}) => {
+  const initializeGame = (existingUpgrades = {}, seed = null) => {
     const minRooms = 15;
     const maxRooms = 30;
-    const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
-    const dungeon = new Dungeon(50, 50, numRooms);
+    // Generate number of rooms first using the seeded RNG
+    const tempDungeon = new Dungeon(50, 50, 1, 1, seed); // Temporary dungeon just for RNG
+    // Use the seeded RNG to get a number between minRooms and maxRooms
+    const numRooms = Math.floor(tempDungeon.random() * (maxRooms - minRooms + 1)) + minRooms;
+    console.log(`Generating dungeon with ${numRooms} rooms`);
+    // Create actual dungeon with the determined number of rooms
+    const dungeon = new Dungeon(50, 50, numRooms, 1, seed);
     const startingRoom = dungeon.rooms.get(0);
     startingRoom.discovered = true;
     startingRoom.createItemsFromFeatures();
@@ -107,10 +112,10 @@ function App() {
       unlockedStats: {
         health: true,        // Bar always visible
         healthNumbers: false, // Numbers need to be unlocked
-        level: false,        // Unlocked after Mirror Keeper
-        experience: false,   // Purchasable
-        attack: false,      // Purchasable
-        defense: false      // Purchasable
+        level: false,        // Level needs to be unlocked
+        experience: false,   // Experience needs to be unlocked
+        attack: false,      // Attack needs to be unlocked
+        defense: false      // Defense needs to be unlocked
       },
       memoryFragments: 0,
       permanentUpgrades: existingUpgrades || {},
@@ -133,6 +138,13 @@ function App() {
       if (e.ctrlKey && e.key === 'd') {
         e.preventDefault();
         setShowDebugMenu(prev => !prev);
+      }
+      // Handle ESC key
+      if (e.key === 'Escape') {
+        setIsHelpOpen(false);
+        setIsAchievementsOpen(false);
+        setShowMemoriesUI(false);
+        setActivePuzzle(null);
       }
     };
 
@@ -216,6 +228,7 @@ function App() {
 
   // Combat victory
   const handleCombatEnd = (result) => {
+    console.log('Combat ended with result:', result);
     setIsCombatOpen(false);
     setCurrentEnemy(null);
     
@@ -225,16 +238,32 @@ function App() {
     
     if (result.victory) {
       const expGained = currentEnemy.experience;
-      const oldLevel = gameState.player.level;
+      console.log('Experience to gain:', expGained);
+      console.log('Current player before exp:', gameState.player);
       
-      // Add experience and check if leveled up
-      gameState.player.gainExperience(expGained);
+      // Update player state with experience
+      setGameState(prev => {
+        const player = prev.player;
+        const oldLevel = player.level;
+        console.log('Old level:', oldLevel);
+        player.gainExperience(expGained);
+        console.log('Player after gainExperience:', player);
+        
+        return {
+          ...prev,
+          player: player,
+          stats: {
+            ...prev.stats,
+            combatsWon: prev.stats.combatsWon + 1
+          }
+        };
+      });
       
       // Clear screen and show only combat results
       addToOutput([
         `You defeated the ${currentEnemy.name}!`,
         `Experience gained: ${expGained}`,
-        gameState.player.level > oldLevel ? 
+        gameState.player.level > oldLevel ?
           `Level Up! You are now level ${gameState.player.level}!` : '',
         '',
         'Type "look" to examine your surroundings.'
@@ -264,7 +293,12 @@ function App() {
         }
       }));
     } else if (result.fled) {
-      addToOutput('You managed to escape!');
+      addToOutput("You managed to escape!", "flee");
+    } else if (gameState.player.health <= 0) {
+      // Handle death
+      setShowMemoriesUI(true);
+      Memories.unlockMemories();
+      addToOutput("You have fallen...", "death");
     }
   };
 
@@ -348,7 +382,7 @@ function App() {
     setShowMemoriesUI(true);
   };
 
-  const handleCommand = (input) => {
+  const handleCommand = async (input) => {
     // Add new command for continuing after death
     if (gameState.isDead && input.toLowerCase() === 'continue') {
       setShowMemoriesUI(true);
@@ -380,11 +414,34 @@ function App() {
             nextRoom.createItemsFromFeatures();
           }
       
+          // Record which direction we entered from
+          nextRoom.recordEntry(direction);
+      
           // Check for combat
-          if (nextRoom.roomType === 'combat' && nextRoom.enemyType) {
-            setCurrentEnemy(nextRoom.enemyType);
+          if (nextRoom.roomType === 'combat' && (nextRoom.enemy || nextRoom.enemyType) && !nextRoom.canSneakPast(direction)) {
+            const enemy = nextRoom.enemy || nextRoom.enemyType;
+            const ambushState = nextRoom.getAmbushState();
+            setCurrentEnemy(enemy);
             setIsCombatOpen(true);
-            addToOutput(`A ${nextRoom.enemyType.name} appears!`, input);
+            nextRoom.enemyAware = true;
+            nextRoom.playerAware = true;
+            
+            switch(ambushState) {
+              case 'player':
+                addToOutput(`You catch the ${enemy.name} by surprise! You'll get the first strike!`, input);
+                break;
+              case 'enemy':
+                addToOutput(`The ${enemy.name} was waiting for you! It gets the first strike!`, input);
+                break;
+              default:
+                addToOutput(`A ${enemy.name} appears!`, input);
+            }
+          } else if (nextRoom.enemy && !nextRoom.enemyAware) {
+            if (nextRoom.playerAware) {
+              addToOutput("There's an enemy here. You've spotted it, but it hasn't noticed you yet. You can sneak back the way you came, or attack for an advantage!", input);
+            } else {
+              addToOutput("You sense a presence, but can't quite make it out. You can sneak back the way you came to be safe.", input);
+            }
           }
       
           // Update gameState - preserve player object
@@ -427,32 +484,60 @@ function App() {
         break;
 
       case 'take':
-        const itemToTake = findItem(target, currentRoom.items || []);
-        if (itemToTake) {
-          if (!itemToTake.canTake) {
-            addToOutput(`You can't take the ${itemToTake.name}.`);
-            return;
-          }
-          
-          const result = currentRoom.removeItem(itemToTake);
+        console.log('Take command initiated for:', target);
+        const item = currentRoom.items.find(i => 
+          i.name === target || 
+          (i.aliases && i.aliases.includes(target))
+        );
+        
+        if (item) {
+          console.log('Found item:', item);
+          const result = currentRoom.removeItem(item);
+          console.log('Remove result:', result);
           if (result.success) {
-            setGameState(prev => ({
-              ...prev,
-              memoryFragments: prev.memoryFragments + result.fragments,
-              currentRoom: { ...prev.currentRoom }
-            }));
-            addToOutput(result.message);
-            addJournalEntry(`Acquired ${itemToTake.name} (+${result.fragments} fragments)`);
-            if (itemToTake.isTreasure) {
-              handleTreasureFound(itemToTake);
+            addToOutput(result.message, input);
+            // Create new room while preserving prototype methods
+            const updatedRoom = Object.assign(
+              Object.create(Object.getPrototypeOf(currentRoom)),
+              currentRoom,
+              {
+                items: [...currentRoom.items],
+                description: currentRoom.description,
+                roomFeatures: [...currentRoom.roomFeatures]
+              }
+            );
+            console.log('Updated room items:', updatedRoom.items);
+            
+            // Add updated room description after item is taken
+            addToOutput(updatedRoom.getFullDescription(), null, true);
+            
+            if (result.fragments) {
+              setGameState(prev => ({
+                ...prev,
+                memoryFragments: prev.memoryFragments + result.fragments,
+                dungeon: {
+                  ...prev.dungeon,
+                  currentRoom: updatedRoom,
+                  rooms: new Map(prev.dungeon.rooms).set(currentRoom.id, updatedRoom)
+                }
+              }));
+              addJournalEntry(`Acquired ${item.name} (+${result.fragments} fragments)`);
+              console.log('GameState updated with fragments');
+            } else {
+              setGameState(prev => ({
+                ...prev,
+                dungeon: {
+                  ...prev.dungeon,
+                  currentRoom: updatedRoom,
+                  rooms: new Map(prev.dungeon.rooms).set(currentRoom.id, updatedRoom)
+                }
+              }));
+              addJournalEntry(`Removed ${item.name}`);
+              console.log('GameState updated without fragments');
             }
-          } else {
-            addToOutput(result.message);
           }
-        } else {
-          addToOutput("You don't see that here.");
         }
-        break;
+        return;
 
       case 'inventory':
         if (gameState.inventory.length === 0) {
@@ -690,6 +775,7 @@ function App() {
             player={gameState.player}
             enemy={currentEnemy}
             onCombatEnd={handleCombatEnd}
+            currentRoom={gameState.currentRoom}
           />
           <DebugMenu
             isOpen={showDebugMenu}
@@ -702,6 +788,7 @@ function App() {
             setMemoryFragments={(fragments) => setGameState(prev => ({ ...prev, memoryFragments: fragments }))}
             discoveredTreasures={new Set()}
             setDiscoveredTreasures={(discoveredTreasures) => setGameState(prev => ({ ...prev, discoveredTreasures }))}
+            initializeGame={initializeGame}
           />
           <AchievementUI 
             isOpen={isAchievementsOpen}
@@ -732,10 +819,30 @@ function App() {
                 initializeGame(permanentUpgrades);
               }
             }}
-            currentMemories={gameState.inventory}
-            permanentUpgrades={permanentUpgrades}
+            currentMemories={[]}
+            permanentUpgrades={gameState.permanentUpgrades}
             memoryFragments={gameState.memoryFragments}
-            onPurchaseUpgrade={handlePurchaseUpgrade}
+            onPurchaseUpgrade={(category, upgrade) => {
+              const result = Memories.purchaseUpgrade(
+                category, 
+                upgrade, 
+                gameState.permanentUpgrades[category]?.[upgrade] || 0,
+                gameState.memoryFragments
+              );
+              if (result) {
+                setGameState(prev => ({
+                  ...prev,
+                  memoryFragments: result.remainingFragments,
+                  permanentUpgrades: {
+                    ...prev.permanentUpgrades,
+                    [category]: {
+                      ...(prev.permanentUpgrades[category] || {}),
+                      [upgrade]: result.newLevel
+                    }
+                  }
+                }));
+              }
+            }}
           />
         </div>
       )}

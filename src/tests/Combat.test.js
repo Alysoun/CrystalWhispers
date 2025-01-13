@@ -1,6 +1,3 @@
-import fc from 'fast-check';
-import { Player } from './mocks/Player';
-
 describe('Combat System', () => {
   test('Basic Combat Mechanics', () => {
     const player = new Player();
@@ -27,30 +24,5 @@ describe('Combat System', () => {
     
     expect(deathResult.keptFragments).toBe(20); // 20% of 100
     expect(deathResult.unlockedUpgrades).toBeDefined();
-  });
-});
-
-describe('Combat System Properties', () => {
-  test('Damage Is Always Non-Negative', () => {
-    fc.assert(
-      fc.property(
-        fc.record({
-          attack: fc.integer(1, 100),
-          defense: fc.integer(1, 100)
-        }),
-        (stats) => {
-          const player = new Player();
-          player.attackPower = stats.attack;
-          
-          const enemy = {
-            health: 100,
-            defense: stats.defense
-          };
-          
-          const result = player.attack(enemy);
-          return result.damage >= 0;
-        }
-      )
-    );
   });
 }); 

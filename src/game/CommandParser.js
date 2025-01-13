@@ -62,17 +62,21 @@ const parseCommand = (input) => {
   return { command, target };
 };
 
-const getCommandType = (input) => {
-  // Special case for movement commands
-  if (input === 'go') return 'go';
+function getCommandType(command) {
+  const commandMap = {
+    'n': 'north',
+    's': 'south',
+    'e': 'east',
+    'w': 'west',
+    'l': 'look',
+    'x': 'examine',
+    'i': 'inventory',
+    't': 'take',
+    // ... other existing commands
+  };
 
-  for (const [type, aliases] of Object.entries(VALID_COMMANDS)) {
-    if (aliases.includes(input)) {
-      return type;
-    }
-  }
-  return null;
-};
+  return commandMap[command.toLowerCase()] || command.toLowerCase();
+}
 
 function findItem(itemName, items) {
   return items.find(item => 

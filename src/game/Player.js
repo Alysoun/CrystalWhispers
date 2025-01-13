@@ -39,22 +39,27 @@ export default class Player {
   }
 
   gainExperience(amount) {
+    console.log('gainExperience called with:', amount);
+    console.log('Current exp before gain:', this.experience);
     this.experience += amount;
     const expNeeded = this.level * 100;
+    console.log('Exp needed for next level:', expNeeded);
+    console.log('Current exp after gain:', this.experience);
     
     // Level up if enough experience
     while (this.experience >= expNeeded) {
+      console.log('Leveling up!');
       this.levelUp();
     }
   }
 
   levelUp() {
-    this.level += 1;
-    this.maxHealth += 20;
-    this.health = this.maxHealth;  // Heal on level up
-    this.attackPower += 2;
-    this.defense += 2;
-    this.experience -= (this.level - 1) * 100;  // Subtract exp needed for previous level
+    console.log('levelUp called');
+    console.log('Current level:', this.level);
+    this.level++;
+    this.maxHealth += 5;
+    this.health = this.maxHealth;
+    console.log('New level:', this.level);
   }
 
   addEffect(type, magnitude, duration) {

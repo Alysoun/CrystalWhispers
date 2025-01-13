@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import EnemyDisplay from './EnemyDisplay';
 import './Combat.css';
 
-function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
+function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
   const [combatLog, setCombatLog] = useState([]);
   const [currentTurn, setCurrentTurn] = useState('player');
+  const [ambushState, setAmbushState] = useState(null);
   const combatLogRef = useRef(null);
 
   // Auto-scroll combat log to bottom when new messages are added
@@ -26,6 +27,21 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd }) {
       setCurrentTurn('player');
     }
   }, [isOpen, enemy]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const roomAmbushState = currentRoom.getAmbushState();
+      setAmbushState(roomAmbushState);
+      
+      // Handle initial advantage
+      if (roomAmbushState === 'enemy') {
+        handleEnemyTurn();
+      } else if (roomAmbushState === 'player') {
+        // Player gets an extra attack
+        setCurrentTurn('player');
+      }
+    }
+  }, [isOpen, currentRoom]);
 
   const addToCombatLog = (message) => {
     setCombatLog(prev => [...prev, message]);

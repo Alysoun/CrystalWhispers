@@ -42,4 +42,25 @@ export class MemoryMatch extends Puzzle {
   getHint() {
     return this.hints[Math.min(this.attempts, this.hints.length - 1)];
   }
+
+  generatePuzzle(difficulty) {
+    // Generate sequence based on difficulty
+    const length = Math.min(3 + difficulty, 8);
+    const symbols = ['△', '○', '□', '⬡', '⬢', '★', '☆', '⬟'];
+    this.sequence = [];
+    
+    // Generate random sequence
+    for (let i = 0; i < length; i++) {
+      this.sequence.push(symbols[Math.floor(Math.random() * symbols.length)]);
+    }
+    
+    return {
+      type: 'MEMORY_MATCH',
+      description: `Match this sequence: ${this.sequence.join(' ')}`,
+      solution: this.sequence.join(' '),
+      maxAttempts: 3,
+      reward: 50 * difficulty,
+      hint: `The sequence is ${this.sequence.length} symbols long.`
+    };
+  }
 } 
