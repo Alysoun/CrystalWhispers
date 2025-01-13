@@ -1,7 +1,4 @@
 # Testing
-/src/tests/
-/src/**/*.test.js
-/src/**/*.spec.js
 /coverage/
 
 # Dependencies
