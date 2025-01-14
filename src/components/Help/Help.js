@@ -10,6 +10,16 @@ function Help({ isOpen, onClose }) {
     soundManager.toggleMute();
   };
 
+  const handleClose = () => {
+    onClose();
+    // Add a small delay to ensure the modal is closed before refocusing
+    setTimeout(() => {
+      // Find and focus the command input
+      const commandInput = document.querySelector('.command-input');
+      commandInput?.focus();
+    }, 0);
+  };
+
   const HELP_TEXT = {
     basic: [
       // ... existing help text ...
@@ -29,7 +39,10 @@ function Help({ isOpen, onClose }) {
       <div className="help-modal">
         <div className="help-header">
           <h2>Command Reference</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button 
+            className="close-button" 
+            onClick={handleClose}
+          >×</button>
         </div>
         
         <div className="help-content">

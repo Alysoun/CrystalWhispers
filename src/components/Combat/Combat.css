@@ -106,4 +106,31 @@
 .potion-slot:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .combat-content {
+    width: 95%;
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .combat-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-controls button {
+    padding: 15px;
+  }
+
+  .potion-slots {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .potion-slot {
+    min-width: 80px;
+    min-height: 44px;
+    padding: 10px;
+  }
 } 

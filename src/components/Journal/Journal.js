@@ -2,24 +2,37 @@ import React, { useEffect, useRef } from 'react';
 import './Journal.css';
 
 function Journal({ entries }) {
-  const journalEndRef = useRef(null);
+  const journalRef = useRef(null);
 
   useEffect(() => {
-    // Scroll to bottom when entries change
-    journalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (journalRef.current) {
+      // Scroll the journal container itself, not the viewport
+      const scrollOptions = {
+        top: journalRef.current.scrollHeight,
+        behavior: 'smooth',
+      };
+      
+      // Only scroll the journal div itself
+      journalRef.current.scrollTo(scrollOptions);
+    }
   }, [entries]);
 
   return (
     <div className="journal-container">
-      <div className="journal-title">Adventure Log</div>
-      <div className="journal-entries">
+      <h3>Journal</h3>
+      <div className="journal-entries" ref={journalRef}>
         {entries.map((entry, index) => (
           <div key={index} className="journal-entry">
-            <span className="entry-timestamp">{entry.timestamp}</span>
-            <span className="entry-text"> - {entry.text}</span>
+            {typeof entry === 'object' ? (
+              <>
+                <span className="entry-timestamp">{entry.timestamp}</span>
+                <span className="entry-text">{entry.text}</span>
+              </>
+            ) : (
+              entry
+            )}
           </div>
         ))}
-        <div ref={journalEndRef} /> {/* Scroll anchor */}
       </div>
     </div>
   );

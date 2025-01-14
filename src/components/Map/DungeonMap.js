@@ -22,6 +22,7 @@ function DungeonMap({ dungeon, playerPosition }) {
   const mapRef = useRef();
   const lastCenteredRoom = useRef(null);
   const hasInitializedRef = useRef(false);
+  const lastTouchDistance = useRef(null);
 
   // Get container dimensions and try to center map
   useEffect(() => {
@@ -122,6 +123,85 @@ function DungeonMap({ dungeon, playerPosition }) {
         </div>
       </div>
     );
+  };
+
+  // Add touch event handlers
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      // Single touch - handle as drag
+      setIsDragging(true);
+      setDragStart({
+        x: e.touches[0].clientX - transform.x,
+        y: e.touches[0].clientY - transform.y
+      });
+    } else if (e.touches.length === 2) {
+      // Two touches - prepare for pinch zoom
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      lastTouchDistance.current = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+    }
+  };
+
+  // Add useEffect for touch events
+  useEffect(() => {
+    const mapElement = mapRef.current;
+    if (!mapElement) return;
+
+    const touchMoveHandler = (e) => {
+      e.preventDefault();
+      
+      if (e.touches.length === 1 && isDragging) {
+        setTransform(prev => ({
+          ...prev,
+          x: e.touches[0].clientX - dragStart.x,
+          y: e.touches[0].clientY - dragStart.y
+        }));
+      } else if (e.touches.length === 2) {
+        // Handle pinch zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+        const currentDistance = Math.hypot(
+          touch2.clientX - touch1.clientX,
+          touch2.clientY - touch1.clientY
+        );
+
+        if (lastTouchDistance.current) {
+          const delta = currentDistance - lastTouchDistance.current;
+          const scaleFactor = delta > 0 ? 1.02 : 0.98;
+          
+          const pinchCenterX = (touch1.clientX + touch2.clientX) / 2;
+          const pinchCenterY = (touch1.clientY + touch2.clientY) / 2;
+          
+          setTransform(prev => {
+            const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+            if (newScale === prev.scale) return prev;
+            
+            const scaleRatio = newScale / prev.scale;
+            return {
+              scale: newScale,
+              x: pinchCenterX - (pinchCenterX - prev.x) * scaleRatio,
+              y: pinchCenterY - (pinchCenterY - prev.y) * scaleRatio
+            };
+          });
+        }
+        lastTouchDistance.current = currentDistance;
+      }
+    };
+
+    // Add event listeners with { passive: false }
+    mapElement.addEventListener('touchmove', touchMoveHandler, { passive: false });
+
+    return () => {
+      mapElement.removeEventListener('touchmove', touchMoveHandler);
+    };
+  }, [isDragging, dragStart]);
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    lastTouchDistance.current = null;
   };
 
   if (!dungeon) {
@@ -269,6 +349,8 @@ function DungeonMap({ dungeon, playerPosition }) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         ref={mapRef}
       >
         <svg

@@ -56,12 +56,20 @@ function PuzzleUI({ puzzle, onClose, onComplete }) {
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      const commandInput = document.querySelector('.command-input');
+      commandInput?.focus();
+    }, 0);
+  };
+
   return (
     <div className="puzzle-overlay">
       <div className="puzzle-modal">
         <div className="puzzle-header">
           <h2>{currentPuzzle.name || 'Memory Match'}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={handleClose}>×</button>
         </div>
         
         <div className="puzzle-content">

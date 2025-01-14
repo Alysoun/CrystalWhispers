@@ -1,8 +1,8 @@
 .journal-container {
-  background-color: #1a1a1a;
-  padding: 10px;
-  margin: 10px;
-  border: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .journal-title {
@@ -12,11 +12,12 @@
 }
 
 .journal-entries {
-  max-height: 200px;
+  flex: 1;
   overflow-y: auto;
-  padding-right: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: #0f0 #1a1a1a;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding: 10px;
+  overscroll-behavior: contain;
 }
 
 .journal-entries::-webkit-scrollbar {
@@ -30,4 +31,31 @@
 .journal-entries::-webkit-scrollbar-thumb {
   background-color: #0f0;
   border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .journal-container {
+    position: relative;
+    overscroll-behavior: none;
+  }
+
+  .journal-entries {
+    overscroll-behavior: contain;
+    max-height: 200px;
+  }
+}
+
+.entry-timestamp {
+  color: #666;
+  font-size: 0.8em;
+  margin-right: 8px;
+}
+
+.entry-text {
+  color: #fff;
+}
+
+.journal-entry {
+  margin-bottom: 8px;
+  line-height: 1.4;
 } 

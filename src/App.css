@@ -97,25 +97,49 @@
 }
 
 /* Responsive design for smaller screens */
-@media (max-width: 1400px) {
+@media (max-width: 768px) {
   .game-container {
+    flex-direction: column;
     padding: 10px;
     gap: 10px;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .game-left,
+  .game-center,
+  .game-right {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #333;
+  }
+
+  .game-output {
+    max-height: 30vh;
+  }
+
+  .dungeon-map-container {
+    min-height: 250px;
+  }
+
+  .inventory-container,
+  .journal-container {
+    min-height: 150px;
+  }
+
+  /* Improve touch targets */
+  button {
+    min-height: 44px; /* iOS minimum touch target */
+    padding: 12px 20px;
   }
 }
 
-@media (max-width: 1200px) {
+/* Add viewport-height fix for mobile browsers */
+@supports (-webkit-touch-callout: none) {
   .game-container {
-    flex-wrap: wrap;
-  }
-
-  .game-left {
-    flex: 100%;
-    min-width: 100%;
-  }
-
-  .game-center, .game-right {
-    flex: 1;
-    min-width: 350px;
+    height: -webkit-fill-available;
   }
 } 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CommandPrompt from './components/CommandPrompt/CommandPrompt';
 import DungeonMap from './components/Map/DungeonMap';
 import Inventory from './components/Inventory/Inventory';
@@ -98,6 +98,13 @@ function App() {
 
   // Add state for trap UI
   const [activeTrap, setActiveTrap] = useState(null);
+
+  const commandPromptRef = useRef(null);
+
+  // Add focus handler
+  const refocusCommandPrompt = () => {
+    commandPromptRef.current?.focus();
+  };
 
   const initializeGame = (existingUpgrades = {}, seed = null) => {
     const minRooms = 15;
@@ -321,6 +328,7 @@ function App() {
         const enemy = currentEnemy;
         setCurrentEnemy(null);
         setIsCombatOpen(false);
+        refocusCommandPrompt();
 
         // Get current room and mark it as cleared
         const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
@@ -993,6 +1001,13 @@ function App() {
     }
   };
 
+  // Add effect to handle focus after state changes
+  useEffect(() => {
+    if (!isCombatOpen && !activePuzzle && !activeTrap) {
+      refocusCommandPrompt();
+    }
+  }, [isCombatOpen, activePuzzle, activeTrap]);
+
   return (
     <>
       {showSplash ? (
@@ -1007,7 +1022,10 @@ function App() {
           <div className="game-left">
             <ImageDisplay currentRoom={gameState.currentRoom} />
             <GameOutput messages={gameState.gameOutput} />
-            <CommandPrompt onCommand={handleCommand} />
+            <CommandPrompt 
+              ref={commandPromptRef}
+              onCommand={handleCommand} 
+            />
           </div>
           <div className="game-center">
             <PlayerStats 
@@ -1026,7 +1044,10 @@ function App() {
           <Help isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
           <Combat 
             isOpen={isCombatOpen} 
-            onClose={() => setIsCombatOpen(false)}
+            onClose={() => {
+              setIsCombatOpen(false);
+              refocusCommandPrompt();
+            }}
             player={gameState.player}
             enemy={currentEnemy}
             onCombatEnd={handleCombatEnd}
@@ -1059,7 +1080,10 @@ function App() {
           {activePuzzle && (
             <PuzzleUI 
               puzzle={activePuzzle}
-              onClose={() => setActivePuzzle(null)}
+              onClose={() => {
+                setActivePuzzle(null);
+                refocusCommandPrompt();
+              }}
               onComplete={(fragments) => {
                 setMemoryFragments(prev => prev + fragments);
                 setActivePuzzle(null);
@@ -1084,7 +1108,10 @@ function App() {
             <TrapUI
               trap={activeTrap}
               onAttemptDisarm={handleTrapDisarm}
-              onClose={() => setActiveTrap(null)}
+              onClose={() => {
+                setActiveTrap(null);
+                refocusCommandPrompt();
+              }}
             />
           )}
         </div>

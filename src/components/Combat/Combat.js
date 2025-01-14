@@ -196,6 +196,14 @@ function Combat({ isOpen, onClose, player, enemy, onCombatEnd, currentRoom }) {
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      const commandInput = document.querySelector('.command-input');
+      commandInput?.focus();
+    }, 0);
+  };
+
   if (!isOpen) return null;
 
   return (

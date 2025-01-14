@@ -9,6 +9,14 @@ function TrapUI({ trap, onAttemptDisarm, onClose }) {
     onAttemptDisarm(selectedMethod, input);
   };
 
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      const commandInput = document.querySelector('.command-input');
+      commandInput?.focus();
+    }, 0);
+  };
+
   const renderDisarmInterface = () => {
     switch (trap.trapType.disarmMethod) {
       case 'TIMING':
@@ -77,7 +85,7 @@ function TrapUI({ trap, onAttemptDisarm, onClose }) {
       <div className="trap-modal">
         <div className="trap-header">
           <h2>{trap.trapType.name}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={handleClose}>×</button>
         </div>
         
         <div className="trap-description">
