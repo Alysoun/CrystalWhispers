@@ -9,14 +9,28 @@ const CommandPrompt = React.forwardRef(({ onCommand }, ref) => {
   useEffect(() => {
     if (ref) {
       ref.current = {
-        focus: () => inputRef.current?.focus()
+        focus: () => inputRef.current?.focus(),
+        querySelector: (selector) => inputRef.current
       };
     }
   }, [ref]);
 
-  // Focus input when component mounts
+  // Keep focus on input
   useEffect(() => {
-    inputRef.current?.focus();
+    const input = inputRef.current;
+    if (!input) return;
+
+    const handleBlur = () => {
+      // Small timeout to allow for other interactions
+      setTimeout(() => {
+        if (document.activeElement !== input) {
+          input.focus();
+        }
+      }, 10);
+    };
+
+    input.addEventListener('blur', handleBlur);
+    return () => input.removeEventListener('blur', handleBlur);
   }, []);
 
   const handleSubmit = (e) => {

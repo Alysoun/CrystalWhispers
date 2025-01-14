@@ -1008,6 +1008,36 @@ function App() {
     }
   }, [isCombatOpen, activePuzzle, activeTrap]);
 
+  // Add effect to handle clicks anywhere in the app
+  useEffect(() => {
+    const handleMouseDown = (e) => {
+      // Prevent focus loss unless clicking on another input or specific interactive elements
+      if (!e.target.matches('input, textarea, [role="button"], button, a, .interactive')) {
+        e.preventDefault();
+        // Keep command prompt focused
+        commandPromptRef.current?.focus();
+      }
+    };
+
+    // Add the event listener to the whole document
+    document.addEventListener('mousedown', handleMouseDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+    };
+  }, []);
+
+  // Add effect to ensure command prompt stays focused
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.activeElement !== commandPromptRef.current?.querySelector('input')) {
+        commandPromptRef.current?.focus();
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <>
       {showSplash ? (
