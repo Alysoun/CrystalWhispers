@@ -1,4 +1,4 @@
-.combat-modal {
+.combat-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,71 +11,78 @@
   z-index: 1000;
 }
 
-.combat-content {
+.combat-modal {
   background-color: #1a1a1a;
-  border: 2px solid #333;
+  border: 1px solid #0f0;
   border-radius: 4px;
-  padding: 20px;
-  width: 80%;
-  max-width: 600px;
-  max-height: 90vh;
+  width: 90%;
+  max-width: 500px;
+  height: 90vh;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  color: #0f0;
 }
 
 .combat-header {
+  padding: 15px;
+  border-bottom: 1px solid #0f0;
+  text-align: center;
+}
+
+.combat-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 15px;
+  padding: 15px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .combat-stats {
   display: flex;
   justify-content: space-between;
-  margin: 10px 0;
-  color: #00ff00;
-  font-family: monospace;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #333;
+  border-radius: 4px;
 }
 
 .combat-log {
-  background-color: #2a2a2a;
-  padding: 10px;
-  border-radius: 4px;
-  height: 200px;
+  flex: 1;
   overflow-y: auto;
-  font-family: monospace;
-  color: #fff;
-  scroll-behavior: smooth;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #333;
+  border-radius: 4px;
+  min-height: 150px;
 }
 
 .combat-message {
   margin: 5px 0;
-  white-space: pre-wrap;
+  color: #ccc;
 }
 
 .combat-controls {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  padding: 15px;
+  border-top: 1px solid #0f0;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 .combat-controls button {
-  background-color: #333;
-  color: #00ff00;
-  border: 1px solid #00ff00;
-  padding: 10px;
+  background-color: #1a1a1a;
+  border: 1px solid #0f0;
+  color: #0f0;
+  padding: 12px;
   cursor: pointer;
-  font-family: monospace;
-}
-
-.combat-controls button:hover:not(:disabled) {
-  background-color: #444;
+  font-size: 1em;
+  min-height: 44px;
 }
 
 .combat-controls button:disabled {
-  opacity: 0.5;
+  border-color: #666;
+  color: #666;
   cursor: not-allowed;
 }
 
@@ -109,28 +116,28 @@
 }
 
 @media (max-width: 768px) {
-  .combat-content {
-    width: 95%;
-    padding: 15px;
-    gap: 15px;
+  .combat-modal {
+    height: 100vh;
+    width: 100%;
+    border-radius: 0;
   }
 
-  .combat-controls {
-    grid-template-columns: 1fr;
+  .combat-content {
+    padding: 10px;
+  }
+
+  .combat-log {
+    min-height: 120px;
+    max-height: 40vh;
+  }
+
+  .combat-message {
+    font-size: 0.9em;
+    line-height: 1.4;
   }
 
   .combat-controls button {
     padding: 15px;
-  }
-
-  .potion-slots {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .potion-slot {
-    min-width: 80px;
-    min-height: 44px;
-    padding: 10px;
+    margin: 5px 0;
   }
 } 

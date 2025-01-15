@@ -17,6 +17,10 @@ const DOOR_COLOR = '#8b4513';
 const DOOR_OFFSET = 2;
 
 function DungeonMap({ dungeon, playerPosition, permanentUpgrades, memoryFragments, onPurchaseMap }) {
+  const hasMapUpgrade = permanentUpgrades?.exploration?.dungeonMap > 0;
+  const width = dungeon ? dungeon.width * CELL_SIZE : 0;
+  const height = dungeon ? dungeon.height * CELL_SIZE : 0;
+
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 0.8 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -52,24 +56,30 @@ function DungeonMap({ dungeon, playerPosition, permanentUpgrades, memoryFragment
   }, [dungeon]);
 
   useEffect(() => {
+    if (hasMapUpgrade && !hasInitializedRef.current && dungeon?.currentRoomId) {
+      const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+      if (currentRoom && mapRef.current) {
+        const { width, height } = mapRef.current.getBoundingClientRect();
+        setViewport({ width, height });
+        
+        const center = currentRoom.getCenter();
+        setTransform({
+          scale: 0.8,
+          x: width/2 - center.x * CELL_SIZE * 0.8,
+          y: height/2 - center.y * CELL_SIZE * 0.8
+        });
+        
+        hasInitializedRef.current = true;
+        lastCenteredRoom.current = currentRoom.id;
+      }
+    }
+  }, [hasMapUpgrade, dungeon?.currentRoomId]);
+
+  useEffect(() => {
     const updateViewportAndCenter = () => {
       if (!mapRef.current || !dungeon?.currentRoomId) return;
       const { width, height } = mapRef.current.getBoundingClientRect();
       setViewport({ width, height });
-
-      if (!hasInitializedRef.current) {
-        const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
-        if (currentRoom && width && height) {
-          const center = currentRoom.getCenter();
-          setTransform({
-            scale: 0.8,
-            x: width/2 - center.x * CELL_SIZE * 0.8,
-            y: height/2 - center.y * CELL_SIZE * 0.8
-          });
-          hasInitializedRef.current = true;
-          lastCenteredRoom.current = currentRoom.id;
-        }
-      }
     };
 
     updateViewportAndCenter();
@@ -97,13 +107,9 @@ function DungeonMap({ dungeon, playerPosition, permanentUpgrades, memoryFragment
       x: viewport.width/2 - center.x * CELL_SIZE * prev.scale,
       y: viewport.height/2 - center.y * CELL_SIZE * prev.scale
     }));
+    
     lastCenteredRoom.current = currentRoom.id;
-
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
-
-  const hasMapUpgrade = permanentUpgrades?.exploration?.dungeonMap > 0;
-  const width = dungeon ? dungeon.width * CELL_SIZE : 0;
-  const height = dungeon ? dungeon.height * CELL_SIZE : 0;
 
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {

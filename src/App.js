@@ -644,7 +644,9 @@ function App() {
           nextRoom.recordEntry(direction);
       
           // Check for combat
-          if (nextRoom.roomType === 'combat' && (nextRoom.enemy || nextRoom.enemyType) && !nextRoom.canSneakPast(direction)) {
+          if ((nextRoom.roomType === 'combat' || nextRoom.roomType === 'boss') && 
+              (nextRoom.enemy || nextRoom.enemyType) && 
+              !nextRoom.canSneakPast(direction)) {
             const enemy = nextRoom.enemy || nextRoom.enemyType;
             const ambushState = nextRoom.getAmbushState();
             setCurrentEnemy(enemy);
@@ -652,15 +654,20 @@ function App() {
             nextRoom.enemyAware = true;
             nextRoom.playerAware = true;
             
-            switch(ambushState) {
-              case 'player':
-                addToOutput(`You catch the ${enemy.name} by surprise! You'll get the first strike!`, input);
-                break;
-              case 'enemy':
-                addToOutput(`The ${enemy.name} was waiting for you! It gets the first strike!`, input);
-                break;
-              default:
-                addToOutput(`A ${enemy.name} appears!`, input);
+            // Special message for boss rooms
+            if (nextRoom.roomType === 'boss') {
+                addToOutput(`You face ${enemy.name}, a powerful manifestation of grief!`, input);
+            } else {
+                switch(ambushState) {
+                    case 'player':
+                        addToOutput(`You catch the ${enemy.name} by surprise! You'll get the first strike!`, input);
+                        break;
+                    case 'enemy':
+                        addToOutput(`The ${enemy.name} was waiting for you! It gets the first strike!`, input);
+                        break;
+                    default:
+                        addToOutput(`A ${enemy.name} appears!`, input);
+                }
             }
           } else if (nextRoom.enemy && !nextRoom.enemyAware) {
             if (nextRoom.playerAware) {
