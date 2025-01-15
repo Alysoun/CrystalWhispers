@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Player from '../../game/Player';
 import { Dungeon } from '../../game/DungeonGenerator';
 import { getBossForLevel } from '../../game/bosses/GriefBosses';
@@ -19,6 +19,61 @@ function DebugMenu({
   handlePlayerDeath
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
+  const [position, setPosition] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!position && menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      setPosition({
+        x: rect.left,
+        y: rect.top
+      });
+    }
+  }, [position]);
+
+  const handleMouseDown = (e) => {
+    if (e.target.closest('.debug-actions') || e.target.tagName === 'BUTTON') return;
+    setIsDragging(true);
+    const rect = menuRef.current.getBoundingClientRect();
+    setDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    const x = e.clientX - dragOffset.x;
+    const y = e.clientY - dragOffset.y;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const menuRect = menuRef.current.getBoundingClientRect();
+    
+    const boundedX = Math.min(Math.max(x, 0), windowWidth - menuRect.width);
+    const boundedY = Math.min(Math.max(y, 0), windowHeight - menuRect.height);
+    
+    setPosition({ x: boundedX, y: boundedY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   const clonePlayer = (originalPlayer) => {
     const newPlayer = new Player();
@@ -139,6 +194,98 @@ function DebugMenu({
         }
       }
     ],
+    teleport: [
+      {
+        name: 'Reveal & Teleport Map',
+        action: () => {
+          dungeon.rooms.forEach(room => {
+            room.discovered = true;
+            if (!room.items || room.items.length === 0) {
+              room.createItemsFromFeatures();
+            }
+          });
+
+          const roomsList = Array.from(dungeon.rooms.values());
+          const teleportUI = document.createElement('div');
+          teleportUI.className = 'teleport-grid';
+          
+          roomsList.forEach(room => {
+            const button = document.createElement('button');
+            button.className = `room-button ${room.id === dungeon.currentRoomId ? 'current' : ''}`;
+            button.textContent = `Room ${room.id} (${room.roomType})`;
+            button.onclick = () => {
+              dungeon.currentRoomId = room.id;
+              room.discovered = true;
+              room.createItemsFromFeatures();
+              setDungeon({ ...dungeon });
+              teleportUI.remove();
+            };
+            teleportUI.appendChild(button);
+          });
+
+          const debugMenu = document.querySelector('.debug-menu');
+          const existingTeleportUI = debugMenu.querySelector('.teleport-grid');
+          if (existingTeleportUI) {
+            existingTeleportUI.remove();
+          }
+          debugMenu.appendChild(teleportUI);
+        }
+      },
+      {
+        name: 'Quick Room Teleport',
+        action: () => {
+          const roomId = prompt('Enter room ID to teleport to:');
+          if (roomId && dungeon.rooms.has(Number(roomId))) {
+            const targetRoom = dungeon.rooms.get(Number(roomId));
+            targetRoom.discovered = true;
+            targetRoom.createItemsFromFeatures();
+            dungeon.currentRoomId = Number(roomId);
+            setDungeon({ ...dungeon });
+          } else {
+            alert('Invalid room ID');
+          }
+        }
+      },
+      {
+        name: 'Find & Teleport to Boss',
+        action: () => {
+          const bossRoom = Array.from(dungeon.rooms.values()).find(room => room.roomType === 'boss');
+          if (bossRoom) {
+            bossRoom.discovered = true;
+            bossRoom.createItemsFromFeatures();
+            dungeon.currentRoomId = bossRoom.id;
+            setDungeon({ ...dungeon });
+          } else {
+            alert('No boss room found in current dungeon');
+          }
+        }
+      },
+      {
+        name: 'Teleport to Start',
+        action: () => {
+          const startRoom = dungeon.rooms.get(0);
+          if (startRoom) {
+            startRoom.discovered = true;
+            dungeon.currentRoomId = 0;
+            setDungeon({ ...dungeon });
+          }
+        }
+      },
+      {
+        name: 'Find & Teleport to Treasure',
+        action: () => {
+          const treasureRoom = Array.from(dungeon.rooms.values()).find(room => room.roomType === 'treasure');
+          if (treasureRoom) {
+            treasureRoom.discovered = true;
+            treasureRoom.createItemsFromFeatures();
+            dungeon.currentRoomId = treasureRoom.id;
+            setDungeon({ ...dungeon });
+          } else {
+            alert('No treasure room found in current dungeon');
+          }
+        }
+      }
+    ],
     dungeon: [
       {
         name: 'New Game with Seed',
@@ -176,7 +323,6 @@ function DebugMenu({
           const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
           const newDungeon = new Dungeon(50, 50, numRooms);
           
-          // Set starting room as discovered
           const startingRoom = newDungeon.rooms.get(0);
           startingRoom.discovered = true;
           startingRoom.createItemsFromFeatures();
@@ -199,8 +345,9 @@ function DebugMenu({
       {
         name: 'Kill Player',
         action: () => {
-          player.health = 0;
-          setPlayer({ ...player });
+          const newPlayer = clonePlayer(player);
+          newPlayer.health = 0;
+          setPlayer(newPlayer);
           handlePlayerDeath();
         }
       },
@@ -231,13 +378,63 @@ function DebugMenu({
           setPlayer({ ...player });
         }
       }
+    ],
+    traps: [
+      {
+        name: 'Simulate Trap Death',
+        action: () => {
+          const newPlayer = clonePlayer(player);
+          newPlayer.health = 0;
+          setPlayer(newPlayer);
+          handlePlayerDeath({
+            cause: 'trap',
+            message: 'You were killed by a deadly trap!'
+          });
+        }
+      },
+      {
+        name: 'Add Trap to Room',
+        action: () => {
+          const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+          if (currentRoom) {
+            currentRoom.trap = {
+              type: 'spike',
+              difficulty: 3,
+              damage: 50,
+              isDisarmed: false,
+              description: 'A deadly spike trap'
+            };
+            setDungeon({ ...dungeon });
+          }
+        }
+      },
+      {
+        name: 'Disarm Room Trap',
+        action: () => {
+          const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+          if (currentRoom && currentRoom.trap) {
+            currentRoom.trap.isDisarmed = true;
+            setDungeon({ ...dungeon });
+          }
+        }
+      }
     ]
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="debug-menu">
+    <div 
+      className="debug-menu"
+      ref={menuRef}
+      style={{
+        left: position ? `${position.x}px` : '20%',
+        top: position ? `${position.y}px` : '20%',
+        transform: 'none',
+        transition: isDragging ? 'none' : 'all 0.2s'
+      }}
+      onMouseDown={handleMouseDown}
+    >
       <div className="debug-header">
         <h2>Debug Menu</h2>
         <button onClick={onClose}>×</button>

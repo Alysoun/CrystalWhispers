@@ -24,13 +24,35 @@ function Help({ isOpen, onClose }) {
     basic: [
       // ... existing help text ...
     ],
-    advanced: [
-      // ... existing advanced commands ...
+    traps: [
       {
-        command: 'memories (mem, m)',
-        description: 'Access your crystallized memories and permanent upgrades',
-        unlockCondition: 'Unlocked after first death'
+        command: 'disarm',
+        description: 'Attempt to disarm a trap in the current room',
+        details: 'Opens the trap disarming interface'
       }
+    ],
+    trapTypes: [
+      {
+        name: 'Timing Trap',
+        description: 'Click the button when the moving bar aligns with the target zone',
+        difficulty: 'Easy to Medium'
+      },
+      {
+        name: 'Pattern Trap',
+        description: 'Click buttons in the correct sequence to disarm',
+        difficulty: 'Medium'
+      },
+      {
+        name: 'Sequence Trap',
+        description: 'Enter the correct sequence of characters',
+        difficulty: 'Hard'
+      }
+    ],
+    trapTips: [
+      "Traps can be detected before entering a room",
+      "Failed disarm attempts may trigger the trap",
+      "Some upgrades can help with trap avoidance and disarming",
+      "The Safe Passage upgrade increases your chance to avoid traps"
     ]
   };
 
@@ -126,6 +148,36 @@ function Help({ isOpen, onClose }) {
                 <span className="command-desc">View your achievements</span>
               </div>
             </div>
+          </div>
+
+          <div className="command-section">
+            <h3>Traps</h3>
+            <div className="command-grid">
+              {HELP_TEXT.traps.map((cmd, index) => (
+                <div key={index} className="command">
+                  <span className="command-name">{cmd.command}</span>
+                  <span className="command-desc">{cmd.description}</span>
+                </div>
+              ))}
+            </div>
+
+            <h4>Trap Types</h4>
+            <div className="trap-types-grid">
+              {HELP_TEXT.trapTypes.map((trap, index) => (
+                <div key={index} className="trap-type">
+                  <span className="trap-name">{trap.name}</span>
+                  <span className="trap-desc">{trap.description}</span>
+                  <span className="trap-difficulty">Difficulty: {trap.difficulty}</span>
+                </div>
+              ))}
+            </div>
+
+            <h4>Tips</h4>
+            <ul className="trap-tips">
+              {HELP_TEXT.trapTips.map((tip, index) => (
+                <li key={index}>{tip}</li>
+              ))}
+            </ul>
           </div>
         </div>
 

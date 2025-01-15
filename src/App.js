@@ -561,6 +561,13 @@ function App() {
   };
 
   const handleCommand = async (input) => {
+    // Add the Konami code check at the start
+    if (input.toLowerCase() === 'uuddlrlrbas') {
+        setShowDebugMenu(prev => !prev);
+        addToOutput("Debug mode toggled");
+        return;
+    }
+
     // Add new command for continuing after death
     if (gameState.isDead && input.toLowerCase() === 'continue') {
         handleContinue();
@@ -595,13 +602,26 @@ function App() {
             if (trapResult.triggered) {
               addToOutput(trapResult.message);
               if (trapResult.damage) {
-                setGameState(prev => ({
-                  ...prev,
-                  player: {
-                    ...prev.player,
-                    health: Math.max(0, prev.player.health - trapResult.damage)
+                setGameState(prev => {
+                  const newHealth = Math.max(0, prev.player.health - trapResult.damage);
+                  const newState = {
+                    ...prev,
+                    player: {
+                      ...prev.player,
+                      health: newHealth
+                    }
+                  };
+                  
+                  // Check if the trap killed the player
+                  if (newHealth <= 0) {
+                    handlePlayerDeath({
+                      cause: 'trap',
+                      message: 'You were killed by a deadly trap!'
+                    });
                   }
-                }));
+                  
+                  return newState;
+                });
                 addToOutput(`You take ${trapResult.damage} damage from the trap!`);
               }
             } else {
@@ -903,6 +923,18 @@ function App() {
         }
         return;
 
+      case 'disarm':
+        if (currentRoom.trap) {
+          if (currentRoom.trap.isDisarmed) {
+            addToOutput("This trap has already been disarmed.");
+          } else {
+            setActiveTrap(currentRoom.trap);
+          }
+        } else {
+          addToOutput("There is no trap to disarm in this room.");
+        }
+        break;
+
       default:
         addToOutput("I don't understand that command.", input);
     }
@@ -1038,6 +1070,23 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const handlePurchaseMap = () => {
+    if (gameState.memoryFragments >= 200) {
+      setGameState(prev => ({
+        ...prev,
+        memoryFragments: prev.memoryFragments - 200,
+        permanentUpgrades: {
+          ...prev.permanentUpgrades,
+          exploration: {
+            ...prev.permanentUpgrades.exploration,
+            dungeonMap: 1
+          }
+        }
+      }));
+      addToOutput("Map feature unlocked! You can now see a visual representation of the dungeon.");
+    }
+  };
+
   return (
     <>
       {showSplash ? (
@@ -1065,7 +1114,13 @@ function App() {
               unlockedStats={gameState.unlockedStats}
               onPurchase={handleStatUnlock}
             />
-            <DungeonMap dungeon={gameState.dungeon} playerPosition={gameState.playerPosition} />
+            <DungeonMap 
+              dungeon={gameState.dungeon} 
+              playerPosition={gameState.playerPosition}
+              permanentUpgrades={gameState.permanentUpgrades}
+              memoryFragments={gameState.memoryFragments}
+              onPurchaseMap={handlePurchaseMap}
+            />
           </div>
           <div className="game-right">
             <Inventory items={gameState.inventory} />

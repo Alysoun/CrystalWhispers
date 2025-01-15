@@ -201,6 +201,13 @@ export const Memories = {
           })
         }
       }
+    },
+    exploration: {
+      name: "Exploration",
+      description: "Enhance your ability to navigate and explore",
+      upgrades: {
+        // ... other exploration upgrades ...
+      }
     }
   },
 

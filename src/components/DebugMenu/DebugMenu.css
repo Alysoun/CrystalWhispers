@@ -1,25 +1,28 @@
 .debug-menu {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 20%;
+  left: 20%;
   background-color: #1a1a1a;
   border: 2px solid #c4a7e7;
   border-radius: 8px;
   padding: 20px;
-  width: 80%;
-  max-width: 600px;
-  max-height: 80vh;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
   overflow-y: auto;
   color: #fff;
   z-index: 2000;
+  cursor: move;
 }
 
 .debug-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 15px;
+  border-bottom: 1px solid #c4a7e7;
+  cursor: move;
+  user-select: none;
 }
 
 .debug-header button {
@@ -32,11 +35,13 @@
 
 .debug-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 .debug-tabs button {
+  min-width: 100px;
   padding: 8px 16px;
   background-color: #333;
   border: 1px solid #4a4a4a;
@@ -52,7 +57,7 @@
 
 .debug-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -82,4 +87,31 @@
   font-family: monospace;
   white-space: pre-wrap;
   color: #b4b4b4;
+}
+
+/* Add styles for the teleport section */
+.teleport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.room-button {
+  padding: 8px;
+  background-color: #333;
+  border: 1px solid #666;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.room-button:hover {
+  background-color: #444;
+  border-color: #c4a7e7;
+}
+
+.room-button.current {
+  background-color: #c4a7e7;
+  color: #000;
 } 

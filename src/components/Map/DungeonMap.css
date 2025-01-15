@@ -40,11 +40,13 @@
 
 .map-placeholder {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
   color: #666;
   font-style: italic;
+  text-align: center;
 }
 
 .map-legend {
@@ -79,6 +81,9 @@
   padding: 5px 10px;
   border-radius: 4px;
   z-index: 1000;
+  color: #0f0;
+  font-size: 0.9em;
+  margin-top: 10px;
 }
 
 .hint-text {
@@ -96,6 +101,41 @@
 @keyframes fadeOut {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+.map-unlock {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background-color: #1a1a1a;
+}
+
+.map-unlock .cost {
+  color: #0f0;
+  font-family: monospace;
+  margin: 10px 0;
+}
+
+.unlock-button {
+  background-color: #1a1a1a;
+  border: 1px solid #666;
+  color: #666;
+  padding: 8px 16px;
+  cursor: not-allowed;
+  transition: all 0.2s;
+}
+
+.unlock-button.can-afford {
+  border-color: #0f0;
+  color: #0f0;
+  cursor: pointer;
+}
+
+.unlock-button.can-afford:hover {
+  background-color: #0f0;
+  color: #1a1a1a;
 }
 
 /* ... rest of the CSS from Map.css ... */

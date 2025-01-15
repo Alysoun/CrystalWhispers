@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './TrapUI.css';
 
 function TrapUI({ trap, onAttemptDisarm, onClose }) {
-  const [selectedMethod, setSelectedMethod] = useState(null);
   const [input, setInput] = useState('');
 
   const handleDisarmAttempt = () => {
@@ -17,8 +16,8 @@ function TrapUI({ trap, onAttemptDisarm, onClose }) {
     }, 0);
   };
 
-  const renderDisarmInterface = () => {
-    switch (trap.trapType.disarmMethod) {
+  const renderDisarmInterface = (disarmMethod) => {
+    switch (disarmMethod) {
       case 'TIMING':
         return (
           <div className="timing-interface">
@@ -84,24 +83,24 @@ function TrapUI({ trap, onAttemptDisarm, onClose }) {
     <div className="trap-overlay">
       <div className="trap-modal">
         <div className="trap-header">
-          <h2>{trap.trapType.name}</h2>
-          <button className="close-button" onClick={handleClose}>×</button>
+          <h2>{trap.type.name}</h2>
+          <button className="close-button" onClick={onClose}>×</button>
         </div>
         
         <div className="trap-description">
-          <p>{trap.trapType.description}</p>
+          <p>{trap.type.description}</p>
           <div className="difficulty-indicator">
-            Difficulty: {'⚡'.repeat(trap.trapType.difficulty)}
+            Difficulty: {'⚡'.repeat(trap.type.difficulty)}
           </div>
         </div>
 
         <div className="disarm-interface">
-          {renderDisarmInterface()}
+          {renderDisarmInterface(trap.type.disarmMethod)}
         </div>
 
         <div className="trap-footer">
           <div className="reward-preview">
-            Potential Reward: {trap.trapType.fragments} fragments
+            Potential Reward: {trap.type.fragments} fragments
           </div>
         </div>
       </div>

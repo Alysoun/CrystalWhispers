@@ -2,6 +2,7 @@ import { TreasurePool } from '../treasures/TreasurePool';
 import { PuzzlePool } from '../puzzles/PuzzlePool';
 import { getBossForLevel } from '../bosses/GriefBosses';
 import { TrapRoom } from './TrapRoom';
+import { TrapTypes } from '../TrapTypes';
 
 export class Room {
     constructor(id, x, y, width, height, theme, dungeon) {
@@ -558,8 +559,13 @@ export class Room {
 
     generateCombatContent() {
         if (!this.cleared && !this.enemy && !this.enemyState) {
-            this.enemy = this.generateEnemy();
-            this.description += '\n\nThere is a hostile presence here...';
+            if (this.roomType === 'boss') {
+                this.enemy = this.generateBossEnemy();
+                this.description += '\n\nA powerful presence awaits...';
+            } else {
+                this.enemy = this.generateEnemy();
+                this.description += '\n\nThere is a hostile presence here...';
+            }
         } else if (this.enemyState) {
             this.enemy = this.enemyState;
             this.description += '\n\nThe enemy you fled from is still here...';
@@ -718,6 +724,26 @@ export class Room {
             }
             return item;
         });
+    }
+
+    generateTrap() {
+        if (this.roomType === 'trap') {
+            const trapTypes = Object.values(TrapTypes);
+            const selectedTrap = trapTypes[Math.floor(Math.random() * trapTypes.length)];
+            this.trap = {
+                type: selectedTrap,
+                isDisarmed: false,
+                attempts: 0
+            };
+        }
+    }
+
+    setupBossRoom() {
+        this.roomType = 'boss';
+        this.contentGenerated = true;
+        // Generate the boss immediately to ensure it's there
+        this.enemy = this.generateBossEnemy();
+        this.description = this.baseDescription + '\n\nA powerful presence awaits...';
     }
 }
   

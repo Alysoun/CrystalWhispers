@@ -1,10 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './DungeonMap.css';
 
 const CELL_SIZE = 20;
 const GRID_COLOR = '#333';
 const ROOM_COLOR = '#0f0';
 const CURRENT_ROOM_COLOR = '#ff0';
+const BOSS_ROOM_COLOR = '#f00';
+const TREASURE_ROOM_COLOR = '#c4a7e7';
 const UNDISCOVERED_COLOR = '#222';
 const CONNECTION_COLOR = '#666';
 const CONNECTION_WIDTH = 2;
@@ -14,7 +16,7 @@ const DOOR_SIZE = 12;
 const DOOR_COLOR = '#8b4513';
 const DOOR_OFFSET = 2;
 
-function DungeonMap({ dungeon, playerPosition }) {
+function DungeonMap({ dungeon, playerPosition, permanentUpgrades, memoryFragments, onPurchaseMap }) {
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 0.8 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -24,15 +26,37 @@ function DungeonMap({ dungeon, playerPosition }) {
   const hasInitializedRef = useRef(false);
   const lastTouchDistance = useRef(null);
 
-  // Get container dimensions and try to center map
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    if (!dungeon) return;
+
+    const delta = -e.deltaY;
+    const scaleFactor = delta > 0 ? 1.1 : 0.9;
+    
+    const rect = mapRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    setTransform(prev => {
+      const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+      if (newScale === prev.scale) return prev;
+      
+      const scaleRatio = newScale / prev.scale;
+      
+      return {
+        scale: newScale,
+        x: mouseX - (mouseX - prev.x) * scaleRatio,
+        y: mouseY - (mouseY - prev.y) * scaleRatio
+      };
+    });
+  }, [dungeon]);
+
   useEffect(() => {
     const updateViewportAndCenter = () => {
-      if (!mapRef.current || dungeon?.currentRoomId === undefined) return;
-
+      if (!mapRef.current || !dungeon?.currentRoomId) return;
       const { width, height } = mapRef.current.getBoundingClientRect();
       setViewport({ width, height });
 
-      // Only try to center if we haven't done initial centering
       if (!hasInitializedRef.current) {
         const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
         if (currentRoom && width && height) {
@@ -53,12 +77,19 @@ function DungeonMap({ dungeon, playerPosition }) {
     return () => window.removeEventListener('resize', updateViewportAndCenter);
   }, [dungeon]);
 
-  // Handle room changes after initial centering
   useEffect(() => {
-    if (!dungeon?.currentRoomId || !viewport.width || !viewport.height || !hasInitializedRef.current) return;
+    const mapElement = mapRef.current;
+    if (!mapElement) return;
+
+    mapElement.addEventListener('wheel', handleWheel, { passive: false });
+    return () => mapElement.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
+
+  useEffect(() => {
+    if (!dungeon?.currentRoomId || !viewport.width || !viewport.height) return;
 
     const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
-    if (!currentRoom || currentRoom.id === lastCenteredRoom.current) return;
+    if (!currentRoom) return;
 
     const center = currentRoom.getCenter();
     setTransform(prev => ({
@@ -67,75 +98,21 @@ function DungeonMap({ dungeon, playerPosition }) {
       y: viewport.height/2 - center.y * CELL_SIZE * prev.scale
     }));
     lastCenteredRoom.current = currentRoom.id;
+
   }, [dungeon?.currentRoomId, viewport.width, viewport.height]);
 
-    // Handle mouse wheel zoom
-    const handleWheel = (e) => {
-        e.preventDefault();
-        
-        // Ignore if no dungeon
-        if (!dungeon) return;
-    
-        const delta = -e.deltaY;
-        const scaleFactor = delta > 0 ? 1.1 : 0.9;
-        
-        // Get mouse position relative to the map container
-        const rect = mapRef.current.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-    
-        setTransform(prev => {
-          // Limit scale between 0.5 and 2.0
-          const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
-          
-          // If scale hasn't changed, don't update
-          if (newScale === prev.scale) return prev;
-          
-          const scaleRatio = newScale / prev.scale;
-          
-          return {
-            scale: newScale,
-            x: mouseX - (mouseX - prev.x) * scaleRatio,
-            y: mouseY - (mouseY - prev.y) * scaleRatio
-          };
-        });
-      };
-      
-  useEffect(() => {
-    const mapElement = mapRef.current;
-    if (!mapElement) return;
-  
-    // Add non-passive wheel event listener
-    mapElement.addEventListener('wheel', handleWheel, { passive: false });
-  
-    // Cleanup event listener on unmount
-    return () => {
-      mapElement.removeEventListener('wheel', handleWheel);
-    };
-  }, [handleWheel]);
+  const hasMapUpgrade = permanentUpgrades?.exploration?.dungeonMap > 0;
+  const width = dungeon ? dungeon.width * CELL_SIZE : 0;
+  const height = dungeon ? dungeon.height * CELL_SIZE : 0;
 
-  // Add visual indicator for map interaction
-  const renderMapHint = () => {
-    return (
-      <div className="map-hint">
-        <div className="hint-text">
-          🔍 Scroll to zoom, drag to move
-        </div>
-      </div>
-    );
-  };
-
-  // Add touch event handlers
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
-      // Single touch - handle as drag
       setIsDragging(true);
       setDragStart({
         x: e.touches[0].clientX - transform.x,
         y: e.touches[0].clientY - transform.y
       });
     } else if (e.touches.length === 2) {
-      // Two touches - prepare for pinch zoom
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       lastTouchDistance.current = Math.hypot(
@@ -145,58 +122,44 @@ function DungeonMap({ dungeon, playerPosition }) {
     }
   };
 
-  // Add useEffect for touch events
-  useEffect(() => {
-    const mapElement = mapRef.current;
-    if (!mapElement) return;
+  const handleTouchMove = useCallback((e) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 1 && isDragging) {
+      setTransform(prev => ({
+        ...prev,
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y
+      }));
+    } else if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
 
-    const touchMoveHandler = (e) => {
-      e.preventDefault();
-      
-      if (e.touches.length === 1 && isDragging) {
-        setTransform(prev => ({
-          ...prev,
-          x: e.touches[0].clientX - dragStart.x,
-          y: e.touches[0].clientY - dragStart.y
-        }));
-      } else if (e.touches.length === 2) {
-        // Handle pinch zoom
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const currentDistance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-
-        if (lastTouchDistance.current) {
-          const delta = currentDistance - lastTouchDistance.current;
-          const scaleFactor = delta > 0 ? 1.02 : 0.98;
+      if (lastTouchDistance.current) {
+        const delta = currentDistance - lastTouchDistance.current;
+        const scaleFactor = delta > 0 ? 1.02 : 0.98;
+        
+        const pinchCenterX = (touch1.clientX + touch2.clientX) / 2;
+        const pinchCenterY = (touch1.clientY + touch2.clientY) / 2;
+        
+        setTransform(prev => {
+          const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
+          if (newScale === prev.scale) return prev;
           
-          const pinchCenterX = (touch1.clientX + touch2.clientX) / 2;
-          const pinchCenterY = (touch1.clientY + touch2.clientY) / 2;
-          
-          setTransform(prev => {
-            const newScale = Math.max(0.5, Math.min(2.0, prev.scale * scaleFactor));
-            if (newScale === prev.scale) return prev;
-            
-            const scaleRatio = newScale / prev.scale;
-            return {
-              scale: newScale,
-              x: pinchCenterX - (pinchCenterX - prev.x) * scaleRatio,
-              y: pinchCenterY - (pinchCenterY - prev.y) * scaleRatio
-            };
-          });
-        }
-        lastTouchDistance.current = currentDistance;
+          const scaleRatio = newScale / prev.scale;
+          return {
+            scale: newScale,
+            x: pinchCenterX - (pinchCenterX - prev.x) * scaleRatio,
+            y: pinchCenterY - (pinchCenterY - prev.y) * scaleRatio
+          };
+        });
       }
-    };
-
-    // Add event listeners with { passive: false }
-    mapElement.addEventListener('touchmove', touchMoveHandler, { passive: false });
-
-    return () => {
-      mapElement.removeEventListener('touchmove', touchMoveHandler);
-    };
+      lastTouchDistance.current = currentDistance;
+    }
   }, [isDragging, dragStart]);
 
   const handleTouchEnd = () => {
@@ -204,23 +167,8 @@ function DungeonMap({ dungeon, playerPosition }) {
     lastTouchDistance.current = null;
   };
 
-  if (!dungeon) {
-    return (
-      <div className="map-container">
-        <div className="map-placeholder">No map available</div>
-      </div>
-    );
-  }
-
-  // Calculate map dimensions
-  const width = dungeon.width * CELL_SIZE;
-  const height = dungeon.height * CELL_SIZE;
-
-
-
-  // Handle drag start
   const handleMouseDown = (e) => {
-    if (e.button === 0) { // Left click only
+    if (e.button === 0) {
       setIsDragging(true);
       setDragStart({
         x: e.clientX - transform.x,
@@ -229,7 +177,6 @@ function DungeonMap({ dungeon, playerPosition }) {
     }
   };
 
-  // Handle drag
   const handleMouseMove = (e) => {
     if (isDragging) {
       setTransform(prev => ({
@@ -240,7 +187,6 @@ function DungeonMap({ dungeon, playerPosition }) {
     }
   };
 
-  // Handle drag end
   const handleMouseUp = () => {
     setIsDragging(false);
   };
@@ -263,21 +209,31 @@ function DungeonMap({ dungeon, playerPosition }) {
     }
   };
 
+  const getRoomColor = (room) => {
+    if (room.id === dungeon.currentRoomId) {
+      return CURRENT_ROOM_COLOR;
+    }
+    if (room.roomType === 'boss') {
+      return BOSS_ROOM_COLOR;
+    }
+    if (room.roomType === 'treasure') {
+      return TREASURE_ROOM_COLOR;
+    }
+    return ROOM_COLOR;
+  };
+
   const renderRooms = () => {
     const elements = [];
 
-    // Draw connections first
     dungeon.rooms.forEach(room => {
       if (!room.discovered) return;
 
       room.connections.forEach(({ room: connectedRoom, direction, state }) => {
-        // Only draw connections between discovered rooms
         if (!connectedRoom.discovered) return;
 
         const start = room.getCenter();
         const end = connectedRoom.getCenter();
 
-        // Draw connection line
         elements.push(
           <line
             key={`connection-${room.id}-${connectedRoom.id}`}
@@ -292,7 +248,6 @@ function DungeonMap({ dungeon, playerPosition }) {
       });
     });
 
-    // Draw doors
     dungeon.rooms.forEach(room => {
       if (!room.discovered) return;
 
@@ -316,11 +271,9 @@ function DungeonMap({ dungeon, playerPosition }) {
       });
     });
 
-    // Draw rooms on top
     dungeon.rooms.forEach(room => {
       if (!room.discovered) return;
       
-      const isCurrentRoom = room.id === dungeon.currentRoomId;
       elements.push(
         <rect
           key={`room-${room.id}`}
@@ -328,15 +281,54 @@ function DungeonMap({ dungeon, playerPosition }) {
           y={room.y * CELL_SIZE}
           width={room.width * CELL_SIZE}
           height={room.height * CELL_SIZE}
-          fill={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+          fill={getRoomColor(room)}
           opacity={0.7}
-          stroke={isCurrentRoom ? CURRENT_ROOM_COLOR : ROOM_COLOR}
+          stroke={getRoomColor(room)}
           strokeWidth="2"
         />
       );
     });
 
     return elements;
+  };
+
+  if (!hasMapUpgrade) {
+    return (
+      <div className="map-container">
+        <div className="map-placeholder">
+          <p>Map feature locked</p>
+          <div className="map-unlock">
+            <p>Unlock Map Feature</p>
+            <p className="cost">Cost: 200 fragments</p>
+            <button 
+              className={`unlock-button ${memoryFragments >= 200 ? 'can-afford' : ''}`}
+              onClick={onPurchaseMap}
+              disabled={memoryFragments < 200}
+            >
+              {memoryFragments >= 200 ? 'Purchase Map' : 'Not Enough Fragments'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dungeon) {
+    return (
+      <div className="map-container">
+        <div className="map-placeholder">No map available</div>
+      </div>
+    );
+  }
+
+  const renderMapHint = () => {
+    return (
+      <div className="map-hint">
+        <div className="hint-text">
+          🔍 Scroll to zoom, drag to move
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -382,6 +374,14 @@ function DungeonMap({ dungeon, playerPosition }) {
         <div className="legend-item">
           <span className="legend-color" style={{ backgroundColor: ROOM_COLOR }}></span>
           Discovered Rooms
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: BOSS_ROOM_COLOR }}></span>
+          Boss Room
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: TREASURE_ROOM_COLOR }}></span>
+          Treasure Room
         </div>
         <div className="legend-item">
           <span className="legend-color" style={{ backgroundColor: DOOR_COLOR }}></span>
