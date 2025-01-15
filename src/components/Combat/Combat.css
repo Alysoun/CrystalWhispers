@@ -29,19 +29,23 @@
   text-align: center;
 }
 
+.combat-header h2 {
+  margin: 0;
+  color: #0f0;
+}
+
 .combat-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 15px;
-  min-height: 0;
   overflow-y: auto;
 }
 
 .combat-stats {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 15px;
+  margin: 15px 0;
   padding: 10px;
   border: 1px solid #333;
   border-radius: 4px;
@@ -55,6 +59,7 @@
   border: 1px solid #333;
   border-radius: 4px;
   min-height: 150px;
+  font-family: monospace;
 }
 
 .combat-message {
@@ -63,11 +68,10 @@
 }
 
 .combat-controls {
-  padding: 15px;
-  border-top: 1px solid #0f0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin: 15px 0;
 }
 
 .combat-controls button {
@@ -86,19 +90,37 @@
   cursor: not-allowed;
 }
 
+.combat-status {
+  text-align: center;
+  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid #0f0;
+  border-radius: 4px;
+  background-color: rgba(0, 255, 0, 0.1);
+}
+
+.combat-status.adrenaline {
+  border-color: #f00;
+  color: #f00;
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
 .potion-slots {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
 }
 
 .potion-slot {
-  padding: 5px 10px;
+  flex: 1;
+  min-width: 100px;
+  padding: 10px;
+  text-align: center;
   border: 1px solid #666;
   border-radius: 4px;
   background: #333;
-  color: white;
-  cursor: pointer;
+  color: #fff;
 }
 
 .potion-slot.empty {
@@ -106,19 +128,10 @@
   cursor: default;
 }
 
-.potion-slot:not(.empty):hover {
-  background: #444;
-}
-
-.potion-slot:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 @media (max-width: 768px) {
   .combat-modal {
-    height: 100vh;
     width: 100%;
+    height: 100vh;
     border-radius: 0;
   }
 
@@ -128,16 +141,73 @@
 
   .combat-log {
     min-height: 120px;
-    max-height: 40vh;
-  }
-
-  .combat-message {
-    font-size: 0.9em;
-    line-height: 1.4;
+    max-height: 30vh;
   }
 
   .combat-controls button {
     padding: 15px;
-    margin: 5px 0;
   }
+
+  .potion-slot {
+    min-width: 80px;
+  }
+}
+
+.boss-ui {
+  border: 1px solid #0f0;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 4px;
+}
+
+.boss-phase {
+  color: #ff0;
+  text-align: center;
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.mirror-images {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.mirror-target {
+  background: #1a1a1a;
+  border: 1px solid #0f0;
+  color: #0f0;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.mirror-target:disabled {
+  border-color: #666;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.boss-dialogue {
+  color: #0f0;
+  font-style: italic;
+  text-align: center;
+  margin: 10px 0;
+  padding: 10px;
+  border-top: 1px solid #333;
+}
+
+.enemy-display.boss {
+    color: #ff0;  /* Make boss appear in yellow */
+}
+
+.enemy-display.boss .enemy-name {
+    color: #ff0;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.enemy-display.boss .enemy-ascii {
+    color: #ff0;
+    text-shadow: 0 0 5px #ff0;
 } 

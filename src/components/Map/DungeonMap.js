@@ -305,13 +305,13 @@ function DungeonMap({ dungeon, playerPosition, permanentUpgrades, memoryFragment
           <p>Map feature locked</p>
           <div className="map-unlock">
             <p>Unlock Map Feature</p>
-            <p className="cost">Cost: 200 fragments</p>
+            <p className="cost">Cost: 100 fragments</p>
             <button 
-              className={`unlock-button ${memoryFragments >= 200 ? 'can-afford' : ''}`}
+              className={`unlock-button ${memoryFragments >= 100 ? 'can-afford' : ''}`}
               onClick={onPurchaseMap}
-              disabled={memoryFragments < 200}
+              disabled={memoryFragments < 100}
             >
-              {memoryFragments >= 200 ? 'Purchase Map' : 'Not Enough Fragments'}
+              {memoryFragments >= 100 ? 'Purchase Map' : 'Not Enough Fragments'}
             </button>
           </div>
         </div>

@@ -104,6 +104,7 @@
   border-radius: 4px;
   color: #fff;
   cursor: pointer;
+  position: relative;
 }
 
 .room-button:hover {
@@ -111,7 +112,31 @@
   border-color: #c4a7e7;
 }
 
+.room-button.boss {
+  background-color: #ff4444;
+  color: white;
+}
+
+.room-button.combat {
+  background-color: #ff8844;
+}
+
+.room-button.treasure {
+  background-color: #44ff44;
+}
+
+.room-button.puzzle {
+  background-color: #4444ff;
+  color: white;
+}
+
+.room-button.trap {
+  background-color: #ff44ff;
+}
+
 .room-button.current {
   background-color: #c4a7e7;
   color: #000;
+  border: 2px solid #fff;
+  font-weight: bold;
 } 

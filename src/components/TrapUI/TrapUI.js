@@ -1,109 +1,67 @@
 import React, { useState } from 'react';
 import './TrapUI.css';
 
-function TrapUI({ trap, onAttemptDisarm, onClose }) {
+function TrapUI({ trap, onDisarm, onClose }) {
+  const [selectedMethod, setSelectedMethod] = useState(null);
   const [input, setInput] = useState('');
 
-  const handleDisarmAttempt = () => {
-    onAttemptDisarm(selectedMethod, input);
+  // Guard against undefined trap
+  if (!trap || !trap.type) {
+    return null;
+  }
+
+  const handleMethodSelect = (method) => {
+    setSelectedMethod(method);
   };
 
-  const handleClose = () => {
-    onClose();
-    setTimeout(() => {
-      const commandInput = document.querySelector('.command-input');
-      commandInput?.focus();
-    }, 0);
-  };
-
-  const renderDisarmInterface = (disarmMethod) => {
-    switch (disarmMethod) {
-      case 'TIMING':
-        return (
-          <div className="timing-interface">
-            <div className="timing-bar-container">
-              <div className="timing-bar" />
-              <button 
-                className="timing-button"
-                onClick={() => handleDisarmAttempt()}
-              >
-                Stop!
-              </button>
-            </div>
-            <p className="hint-text">Click the button when the bar aligns with the target zone</p>
-          </div>
-        );
-
-      case 'PATTERN':
-        return (
-          <div className="pattern-interface">
-            <div className="pattern-display">
-              {Array(4).fill(0).map((_, i) => (
-                <button 
-                  key={i}
-                  className={`pattern-button ${input.includes(i) ? 'active' : ''}`}
-                  onClick={() => setInput(prev => prev + i)}
-                />
-              ))}
-            </div>
-            <button 
-              className="submit-button"
-              onClick={() => handleDisarmAttempt()}
-            >
-              Submit Pattern
-            </button>
-          </div>
-        );
-
-      case 'SEQUENCE':
-        return (
-          <div className="sequence-interface">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter the sequence..."
-              className="sequence-input"
-            />
-            <button 
-              className="submit-button"
-              onClick={() => handleDisarmAttempt()}
-            >
-              Submit Sequence
-            </button>
-          </div>
-        );
-
-      default:
-        return <p>Unknown trap type</p>;
+  const handleSubmit = () => {
+    if (selectedMethod) {
+      onDisarm(selectedMethod.name, input);
+      setSelectedMethod(null);
+      setInput('');
     }
   };
 
   return (
-    <div className="trap-overlay">
-      <div className="trap-modal">
-        <div className="trap-header">
-          <h2>{trap.type.name}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
-        
-        <div className="trap-description">
-          <p>{trap.type.description}</p>
-          <div className="difficulty-indicator">
-            Difficulty: {'⚡'.repeat(trap.type.difficulty)}
-          </div>
-        </div>
-
-        <div className="disarm-interface">
-          {renderDisarmInterface(trap.type.disarmMethod)}
-        </div>
-
-        <div className="trap-footer">
-          <div className="reward-preview">
-            Potential Reward: {trap.type.fragments} fragments
-          </div>
-        </div>
+    <div className="trap-ui">
+      <div className="trap-header">
+        <h3>Trap Encountered!</h3>
+        <button className="close-button" onClick={onClose}>×</button>
       </div>
+      
+      <div className="trap-description">
+        {trap.type.description || "A dangerous trap blocks your path."}
+      </div>
+
+      <div className="disarm-methods">
+        <h4>Choose your approach:</h4>
+        {trap.type.methods?.map((method) => (
+          <button
+            key={method.name}
+            onClick={() => handleMethodSelect(method)}
+            className={`method-button ${selectedMethod === method ? 'selected' : ''}`}
+          >
+            {method.name}
+          </button>
+        ))}
+      </div>
+
+      {selectedMethod && (
+        <div className="method-details">
+          <p>{selectedMethod.description}</p>
+          {selectedMethod.requiresInput && (
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={selectedMethod.inputHint || "Enter your solution..."}
+            />
+          )}
+          <button onClick={handleSubmit} className="submit-button">
+            Attempt Disarm
+          </button>
+        </div>
+      )}
     </div>
   );
 }

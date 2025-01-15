@@ -1,126 +1,72 @@
-.trap-overlay {
+.trap-ui {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.trap-modal {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #1a1a1a;
   border: 2px solid #ff3300;
   border-radius: 4px;
   padding: 20px;
   width: 500px;
   color: #fff;
-}
-
-.trap-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #ff3300;
-  padding-bottom: 10px;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  color: #ff3300;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.close-button:hover {
-  color: #ff6600;
+  z-index: 1000;
 }
 
 .trap-description {
   margin-bottom: 20px;
+  font-size: 1.1em;
+  color: #ff6666;
 }
 
-.difficulty-indicator {
-  color: #ff3300;
-  margin-top: 10px;
-}
-
-.disarm-interface {
-  background: #2a2a2a;
-  padding: 20px;
-  border-radius: 4px;
+.disarm-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
-/* Timing-specific styles */
-.timing-bar-container {
-  height: 20px;
-  background: #333;
-  position: relative;
+.disarm-methods h4 {
+  color: #ff3300;
   margin-bottom: 10px;
 }
 
-.timing-bar {
-  height: 100%;
-  background: #ff3300;
-  width: 10px;
-  position: absolute;
-  animation: moveBar 2s linear infinite;
-}
-
-@keyframes moveBar {
-  0% { left: 0; }
-  100% { left: calc(100% - 10px); }
-}
-
-.timing-button {
-  width: 100%;
-  padding: 10px;
-  background: #ff3300;
-  border: none;
-  color: white;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-/* Pattern-specific styles */
-.pattern-interface {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-
-.pattern-display {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.pattern-button {
-  width: 60px;
-  height: 60px;
-  background: #333;
-  border: 1px solid #ff3300;
-  cursor: pointer;
-}
-
-.pattern-button.active {
-  background: #ff3300;
-}
-
-/* Sequence-specific styles */
-.sequence-input {
-  width: 100%;
-  padding: 10px;
+.method-button {
   background: #2a2a2a;
   border: 1px solid #ff3300;
-  color: white;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.method-button:hover {
+  background: #3a3a3a;
+  border-color: #ff6600;
+}
+
+.method-button.selected {
+  background: #ff3300;
+  color: #fff;
+}
+
+.method-details {
+  background: #2a2a2a;
+  padding: 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+}
+
+.method-details p {
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+.method-details input {
+  width: 100%;
+  padding: 8px;
+  background: #1a1a1a;
+  border: 1px solid #ff3300;
+  color: #fff;
   margin-bottom: 10px;
 }
 
@@ -131,24 +77,29 @@
   border: none;
   color: white;
   cursor: pointer;
+  transition: background 0.2s;
 }
 
 .submit-button:hover {
   background: #ff6600;
 }
 
-.trap-footer {
-  text-align: right;
+.trap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.close-button {
+  background: none;
+  border: none;
   color: #ff3300;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 10px;
 }
 
-.reward-preview {
-  font-style: italic;
-}
-
-.hint-text {
-  color: #999;
-  font-style: italic;
-  margin-top: 10px;
-  text-align: center;
+.close-button:hover {
+  color: #ff6600;
 } 

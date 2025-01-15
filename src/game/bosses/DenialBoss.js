@@ -1,151 +1,124 @@
 export const DenialBoss = {
-  name: 'The Eternal Mirror',
-  health: 80,
-  maxHealth: 80,
-  attack: 10,
-  defense: 5,
-  experience: 100,
-  description: 'A figure of shifting reflections, reality seems to bend around it',
-  
-  dialogue: [
-    "System Error: Reality Not Found",
-    "LOAD \"REALITY\", 8, 1... ERROR",
-    "Attempting to restore previous save state..."
-  ],
-  deathQuote: "The reflection finally shows the truth...",
-
-  // Simplified mechanics for first boss
-  specialAbilities: {
-    mirrorImage: {
-      name: "Mirror Image",
-      description: "Creates a reflection of itself",
-      effect: "Creates one mirror image that must be identified from the real boss",
-      dialogue: "Which one is real?",
-      tell: "The real Mirror Keeper casts a subtle shadow"
+    // Get number of times player has completed the game
+    getGameCompletions() {
+        return parseInt(localStorage.getItem('gameCompletions') || '0');
     },
-    realityShift: {
-      name: "Reality Shift",
-      description: "Swaps places with its image",
-      effect: "Switches position with its mirror image",
-      dialogue: "Things aren't always where they seem...",
-      cooldown: 3
-    }
-  },
 
-  // Simplified phases
-  phases: [
-    {
-      healthThreshold: 80,
-      message: "The room fills with mirrors...",
-      activeAbilities: ['mirrorImage']
+    // Base stats that scale with game completions
+    baseStats: {
+        health: 80,
+        attack: 8,
+        defense: 5
     },
-    {
-      healthThreshold: 40,
-      message: "The mirrors begin to move...",
-      activeAbilities: ['mirrorImage', 'realityShift']
-    }
-  ],
 
-  // Tutorial hints that appear during the fight
-  tutorialHints: [
-    "Hint: Look carefully for shadows to identify the real Mirror Keeper",
-    "Hint: When the boss shifts, take a moment to observe before attacking",
-    "Hint: The mirror image cannot cast spells, only the real boss can"
-  ],
-
-  roomDescription: {
-    base: "A hall of corrupted pixels stretches before you, each glitch slightly different from the last.",
-    features: [
-      "Screen artifacts dance across the walls",
-      "Your sprite doesn't quite match your movements",
-      "Error messages flash in and out of existence"
+    // Just two phases for the demo
+    difficultyLevels: [
+        {
+            multipliers: { health: 1, attack: 1 },
+            name: "The Mirror Keeper",
+            description: "A mysterious figure wrapped in reflective surfaces",
+            roomDescription: {
+                base: "You enter a chamber of mirrors. Each surface reflects a different memory, all of them painful.",
+                features: ["mirrors", "reflections", "shadows"]
+            }
+        },
+        {
+            multipliers: { health: 1.5, attack: 1.2 },
+            name: "The Memory's Denial",
+            description: "The figure's form shifts between reflections with newfound purpose",
+            roomDescription: {
+                base: "The mirror chamber pulses with remembered pain. The reflections show moments you've tried to forget.",
+                features: ["shifting mirrors", "memory echoes", "distorted reflections"]
+            }
+        }
     ],
-    atmosphere: "The air crackles with digital static."
-  },
 
-  // Crystal-specific behaviors
-  crystalBehaviors: {
-    DEFIANCE: {
-      name: "Defiant Reflections",
-      description: "Mirror images now fight back independently",
-      modifiedAbilities: {
+    // Core abilities for first phase
+    baseAbilities: {
         mirrorImage: {
-          name: "Aggressive Reflection",
-          description: "Creates a reflection that can attack",
-          effect: "Mirror image deals 50% of boss damage",
-          dialogue: "Face yourself..."
+            name: "Mirror Image",
+            description: "Creates reflections of itself",
+            damage: 0,
+            effect: "Creates mirror images that must be identified from the real boss",
+            imageCount: 3
+        },
+        shatteringStrike: {
+            name: "Shattering Strike",
+            description: "A powerful blow that can break defenses",
+            damage: 12,
+            effect: "Reduces player defense temporarily"
         }
-      }
     },
 
-    RESILIENCE: {
-      name: "Endless Mirrors",
-      description: "Mirror images split when attacked",
-      modifiedAbilities: {
-        mirrorImage: {
-          name: "Splitting Image",
-          description: "Images create new copies when hit",
-          effect: "Each image splits once when damaged (max 4 images)",
-          dialogue: "Break one, face many..."
+    // Second phase adds one new ability
+    enhancedAbilities: {
+        realityShift: {
+            name: "Reality Shift",
+            description: "Swaps places with its image",
+            damage: 0,
+            effect: "Switches position with mirror image and increases next attack damage",
+            bonusDamage: 5
         }
-      }
     },
 
-    REFLECTION: {
-      name: "True Mirrors",
-      description: "Mirror images copy player abilities",
-      modifiedAbilities: {
-        mirrorCopy: {
-          name: "Perfect Mimicry",
-          description: "Copies player's last action",
-          effect: "Images use player's own attacks against them",
-          dialogue: "Your strength becomes your weakness..."
-        }
-      }
-    },
+    // Dialogue for both phases
+    dialogueByPhase: [
+        [
+            "Why do you persist in remembering?",
+            "These memories only bring pain...",
+            "Let them fade into darkness..."
+        ],
+        [
+            "You dare return? There are darker truths ahead...",
+            "Your memories are chains that bind you.",
+            "What you seek... you may not wish to find..."
+        ]
+    ],
 
-    CHALLENGE: {
-      name: "Reality Fracture",
-      description: "Room layout changes with each mirror phase",
-      modifiedAbilities: {
-        realityBend: {
-          name: "Shattered Reality",
-          description: "Completely changes the battlefield",
-          effect: "Rearranges room features and mirror positions",
-          dialogue: "Nothing stays the same..."
-        }
-      }
-    }
-  },
-
-  // Method to apply crystal modifications
-  applyCrystalBehaviors(activeCrystals) {
-    let modifiedBoss = { ...this };
-    
-    activeCrystals.forEach(crystal => {
-      if (this.crystalBehaviors[crystal]) {
-        const behavior = this.crystalBehaviors[crystal];
+    spawn() {
+        const completions = Math.min(this.getGameCompletions(), 1); // Cap at 1 for demo
+        const config = this.difficultyLevels[completions];
         
-        // Add new abilities
-        modifiedBoss.specialAbilities = {
-          ...modifiedBoss.specialAbilities,
-          ...behavior.modifiedAbilities
+        // Calculate scaled stats
+        const stats = {
+            health: Math.floor(this.baseStats.health * config.multipliers.health),
+            attack: Math.floor(this.baseStats.attack * config.multipliers.attack),
+            defense: this.baseStats.defense,
+            maxHealth: Math.floor(this.baseStats.health * config.multipliers.health)
         };
 
-        // Modify room description
-        modifiedBoss.roomDescription.features.push(
-          `The mirrors seem to ${behavior.description.toLowerCase()}`
-        );
+        // Combine abilities based on phase
+        let abilities = { ...this.baseAbilities };
+        if (completions > 0) {
+            abilities = { 
+                ...abilities, 
+                ...this.enhancedAbilities,
+                mirrorImage: {
+                    ...this.baseAbilities.mirrorImage,
+                    imageCount: 4  // More images in phase 2
+                }
+            };
+        }
 
-        // Add crystal-specific combat phases
-        modifiedBoss.phases.push({
-          healthThreshold: 60,
-          message: `${behavior.name} activates!`,
-          activeAbilities: [...Object.keys(behavior.modifiedAbilities)]
-        });
-      }
-    });
-
-    return modifiedBoss;
-  }
+        return {
+            ...config,
+            ...stats,
+            abilities,
+            dialogue: this.dialogueByPhase[completions],
+            isBoss: true,
+            appearance: {
+                ascii: [
+                    "   ╔═══╗   ",
+                    "   ║ ◊ ║   ",
+                    " ╔═╝   ╚═╗ ",
+                    " ║ ◊   ◊ ║ ",
+                    " ╚═╗   ╔═╝ ",
+                    "   ║ ◊ ║   ",
+                    "   ╚═══╝   "
+                ]
+            },
+            phase: completions,
+            hasRealityShift: completions > 0
+        };
+    }
 }; 

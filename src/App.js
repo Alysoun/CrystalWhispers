@@ -52,7 +52,8 @@ const initialGameState = {
   unlockedAchievements: new Set()
 };
 
-const generateDungeon = (level = 1) => {
+// Rename this function to avoid conflict
+const createNewDungeon = (level = 1) => {
   const minRooms = 15;
   const maxRooms = 30;
   const numRooms = Math.floor(Math.random() * (maxRooms - minRooms + 1)) + minRooms;
@@ -319,72 +320,116 @@ function App() {
 
   // Combat victory
   const handleCombatEnd = (result) => {
-    // Change to handle result as an object or string
-    const victory = result === 'victory' || result.victory;
-    const fled = result === 'flee' || result.fled;
+    setIsCombatOpen(false);
+    setCurrentEnemy(null);
+    refocusCommandPrompt();
 
-    if (victory) {
+    if (result.victory) {
         soundManager.play('victory');
-        const enemy = currentEnemy;
-        setCurrentEnemy(null);
-        setIsCombatOpen(false);
-        refocusCommandPrompt();
-
-        // Get current room and mark it as cleared
+        
+        // Get current room and mark it cleared
         const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
         currentRoom.cleared = true;
         currentRoom.enemy = null;
 
-        // Update player stats and handle experience gain
-        setGameState(prev => {
-            const newPlayer = new Player();
-            Object.assign(newPlayer, {
-                maxHealth: prev.player.maxHealth,
-                health: prev.player.health,
-                attack: prev.player.attack,
-                defense: prev.player.defense,
-                level: prev.player.level,
-                experience: prev.player.experience,
-                healAfterCombat: prev.player.healAfterCombat
-            });
-            
-            const expResult = newPlayer.gainExperience(enemy.experience);
-            
-            const messages = [
-                `You defeated the ${enemy.name}!`,
-                `Gained ${enemy.experience} experience points.`
-            ];
+        if (result.isBoss) {
+            // Handle boss victory
+            setGameState(prev => {
+                const newPlayer = new Player();
+                Object.assign(newPlayer, prev.player);
+                const expResult = newPlayer.gainExperience(result.experience || 100);
 
-            if (expResult.levelsGained > 0) {
-                messages.push(`Level Up! You are now level ${expResult.newLevel}!`);
-                addJournalEntry(`Reached level ${expResult.newLevel}`);
-            }
+                const messages = [
+                    `You've defeated ${currentEnemy.name}!`,
+                    `A powerful memory has been unlocked!`,
+                    `Gained ${result.experience || 100} experience points.`,
+                    `Found ${result.fragments || 200} memory fragments!`,
+                    'The Memories interface has opened, allowing you to purchase upgrades.',
+                    'Reality shifts, but your memories remain...'
+                ];
 
-            if (newPlayer.healAfterCombat) {
-                messages.push(`Recovered ${newPlayer.healAfterCombat} HP.`);
-            }
-
-            addToOutput(messages.filter(Boolean).join('\n'));
-            addJournalEntry(`Defeated ${enemy.name} (+${enemy.experience} XP)`);
-
-            return {
-                ...prev,
-                player: newPlayer,
-                stats: {
-                    ...prev.stats,
-                    enemiesDefeated: (prev.stats.enemiesDefeated || 0) + 1
+                if (expResult.levelsGained > 0) {
+                    messages.push(`Level Up! You are now level ${expResult.newLevel}!`);
+                    addJournalEntry(`Reached level ${expResult.newLevel}`);
                 }
-            };
-        });
-    } else if (fled) {
+
+                addToOutput(messages.join('\n'));
+                addJournalEntry(`Defeated ${currentEnemy.name} (Boss)`);
+
+                // Show memories UI after boss victory
+                setShowMemoriesUI(true);
+
+                // Get current game completions and increment
+                const completions = parseInt(localStorage.getItem('gameCompletions') || '0');
+                const newCompletions = completions + 1;
+                localStorage.setItem('gameCompletions', newCompletions.toString());
+
+                // Generate new dungeon with increased difficulty
+                const newDungeon = createNewDungeon(newCompletions + 1); // Increase dungeon level
+                const startRoom = newDungeon.rooms.get(0);
+                startRoom.discovered = true;
+
+                return {
+                    ...prev,
+                    player: newPlayer, // Keep all player progress
+                    memoryFragments: prev.memoryFragments + (result.fragments || 200),
+                    stats: {
+                        ...prev.stats,
+                        bossesDefeated: (prev.stats.bossesDefeated || 0) + 1,
+                        enemiesDefeated: (prev.stats.enemiesDefeated || 0) + 1,
+                        gamesCompleted: (prev.stats.gamesCompleted || 0) + 1
+                    },
+                    dungeon: newDungeon,
+                    currentRoom: startRoom,
+                    playerPosition: { x: startRoom.x, y: startRoom.y }
+                };
+            });
+        } else {
+            // Handle normal enemy victory
+            setGameState(prev => {
+                const newPlayer = new Player();
+                Object.assign(newPlayer, prev.player);
+                const expResult = newPlayer.gainExperience(result.experience || 20);
+
+                const messages = [
+                    `You defeated the ${currentEnemy.name}!`,
+                    `Gained ${result.experience || 20} experience points.`,
+                    `Found ${result.fragments || 10} memory fragments!`
+                ];
+
+                if (expResult.levelsGained > 0) {
+                    messages.push(`Level Up! You are now level ${expResult.newLevel}!`);
+                    addJournalEntry(`Reached level ${expResult.newLevel}`);
+                }
+
+                if (newPlayer.healAfterCombat) {
+                    messages.push(`Recovered ${newPlayer.healAfterCombat} HP.`);
+                }
+
+                addToOutput(messages.join('\n'));
+                addJournalEntry(`Defeated ${currentEnemy.name} (+${result.experience || 20} XP)`);
+
+                return {
+                    ...prev,
+                    player: newPlayer,
+                    memoryFragments: prev.memoryFragments + (result.fragments || 10),
+                    stats: {
+                        ...prev.stats,
+                        enemiesDefeated: (prev.stats.enemiesDefeated || 0) + 1
+                    }
+                };
+            });
+        }
+    } else if (result.fled) {
         addToOutput("You managed to escape!");
-        setIsCombatOpen(false);
-        setCurrentEnemy(null);
+        // Store enemy state for when player returns
+        const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
+        currentRoom.enemyState = currentEnemy;
     } else {
-        // Only handle death if not victory and not fled
-        setIsCombatOpen(false);
-        setCurrentEnemy(null);
-        handlePlayerDeath();
+        handlePlayerDeath({
+            cause: 'combat',
+            enemy: currentEnemy
+        });
     }
   };
 
@@ -503,42 +548,18 @@ function App() {
   const handleContinue = () => {
     console.log('Handling continue after death');
     
-    // Create new dungeon using the existing Dungeon class
-    const newDungeon = new Dungeon(50, 50, Math.floor(Math.random() * 15) + 15);
-    newDungeon.level = 1;  // Reset to level 1
-    
-    // Set starting room as discovered
-    const startingRoom = newDungeon.rooms.get(0);
-    startingRoom.discovered = true;
-    startingRoom.createItemsFromFeatures();
-
-    // Create new player and apply all permanent upgrades
+    // Create new player with upgrades
     const newPlayer = new Player();
+    Object.assign(newPlayer, gameState.player);
     
-    // Preserve experience and level from previous run
-    newPlayer.experience = gameState.player.experience;
-    newPlayer.level = gameState.player.level;
+    // Reset health to max while keeping upgrades
+    newPlayer.health = newPlayer.maxHealth;
     
-    // Safely apply all permanent upgrades to the new player
-    Object.entries(gameState.permanentUpgrades || {}).forEach(([category, upgrades]) => {
-        if (Memories.categories[category] && upgrades) {  // Check if category exists
-            Object.entries(upgrades).forEach(([upgrade, level]) => {
-                const upgradeInfo = Memories.categories[category]?.upgrades?.[upgrade];
-                if (upgradeInfo) {  // Check if upgrade exists
-                    const effect = upgradeInfo.effect(level);
-                    
-                    // Apply the effects to the player
-                    if (effect.attackBonus) newPlayer.attack += effect.attackBonus;
-                    if (effect.defenseBonus) newPlayer.defense += effect.defenseBonus;
-                    if (effect.healAfterCombat) newPlayer.healAfterCombat = (newPlayer.healAfterCombat || 0) + effect.healAfterCombat;
-                    if (effect.healthBonus) {
-                        newPlayer.maxHealth += effect.healthBonus;
-                        newPlayer.health = newPlayer.maxHealth;  // Start with full health
-                    }
-                }
-            });
-        }
-    });
+    // Create new dungeon at level 1
+    const newDungeon = createNewDungeon(1);
+    const startRoom = newDungeon.rooms.get(0);
+    startRoom.discovered = true;
+    startRoom.createItemsFromFeatures();
 
     // Reset game state but keep memories and permanent upgrades
     setGameState(prev => ({
@@ -549,14 +570,15 @@ function App() {
         unlockedStats: prev.unlockedStats,  // Keep unlocked stats
         discoveredTreasures: prev.discoveredTreasures,
         unlockedAchievements: prev.unlockedAchievements,
-        player: newPlayer,  // Use the player with applied upgrades
+        player: newPlayer,  // Use the player with applied upgrades and full health
         dungeon: newDungeon,
-        currentRoom: newDungeon.rooms.get(newDungeon.currentRoomId),
+        currentRoom: startRoom,
+        playerPosition: { x: startRoom.x, y: startRoom.y },
         isDead: false
     }));
 
     setShowMemoriesUI(false);
-    addToOutput("You awaken in a new memory...");
+    addToOutput("You awaken in a new memory with full health...");
     addJournalEntry("Began new exploration");
   };
 
@@ -596,103 +618,74 @@ function App() {
         if (canMove) {
           const nextRoom = gameState.dungeon.rooms.get(nextRoomId);
           
-          // Handle trap check before movement
-          if (nextRoom.trap && !nextRoom.trap.disarmed) {
-            const trapResult = nextRoom.handleTrapTrigger();
-            if (trapResult.triggered) {
-              addToOutput(trapResult.message);
-              if (trapResult.damage) {
-                setGameState(prev => {
-                  const newHealth = Math.max(0, prev.player.health - trapResult.damage);
-                  const newState = {
-                    ...prev,
-                    player: {
-                      ...prev.player,
-                      health: newHealth
-                    }
-                  };
-                  
-                  // Check if the trap killed the player
-                  if (newHealth <= 0) {
-                    handlePlayerDeath({
-                      cause: 'trap',
-                      message: 'You were killed by a deadly trap!'
-                    });
-                  }
-                  
-                  return newState;
-                });
-                addToOutput(`You take ${trapResult.damage} damage from the trap!`);
-              }
-            } else {
-              addToOutput(trapResult.message);
-            }
-          }
-
-          // Discover and generate loot with bonuses
+          // Handle room entry
           nextRoom.discover();
           nextRoom.generateLoot();
           
           handleRoomDiscovery(nextRoom);
-          nextRoom.discover();
-      
+          
           if (!nextRoom.items || nextRoom.items.length === 0) {
-            nextRoom.createItemsFromFeatures();
+              nextRoom.createItemsFromFeatures();
           }
-      
+          
           // Record which direction we entered from
           nextRoom.recordEntry(direction);
-      
-          // Check for combat
-          if ((nextRoom.roomType === 'combat' || nextRoom.roomType === 'boss') && 
-              (nextRoom.enemy || nextRoom.enemyType) && 
-              !nextRoom.canSneakPast(direction)) {
-            const enemy = nextRoom.enemy || nextRoom.enemyType;
-            const ambushState = nextRoom.getAmbushState();
-            setCurrentEnemy(enemy);
-            setIsCombatOpen(true);
-            nextRoom.enemyAware = true;
-            nextRoom.playerAware = true;
-            
-            // Special message for boss rooms
-            if (nextRoom.roomType === 'boss') {
-                addToOutput(`You face ${enemy.name}, a powerful manifestation of grief!`, input);
-            } else {
-                switch(ambushState) {
-                    case 'player':
-                        addToOutput(`You catch the ${enemy.name} by surprise! You'll get the first strike!`, input);
-                        break;
-                    case 'enemy':
-                        addToOutput(`The ${enemy.name} was waiting for you! It gets the first strike!`, input);
-                        break;
-                    default:
-                        addToOutput(`A ${enemy.name} appears!`, input);
-                }
-            }
-          } else if (nextRoom.enemy && !nextRoom.enemyAware) {
-            if (nextRoom.playerAware) {
-              addToOutput("There's an enemy here. You've spotted it, but it hasn't noticed you yet. You can sneak back the way you came, or attack for an advantage!", input);
-            } else {
-              addToOutput("You sense a presence, but can't quite make it out. You can sneak back the way you came to be safe.", input);
-            }
+
+          // Check for traps before movement
+          if (nextRoom.trap && !nextRoom.trap.isDisarmed) {
+              const trapResult = nextRoom.handleTrapTrigger();
+              if (trapResult.triggered) {
+                  if (trapResult.requiresDisarm) {
+                      setActiveTrap(nextRoom.trap);
+                      addToOutput(trapResult.message);
+                  }
+              }
           }
-      
-          // Update gameState - preserve player object
-          setGameState(prev => {
-            const updatedDungeon = prev.dungeon;
-            updatedDungeon.currentRoomId = nextRoomId;
-            
-            return {
+
+          // Handle combat encounters
+          if (nextRoom.roomType === 'boss') {
+              nextRoom.setupBossRoom(); // This will only setup if not cleared
+              if (!nextRoom.cleared) {
+                  setCurrentEnemy(nextRoom.enemy);
+                  setIsCombatOpen(true);
+                  addToOutput(`You face ${nextRoom.enemy.name}!`);
+              }
+          } 
+          else if (nextRoom.roomType === 'combat' && nextRoom.enemy && !nextRoom.cleared) {
+              if (!nextRoom.canSneakPast(direction)) {
+                  setCurrentEnemy(nextRoom.enemy);
+                  setIsCombatOpen(true);
+                  const ambushState = nextRoom.getAmbushState();
+                  
+                  if (ambushState === 'player') {
+                      addToOutput("You catch the enemy by surprise!");
+                  } else if (ambushState === 'enemy') {
+                      addToOutput("The enemy was waiting for you!");
+                  } else {
+                      addToOutput(`A ${nextRoom.enemy.name} appears!`);
+                  }
+              } else if (!nextRoom.enemyAware) {
+                  if (nextRoom.playerAware) {
+                      addToOutput("There's an enemy here. You've spotted it, but it hasn't noticed you yet. You can sneak back the way you came, or attack for an advantage!");
+                  } else {
+                      addToOutput("You sense a presence, but can't quite make it out. You can sneak back the way you came to be safe.");
+                  }
+              }
+          }
+
+          // Update game state with new room
+          setGameState(prev => ({
               ...prev,
-              dungeon: updatedDungeon,
+              dungeon: {
+                  ...prev.dungeon,
+                  currentRoomId: nextRoomId,
+                  rooms: prev.dungeon.rooms
+              },
               currentRoom: nextRoom,
-              playerPosition: { x: nextRoom.x, y: nextRoom.y },
-              player: prev.player  // Explicitly preserve player state
-            };
-          });
-      
+              playerPosition: { x: nextRoom.x, y: nextRoom.y }
+          }));
+
           addToOutput(nextRoom.getFullDescription(), input, true);
-          addJournalEntry(`Moved ${direction} to room ${nextRoomId}`);
         } else {
           if (direction) {
             addToOutput(direction ? `You cannot go ${direction} from here.` : "Go where?", input);
@@ -931,15 +924,19 @@ function App() {
         return;
 
       case 'disarm':
-        if (currentRoom.trap) {
-          if (currentRoom.trap.isDisarmed) {
-            addToOutput("This trap has already been disarmed.");
-          } else {
-            setActiveTrap(currentRoom.trap);
-          }
-        } else {
-          addToOutput("There is no trap to disarm in this room.");
+        console.log('Current room:', gameState.currentRoom);
+        console.log('Room trap:', gameState.currentRoom.trap);
+        if (!gameState.currentRoom.trap) {
+            addToOutput("There is no trap to disarm in this room.");
+            return;
         }
+
+        if (gameState.currentRoom.trap.isDisarmed) {
+            addToOutput("This trap has already been disarmed.");
+            return;
+        }
+
+        setActiveTrap(gameState.currentRoom.trap);
         break;
 
       default:
@@ -1018,25 +1015,43 @@ function App() {
   };
 
   const handleTrapDisarm = (method, input) => {
-    if (!currentRoom || !activeTrap) return;
+    if (!gameState.currentRoom || !activeTrap) return;
 
-    const result = currentRoom.attemptDisarmTrap(method, input, player);
+    const result = gameState.currentRoom.attemptDisarmTrap(method, input, gameState.player);
     
     if (result.success) {
-      addToGameLog(result.message);
-      if (result.fragments) {
-        setMemoryFragments(prev => prev + result.fragments);
-        addToGameLog(`You gained ${result.fragments} memory fragments!`);
-      }
-      setActiveTrap(null);
-    } else {
-      addToGameLog(result.message);
-      if (result.damage) {
-        addToGameLog(`You took ${result.damage} damage!`);
-      }
-      if (result.destroyed) {
+        addToOutput(result.message);
+        if (result.fragments) {
+            setGameState(prev => ({
+                ...prev,
+                memoryFragments: prev.memoryFragments + result.fragments
+            }));
+            addToOutput(`You gained ${result.fragments} memory fragments!`);
+        }
         setActiveTrap(null);
-      }
+    } else {
+        addToOutput(result.message);
+        // Spring the trap on failed disarm
+        const trapResult = gameState.currentRoom.springTrap();
+        if (trapResult?.damage) {
+            setGameState(prev => ({
+                ...prev,
+                player: {
+                    ...prev.player,
+                    health: Math.max(0, prev.player.health - trapResult.damage)
+                }
+            }));
+            addToOutput(`You took ${trapResult.damage} damage!`);
+            
+            // Check for death
+            if (prev.player.health - trapResult.damage <= 0) {
+                handlePlayerDeath({
+                    cause: 'trap',
+                    message: 'You were killed by a deadly trap!'
+                });
+            }
+        }
+        setActiveTrap(null);  // Close trap UI after springing
     }
   };
 
@@ -1078,10 +1093,10 @@ function App() {
   }, []);
 
   const handlePurchaseMap = () => {
-    if (gameState.memoryFragments >= 200) {
+    if (gameState.memoryFragments >= 100) {
       setGameState(prev => ({
         ...prev,
-        memoryFragments: prev.memoryFragments - 200,
+        memoryFragments: prev.memoryFragments - 100,
         permanentUpgrades: {
           ...prev.permanentUpgrades,
           exploration: {
@@ -1197,13 +1212,10 @@ function App() {
             allowPurchases={gameState.isDead}
           />
           {activeTrap && (
-            <TrapUI
+            <TrapUI 
               trap={activeTrap}
-              onAttemptDisarm={handleTrapDisarm}
-              onClose={() => {
-                setActiveTrap(null);
-                refocusCommandPrompt();
-              }}
+              onDisarm={(method, input) => handleTrapDisarm(method, input)}
+              onClose={() => setActiveTrap(null)}
             />
           )}
         </div>

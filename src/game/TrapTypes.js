@@ -1,44 +1,34 @@
 export const TrapTypes = {
-    POISON_DART: {
-        name: "Poison Dart",
-        description: "Small holes line the walls",
-        damage: 15,
-        difficulty: 2,
-        disarmMethod: "TIMING",
-        fragments: 25,
-        effect: (player) => {
-            return {
-                damage: 15,
-                message: "Poisoned darts shoot from the walls!"
-            };
-        }
-    },
-    SPIKE_PIT: {
-        name: "Spike Pit",
-        description: "The floor looks unstable",
-        damage: 20,
-        difficulty: 2,
-        disarmMethod: "PATTERN",
-        fragments: 30,
-        effect: (player) => {
-            return {
-                damage: 20,
-                message: "The floor gives way to reveal deadly spikes!"
-            };
-        }
-    },
-    RUNE_SEAL: {
-        name: "Rune Seal",
-        description: "Glowing runes pulse with dangerous energy",
-        damage: 25,
+    SPIKE: {
+        name: 'Spike Trap',
+        description: 'Sharp spikes protrude from the floor and walls.',
         difficulty: 3,
-        disarmMethod: "SEQUENCE",
-        fragments: 40,
-        effect: (player) => {
-            return {
-                damage: 25,
-                message: "The runes flare with destructive energy!"
-            };
-        }
+        damage: 25,
+        methods: [
+            {
+                name: 'Mechanical',
+                description: 'Try to jam the mechanism.',
+                requiresInput: false
+            },
+            {
+                name: 'Agility',
+                description: 'Attempt to carefully disable the trigger.',
+                requiresInput: false
+            }
+        ]
+    },
+    PUZZLE: {
+        name: 'Puzzle Lock',
+        description: 'A complex locking mechanism blocks the way.',
+        difficulty: 4,
+        damage: 15,
+        methods: [
+            {
+                name: 'Solve',
+                description: 'Try to solve the puzzle.',
+                requiresInput: true,
+                inputHint: 'Enter the solution...'
+            }
+        ]
     }
 }; 

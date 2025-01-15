@@ -16,7 +16,9 @@ function DebugMenu({
   discoveredTreasures,
   setDiscoveredTreasures,
   initializeGame,
-  handlePlayerDeath
+  handlePlayerDeath,
+  gameState,
+  onUpdateGameState
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
   const [position, setPosition] = useState(null);
@@ -419,6 +421,72 @@ function DebugMenu({
         }
       }
     ]
+  };
+
+  const handleTeleport = (roomId) => {
+    const targetRoom = gameState.dungeon.rooms.get(roomId);
+    if (!targetRoom) return;
+
+    // Discover the room and generate its content
+    targetRoom.discover();
+    
+    // Special handling for boss and combat rooms
+    if (targetRoom.roomType === 'boss') {
+        // Ensure boss room is properly set up
+        targetRoom.setupBossRoom();
+        
+        // Start combat immediately if boss isn't cleared
+        if (!targetRoom.cleared) {
+            onUpdateGameState(prev => ({
+                ...prev,
+                dungeon: {
+                    ...prev.dungeon,
+                    currentRoomId: roomId,
+                    rooms: prev.dungeon.rooms
+                },
+                currentRoom: targetRoom,
+                isCombatOpen: true,
+                currentEnemy: targetRoom.enemy
+            }));
+        } else {
+            // Normal room update if boss is cleared
+            onUpdateGameState(prev => ({
+                ...prev,
+                dungeon: {
+                    ...prev.dungeon,
+                    currentRoomId: roomId,
+                    rooms: prev.dungeon.rooms
+                },
+                currentRoom: targetRoom
+            }));
+        }
+    } 
+    else if (targetRoom.roomType === 'combat' && targetRoom.enemy) {
+      // Start combat immediately for combat rooms
+      onUpdateGameState(prev => ({
+        ...prev,
+        dungeon: {
+          ...prev.dungeon,
+          currentRoomId: roomId,
+          rooms: prev.dungeon.rooms
+        },
+        currentRoom: targetRoom,
+        isCombatOpen: true,
+        currentEnemy: targetRoom.enemy
+      }));
+    }
+    else {
+      // Normal room teleport
+      onUpdateGameState(prev => ({
+        ...prev,
+        dungeon: {
+          ...prev.dungeon,
+          currentRoomId: roomId,
+          rooms: prev.dungeon.rooms
+        },
+        currentRoom: targetRoom
+      }));
+    }
   };
 
   if (!isOpen) return null;

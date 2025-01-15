@@ -38,7 +38,7 @@ export const Memories = {
       }
     },
     combat: {
-      name: "Combat Mastery",
+      name: "Combat Training",
       description: "Enhance your combat abilities",
       upgrades: {
         vitality: {
@@ -93,6 +93,15 @@ export const Memories = {
           cost: (level) => Math.floor(300 * Math.pow(1.8, level)),
           effect: (level) => ({ 
             counterChance: level * 0.1  // 10% per level
+          })
+        },
+        accuracy: {
+          name: "Combat Focus",
+          description: "Improve your accuracy in combat",
+          maxLevel: 3,
+          cost: (level) => Math.floor(150 * Math.pow(1.5, level)),
+          effect: (level) => ({
+            accuracyBonus: level * 10 // +10% accuracy per level
           })
         }
       }

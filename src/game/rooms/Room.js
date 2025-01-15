@@ -3,6 +3,7 @@ import { PuzzlePool } from '../puzzles/PuzzlePool';
 import { getBossForLevel } from '../bosses/GriefBosses';
 import { TrapRoom } from './TrapRoom';
 import { TrapTypes } from '../TrapTypes';
+import { DenialBoss } from '../bosses/DenialBoss';
 
 export class Room {
     constructor(id, x, y, width, height, theme, dungeon) {
@@ -61,17 +62,13 @@ export class Room {
 
     generateContent() {
         if (!this.contentGenerated) {
-            // Starting room (id: 0) should always be safe
-            if (this.id === 0) {
-                this.roomType = 'safe';
-                this.contentGenerated = true;
-                return;
-            }
-
-            const roll = this.dungeon.random();
+            const roll = Math.random();
             
-            if (roll < 0.15) { // 15% chance for trap room
+            if (this.roomType === 'boss') {
+                this.generateCombatContent();
+            } else if (roll < 0.15) { // 15% chance for trap room
                 this.roomType = 'trap';
+                this.generateTrap();
                 this.setupTrap();
             } else if (roll < 0.25) {
                 this.roomType = 'treasure';
@@ -82,16 +79,24 @@ export class Room {
                 this.generatePuzzle();
             } else {
                 this.roomType = 'combat';
-                this.generateCombatContent();
+                this.generateCombatContent(); // Generate combat content for normal combat rooms
             }
+            
             this.contentGenerated = true;
         }
     }
 
     setupTrap() {
-        this.trap = new TrapRoom(this.id, this.x, this.y, this.width, this.height, this.theme, this.dungeon);
-        this.description = this.trap.getDescription();
-        this.features.push(this.trap.trapType.name);
+        if (!this.trap) {
+            this.generateTrap();
+        }
+        if (this.trap) { // Only update if trap exists
+            this.description = this.trap.type.description || 'A dangerous trap lies in wait.';
+            if (this.trap.type.name) {
+                this.features.push(this.trap.type.name);
+            }
+            console.log('Trap setup complete:', this.trap); // Debug log
+        }
     }
 
     generateEnemy() {
@@ -128,12 +133,10 @@ export class Room {
     }
 
     generateBossEnemy() {
-        const boss = getBossForLevel(this.dungeon.level);
-        if (!boss) {
-            console.error('No boss defined for this level!');
-            return null;
+        if (this.roomType === 'boss') {
+            return DenialBoss.spawn();
         }
-        return boss;
+        return null;
     }
 
     getFullDescription() {
@@ -226,8 +229,8 @@ export class Room {
                 'child\'s toy that winds': 'toy',
                 'bookshelf where': 'bookshelf',
                 'fireplace with eternal': 'fireplace',
-                'chess game frozen': 'chess',
-                'chess set mid-game': 'chess',
+                'chess game frozen': 'chess game',
+                'chess set mid-game': 'chess set',
                 'tea set that stays': 'tea set',
                 'crystal chandelier casting': 'chandelier',
                 'piano that plays': 'piano',
@@ -546,29 +549,70 @@ export class Room {
             return { success: false, message: 'There is no trap to disarm here.' };
         }
 
-        const result = this.trap.attemptDisarm(method, input);
-        
-        if (!result.success && !this.trap.isDisarmed) {
-            // Apply trap effect if disarm fails
-            const effectResult = this.trap.trapType.effect(player);
-            result.message += `\n${effectResult}`;
+        if (this.trap.isDisarmed) {
+            return { success: false, message: 'This trap has already been disarmed.' };
         }
 
-        return result;
+        // Check if the method is valid for this trap type
+        const validMethod = this.trap.type.methods.find(m => m.name === method);
+        if (!validMethod) {
+            return {
+                success: false,
+                message: `That's not a valid way to disarm this trap.`,
+                damage: Math.floor(this.trap.type.damage / 2)
+            };
+        }
+
+        // Base success chance
+        let successChance = 0.5;
+
+        // Add bonus from Safe Passage upgrade
+        const safePassageLevel = player?.upgrades?.explorer?.safePassage || 0;
+        successChance += safePassageLevel * 0.15;
+
+        const roll = Math.random();
+        if (roll < successChance) {
+            this.trap.isDisarmed = true;
+            return {
+                success: true,
+                message: "You successfully disarm the trap!",
+                fragments: Math.floor(Math.random() * 20) + 10 // 10-30 fragments
+            };
+        }
+
+        // Failed attempt
+        return {
+            success: false,
+            message: "You fail to disarm the trap!",
+            damage: Math.floor(this.trap.type.damage / 2)
+        };
     }
 
     generateCombatContent() {
-        if (!this.cleared && !this.enemy && !this.enemyState) {
-            if (this.roomType === 'boss') {
-                this.enemy = this.generateBossEnemy();
-                this.description += '\n\nA powerful presence awaits...';
-            } else {
-                this.enemy = this.generateEnemy();
-                this.description += '\n\nThere is a hostile presence here...';
+        if (this.roomType === 'combat') {
+            // Generate enemy
+            this.enemy = this.generateEnemy();
+            
+            // Add combat-related description
+            const enemyDescriptions = [
+                `A ${this.enemy.name.toLowerCase()} lurks in the shadows.`,
+                `You sense the presence of a ${this.enemy.name.toLowerCase()}.`,
+                `A ${this.enemy.name.toLowerCase()} blocks your path.`
+            ];
+            
+            const randomDescription = enemyDescriptions[Math.floor(Math.random() * enemyDescriptions.length)];
+            this.description += `\n\n${randomDescription}`;
+            
+            // Add enemy name to features for examination
+            this.features.push(this.enemy.name);
+            
+            console.log('Generated enemy:', this.enemy); // Debug log
+        } else if (this.roomType === 'boss') {
+            this.enemy = this.generateBossEnemy();
+            if (this.enemy) {
+                this.description = this.enemy.roomDescription?.base || 'A powerful presence fills this room.';
+                this.features = this.enemy.roomDescription?.features || [];
             }
-        } else if (this.enemyState) {
-            this.enemy = this.enemyState;
-            this.description += '\n\nThe enemy you fled from is still here...';
         }
     }
 
@@ -693,20 +737,27 @@ export class Room {
     }
 
     handleTrapTrigger() {
-        if (!this.trap) return null;
-
-        // Check for Safe Passage upgrade
-        const safePassageLevel = this.dungeon?.player?.upgrades?.explorer?.safePassage || 0;
-        const avoidanceChance = safePassageLevel * 0.15; // 15% per level
-
-        if (Math.random() < avoidanceChance) {
+        // Boss rooms and cleared rooms should never trigger traps
+        if (this.roomType === 'boss' || this.cleared) {
             return {
                 triggered: false,
-                message: "Your Safe Passage ability helps you avoid the trap!"
+                message: null
             };
         }
 
-        return this.trap.trigger();
+        if (!this.trap?.type) {
+            return {
+                triggered: false,
+                message: null
+            };
+        }
+
+        // Instead of immediately triggering, just return that we found a trap
+        return {
+            triggered: true,
+            message: "You notice a trap! You should try to disarm it.",
+            requiresDisarm: true  // New flag to indicate player should disarm
+        };
     }
 
     generateLoot() {
@@ -730,6 +781,7 @@ export class Room {
         if (this.roomType === 'trap') {
             const trapTypes = Object.values(TrapTypes);
             const selectedTrap = trapTypes[Math.floor(Math.random() * trapTypes.length)];
+            console.log('Selected trap type:', selectedTrap); // Debug log
             this.trap = {
                 type: selectedTrap,
                 isDisarmed: false,
@@ -739,11 +791,66 @@ export class Room {
     }
 
     setupBossRoom() {
+        if (this.cleared) return; // Don't reset a cleared boss room
+
         this.roomType = 'boss';
         this.contentGenerated = true;
-        // Generate the boss immediately to ensure it's there
-        this.enemy = this.generateBossEnemy();
-        this.description = this.baseDescription + '\n\nA powerful presence awaits...';
+        this.isBossRoom = true;
+        
+        // Get the boss with appropriate phase based on game completions
+        const boss = DenialBoss.spawn();
+        
+        // Set up the boss enemy with all properties
+        this.enemy = {
+            ...boss,
+            health: boss.maxHealth,
+            maxHealth: boss.maxHealth,
+            attack: boss.attack,
+            name: boss.name,
+            isBoss: true,
+            abilities: boss.abilities,
+            dialogue: boss.dialogue,
+            phase: boss.phase,
+            appearance: boss.appearance
+        };
+
+        // Set boss room description and features from boss config
+        this.description = boss.roomDescription.base;
+        this.features = boss.roomDescription.features;
+        
+        // Ensure the room is ready for combat
+        this.enemyAware = true;  // Boss is always aware
+        this.playerAware = true; // Player is always aware of boss
+        this.trap = null;        // Ensure no traps in boss room
+    }
+
+    // Update enter method to handle boss rooms properly
+    enter(fromDirection) {
+        if (this.roomType === 'boss' && !this.cleared && !this.enemy) {
+            this.setupBossRoom();
+        }
+        
+        // Rest of enter logic...
+        this.lastEntryDirection = fromDirection;
+        if (!this.discovered) {
+            this.discover();
+        }
+    }
+
+    // Add method to spring trap (called after failed/skipped disarm)
+    springTrap() {
+        if (!this.trap?.type) return null;
+
+        const damage = this.trap.type.damage;
+        // Remove the trap after it springs
+        const message = this.trap.type.description;
+        this.trap = null;  // Remove trap after springing
+
+        return {
+            triggered: true,
+            message: `${message} The trap springs!`,
+            damage
+        };
     }
 }
   
