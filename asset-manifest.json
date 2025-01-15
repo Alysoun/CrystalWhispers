@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/CrystalWhispers/static/css/main.2a5029b4.css",
-    "main.js": "/CrystalWhispers/static/js/main.c0356e45.js",
+    "main.css": "/CrystalWhispers/static/css/main.562f6f2f.css",
+    "main.js": "/CrystalWhispers/static/js/main.59bd9bc2.js",
     "index.html": "/CrystalWhispers/index.html",
-    "main.2a5029b4.css.map": "/CrystalWhispers/static/css/main.2a5029b4.css.map",
-    "main.c0356e45.js.map": "/CrystalWhispers/static/js/main.c0356e45.js.map"
+    "main.562f6f2f.css.map": "/CrystalWhispers/static/css/main.562f6f2f.css.map",
+    "main.59bd9bc2.js.map": "/CrystalWhispers/static/js/main.59bd9bc2.js.map"
   },
   "entrypoints": [
-    "static/css/main.2a5029b4.css",
-    "static/js/main.c0356e45.js"
+    "static/css/main.562f6f2f.css",
+    "static/js/main.59bd9bc2.js"
   ]
 }
