@@ -3,8 +3,12 @@ import { BrokenMirror } from './items/BrokenMirror';
 import { ChildsLocket } from './items/ChildsLocket';
 import { OldDiary } from './items/OldDiary';
 import { MusicBox } from './items/MusicBox';
-import { AcceptanceToken } from './items/AcceptanceToken';
-// ... import other treasures
+// import { AcceptanceToken } from './items/AcceptanceToken';
+import { CrystalOfMemory } from './items/CrystalOfMemory';
+// import { EchoingPendant } from './items/EchoPendant';
+import { TemporalShard } from './items/TemporalShard';
+import { ForgottenRelic } from './items/ForgottenRelic';
+import { MemoryVessel } from './items/MemoryVessel';
 
 export class TreasurePool {
   constructor() {
@@ -20,7 +24,14 @@ export class TreasurePool {
       new BrokenMirror(),
       new ChildsLocket(),
       new OldDiary(),
-      new MusicBox()
+      new MusicBox(),
+     // new AcceptanceToken(),
+      new CrystalOfMemory(),
+      // new EchoingPendant(),
+      new TemporalShard(),
+      new ForgottenRelic(),
+      new MemoryVessel()
+
     ].forEach(treasure => {
       this.allTreasures.set(treasure.id, treasure);
     });

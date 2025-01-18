@@ -102,4 +102,225 @@
 
 .close-button:hover {
   color: #ff6600;
+}
+
+.puzzle-interface {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px 0;
+  align-items: center;
+}
+
+.available-symbols {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.symbol {
+  font-size: 24px;
+  padding: 10px;
+  background: #2a2a2a;
+  border: 1px solid #ff3300;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s;
+}
+
+.symbol:hover:not(.used) {
+  background: #3a3a3a;
+  transform: scale(1.1);
+}
+
+.symbol.dragging {
+  opacity: 0.2;
+}
+
+.symbol.used {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.solution-slots {
+  display: flex;
+  gap: 10px;
+}
+
+.solution-slot {
+  width: 40px;
+  height: 40px;
+  border: 2px dashed #ff3300;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: #1a1a1a;
+  transition: all 0.2s;
+}
+
+.solution-slot.can-drop {
+  border-style: solid;
+  background: #2a2a2a;
+}
+
+.solution-slot:hover.can-drop {
+  background: #3a3a3a;
+  transform: scale(1.05);
+}
+
+.submit-button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.puzzle-hint {
+  color: #ff9966;
+  margin-bottom: 15px;
+  text-align: center;
+  font-style: italic;
+}
+
+.floating-symbol {
+  position: fixed;
+  font-size: 24px;
+  color: #ff3300;
+  text-shadow: 0 0 10px rgba(255, 51, 0, 0.5);
+  pointer-events: none;
+  user-select: none;
+  background: #2a2a2a;
+  border: 1px solid #ff3300;
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  z-index: 9999;
+}
+
+.symbol {
+  font-size: 24px;
+  padding: 10px;
+  background: #2a2a2a;
+  border: 1px solid #ff3300;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s;
+}
+
+.symbol.dragging {
+  opacity: 0.2;
+}
+
+.symbol:hover:not(.used) {
+  background: #3a3a3a;
+  transform: scale(1.1);
+}
+
+.symbol.used {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.solution-slot {
+  width: 40px;
+  height: 40px;
+  border: 2px dashed #ff3300;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: #1a1a1a;
+  transition: all 0.2s;
+}
+
+.solution-slot.can-drop {
+  border-style: solid;
+  background: #2a2a2a;
+}
+
+.solution-slot:hover.can-drop {
+  background: #3a3a3a;
+  transform: scale(1.05);
+}
+
+.timing-minigame {
+  padding: 20px;
+  text-align: center;
+}
+
+.timing-bar {
+  height: 30px;
+  background: #1a1a1a;
+  border: 1px solid #ff3300;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timing-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: #ff3300;
+  transition: left 0.02s linear;
+}
+
+.success-zone {
+  position: absolute;
+  left: 45%;
+  width: 10%;
+  height: 100%;
+  background: rgba(0, 255, 0, 0.2);
+  border: 1px solid #00ff00;
+}
+
+.strength-minigame {
+  padding: 20px;
+  text-align: center;
+}
+
+.strength-bar {
+  height: 30px;
+  background: #1a1a1a;
+  border: 1px solid #ff3300;
+  margin-bottom: 10px;
+}
+
+.strength-progress {
+  height: 100%;
+  background: #ff3300;
+  transition: width 0.1s ease-out;
+}
+
+.time-remaining {
+  color: #ff6600;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.minigame-hint {
+  color: #999;
+  font-size: 14px;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.timing-button, .strength-button {
+  background: #ff3300;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+
+.timing-button:hover, .strength-button:hover {
+  background: #ff6600;
 } 

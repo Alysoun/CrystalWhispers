@@ -544,29 +544,39 @@ export class Room {
         return 'none';     // No advantage
     }
 
-    attemptDisarmTrap(method, input, player) {
+    attemptDisarmTrap(method, result, player) {
         if (!this.trap) {
             return { success: false, message: 'There is no trap to disarm here.' };
         }
 
-        if (this.trap.isDisarmed) {
-            return { success: false, message: 'This trap has already been disarmed.' };
-        }
-
-        // Check if the method is valid for this trap type
-        const validMethod = this.trap.type.methods.find(m => m.name === method);
-        if (!validMethod) {
+        // Handle timing and strength minigames
+        if (result === 'success') {
+            this.trap.isDisarmed = true;
+            return {
+                success: true,
+                message: "You successfully disarm the trap!",
+                fragments: Math.floor(Math.random() * 20) + 20 // 20-40 fragments for perfect timing/strength
+            };
+        } else if (result === 'failure') {
             return {
                 success: false,
-                message: `That's not a valid way to disarm this trap.`,
+                message: "You failed to disarm the trap!",
                 damage: Math.floor(this.trap.type.damage / 2)
             };
         }
 
-        // Base success chance
-        let successChance = 0.5;
+        // Handle puzzle solution
+        if (typeof result === 'string' && this.trap.type.methods[0].solution === result) {
+            this.trap.isDisarmed = true;
+            return {
+                success: true,
+                message: "The mechanism clicks into place! You've solved the puzzle!",
+                fragments: Math.floor(Math.random() * 20) + 20
+            };
+        }
 
-        // Add bonus from Safe Passage upgrade
+        // Base success chance for other methods
+        let successChance = 0.5;
         const safePassageLevel = player?.upgrades?.explorer?.safePassage || 0;
         successChance += safePassageLevel * 0.15;
 
@@ -576,11 +586,10 @@ export class Room {
             return {
                 success: true,
                 message: "You successfully disarm the trap!",
-                fragments: Math.floor(Math.random() * 20) + 10 // 10-30 fragments
+                fragments: Math.floor(Math.random() * 20) + 10
             };
         }
 
-        // Failed attempt
         return {
             success: false,
             message: "You fail to disarm the trap!",
@@ -737,26 +746,30 @@ export class Room {
     }
 
     handleTrapTrigger() {
-        // Boss rooms and cleared rooms should never trigger traps
-        if (this.roomType === 'boss' || this.cleared) {
+        if (!this.trap) {
             return {
                 triggered: false,
                 message: null
             };
         }
 
-        if (!this.trap?.type) {
+        // Ensure trap has proper type reference
+        if (typeof this.trap.type === 'string') {
+            this.trap.type = TrapTypes[this.trap.type.toUpperCase()];
+        }
+
+        if (!this.trap.type) {
+            console.error('Invalid trap type:', this.trap);
             return {
                 triggered: false,
-                message: null
+                message: 'Error: Invalid trap type'
             };
         }
 
-        // Instead of immediately triggering, just return that we found a trap
         return {
             triggered: true,
-            message: "You notice a trap! You should try to disarm it.",
-            requiresDisarm: true  // New flag to indicate player should disarm
+            message: `You notice ${this.trap.type.description}`,
+            requiresDisarm: true
         };
     }
 

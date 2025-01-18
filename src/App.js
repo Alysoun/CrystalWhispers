@@ -5,7 +5,7 @@ import Inventory from './components/Inventory/Inventory';
 import GameOutput from './components/GameOutput/GameOutput';
 import ImageDisplay from './components/ImageDisplay/ImageDisplay';
 import Journal from './components/Journal/Journal';
-import { parseCommand, getCommandType, findItem } from './game/CommandParser';
+import { parseCommand, getCommandType, findItem, handleExamine } from './game/CommandParser';
 import { saveGame, loadGame, hasSavedGame } from './utils/SaveLoadManager';
 import { MAX_MESSAGES } from './utils/constants';
 import { Dungeon } from './game/DungeonGenerator';
@@ -1014,37 +1014,37 @@ function App() {
     }
   };
 
-  const handleTrapDisarm = (method, input) => {
+  const handleTrapDisarm = (method, result) => {
     if (!gameState.currentRoom || !activeTrap) return;
 
-    const result = gameState.currentRoom.attemptDisarmTrap(method, input, gameState.player);
+    const trapResult = gameState.currentRoom.attemptDisarmTrap(method, result, gameState.player);
     
-    if (result.success) {
-        addToOutput(result.message);
-        if (result.fragments) {
-            setGameState(prev => ({
-                ...prev,
-                memoryFragments: prev.memoryFragments + result.fragments
+    if (trapResult.success) {
+        addToOutput(trapResult.message);
+        if (trapResult.fragments) {
+            setGameState(prevState => ({
+                ...prevState,
+                memoryFragments: prevState.memoryFragments + trapResult.fragments
             }));
-            addToOutput(`You gained ${result.fragments} memory fragments!`);
+            addToOutput(`You gained ${trapResult.fragments} memory fragments!`);
         }
         setActiveTrap(null);
     } else {
-        addToOutput(result.message);
+        addToOutput(trapResult.message);
         // Spring the trap on failed disarm
-        const trapResult = gameState.currentRoom.springTrap();
-        if (trapResult?.damage) {
-            setGameState(prev => ({
-                ...prev,
+        const springResult = gameState.currentRoom.springTrap();
+        if (springResult?.damage) {
+            setGameState(prevState => ({
+                ...prevState,
                 player: {
-                    ...prev.player,
-                    health: Math.max(0, prev.player.health - trapResult.damage)
+                    ...prevState.player,
+                    health: Math.max(0, prevState.player.health - springResult.damage)
                 }
             }));
-            addToOutput(`You took ${trapResult.damage} damage!`);
+            addToOutput(`You took ${springResult.damage} damage!`);
             
             // Check for death
-            if (prev.player.health - trapResult.damage <= 0) {
+            if (gameState.player.health - springResult.damage <= 0) {
                 handlePlayerDeath({
                     cause: 'trap',
                     message: 'You were killed by a deadly trap!'
@@ -1173,6 +1173,8 @@ function App() {
             setDiscoveredTreasures={(treasures) => setGameState(prev => ({ ...prev, discoveredTreasures: treasures }))}
             initializeGame={initializeGame}
             handlePlayerDeath={handlePlayerDeath}
+            gameState={gameState}
+            setGameState={setGameState}
           />
           <AchievementUI 
             isOpen={isAchievementsOpen}

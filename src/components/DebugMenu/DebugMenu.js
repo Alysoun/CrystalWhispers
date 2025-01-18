@@ -3,6 +3,7 @@ import Player from '../../game/Player';
 import { Dungeon } from '../../game/DungeonGenerator';
 import { getBossForLevel } from '../../game/bosses/GriefBosses';
 import './DebugMenu.css';
+import { TrapTypes } from '../../game/TrapTypes';
 
 function DebugMenu({ 
   isOpen, 
@@ -18,7 +19,7 @@ function DebugMenu({
   initializeGame,
   handlePlayerDeath,
   gameState,
-  onUpdateGameState
+  setGameState
 }) {
   const [selectedTab, setSelectedTab] = useState('player');
   const [position, setPosition] = useState(null);
@@ -90,6 +91,10 @@ function DebugMenu({
     });
     return newPlayer;
   };
+
+  useEffect(() => {
+    console.log('DebugMenu setGameState:', typeof setGameState);
+  }, [setGameState]);
 
   const debugActions = {
     player: [
@@ -395,18 +400,72 @@ function DebugMenu({
         }
       },
       {
-        name: 'Add Trap to Room',
+        name: 'Add Spike Trap',
         action: () => {
           const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
           if (currentRoom) {
             currentRoom.trap = {
-              type: 'spike',
-              difficulty: 3,
-              damage: 50,
-              isDisarmed: false,
-              description: 'A deadly spike trap'
+              type: TrapTypes.SPIKE,
+              isDisarmed: false
             };
+            if (typeof setGameState !== 'function') {
+              console.error('setGameState is not a function:', setGameState);
+              return;
+            }
+            setGameState(prev => ({
+              ...prev,
+              currentRoom: currentRoom,
+              activeTrap: currentRoom.trap
+            }));
             setDungeon({ ...dungeon });
+          }
+        }
+      },
+      {
+        name: 'Add Puzzle Trap',
+        action: () => {
+          const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+          if (currentRoom) {
+            currentRoom.trap = {
+              type: TrapTypes.PUZZLE,
+              isDisarmed: false
+            };
+            setGameState(prev => ({
+              ...prev,
+              currentRoom: currentRoom,
+              activeTrap: currentRoom.trap
+            }));
+            setDungeon({ ...dungeon });
+          }
+        }
+      },
+      {
+        name: 'Add Pressure Trap',
+        action: () => {
+          const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+          if (currentRoom) {
+            currentRoom.trap = {
+              type: TrapTypes.PRESSURE,
+              isDisarmed: false
+            };
+            setGameState(prev => ({
+              ...prev,
+              currentRoom: currentRoom,
+              activeTrap: currentRoom.trap
+            }));
+            setDungeon({ ...dungeon });
+          }
+        }
+      },
+      {
+        name: 'Show Current Trap UI',
+        action: () => {
+          const currentRoom = dungeon.rooms.get(dungeon.currentRoomId);
+          if (currentRoom?.trap) {
+            setGameState(prev => ({
+              ...prev,
+              activeTrap: currentRoom.trap
+            }));
           }
         }
       },
@@ -437,7 +496,7 @@ function DebugMenu({
         
         // Start combat immediately if boss isn't cleared
         if (!targetRoom.cleared) {
-            onUpdateGameState(prev => ({
+            setGameState(prev => ({
                 ...prev,
                 dungeon: {
                     ...prev.dungeon,
@@ -450,7 +509,7 @@ function DebugMenu({
             }));
         } else {
             // Normal room update if boss is cleared
-            onUpdateGameState(prev => ({
+            setGameState(prev => ({
                 ...prev,
                 dungeon: {
                     ...prev.dungeon,
@@ -463,7 +522,7 @@ function DebugMenu({
     } 
     else if (targetRoom.roomType === 'combat' && targetRoom.enemy) {
       // Start combat immediately for combat rooms
-      onUpdateGameState(prev => ({
+      setGameState(prev => ({
         ...prev,
         dungeon: {
           ...prev.dungeon,
@@ -477,7 +536,7 @@ function DebugMenu({
     }
     else {
       // Normal room teleport
-      onUpdateGameState(prev => ({
+      setGameState(prev => ({
         ...prev,
         dungeon: {
           ...prev.dungeon,

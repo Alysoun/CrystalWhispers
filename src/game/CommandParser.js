@@ -8,7 +8,8 @@ const VALID_COMMANDS = {
   load: ['load', 'loadgame'],
   help: ['help', 'h', '?'],
   use: ['use', 'apply'],
-  memories: ['memories', 'mem', 'm']
+  memories: ['memories', 'mem', 'm'],
+  achievements: ['achievements', 'a']
 };
 
 const DIRECTIONS = {
@@ -23,16 +24,19 @@ const parseCommand = (input) => {
   const command = words[0];
   let target = words.slice(1).join(' ');
 
+  // Find the canonical command type from aliases
+  const commandType = Object.entries(VALID_COMMANDS).find(([_, aliases]) => 
+    aliases.includes(command)
+  )?.[0] || command;
+
   // Handle look/examine commands
   if (VALID_COMMANDS.look.includes(command)) {
     if (!target) {
-      // If no target, treat as a look at room command
       return {
         type: 'look',
         target: null
       };
     }
-    // Otherwise treat as examine command
     return {
       type: 'examine',
       target: target
@@ -56,20 +60,24 @@ const parseCommand = (input) => {
   }
 
   // Handle other commands
-  return { type: command, target };
+  return { type: commandType, target };
 };
 
 const getCommandType = (input) => {
-  const command = input.toLowerCase().trim();
-  
-  if (command.startsWith('examine ') || command === 'examine') {
-    return 'examine';
-  }
-  // ... other command checks
-  return command;
+  const words = input.toLowerCase().trim().split(' ');
+  const command = words[0];
+
+  // Find the canonical command type from aliases
+  const commandType = Object.entries(VALID_COMMANDS).find(([_, aliases]) => 
+    aliases.includes(command)
+  )?.[0];
+
+  return commandType || command;
 };
 
 const findItem = (itemName, items) => {
+  if (!itemName || !items) return null;
+  
   return items.find(item => 
     item.name.toLowerCase() === itemName.toLowerCase() ||
     (item.aliases && item.aliases.some(alias => 
@@ -79,13 +87,20 @@ const findItem = (itemName, items) => {
 };
 
 const handleExamine = (args, gameState) => {
+  if (!args || !gameState) return "There's nothing to examine.";
+  
   const target = Array.isArray(args) ? args.join(" ").toLowerCase() : args.toLowerCase();
   
   if (target === "puzzle") {
     const currentRoom = gameState.dungeon.rooms.get(gameState.dungeon.currentRoomId);
-    if (currentRoom.puzzle) {
-      return `You begin examining the puzzle more closely...`;
+    if (currentRoom?.puzzle) {
+      return {
+        type: 'puzzle',
+        puzzle: currentRoom.puzzle,
+        message: 'You begin examining the puzzle more closely...'
+      };
     }
+    return "There is no puzzle here.";
   }
   return `You don't see that here.`;
 };

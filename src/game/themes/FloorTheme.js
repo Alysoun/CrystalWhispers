@@ -198,15 +198,26 @@ export class FloorTheme {
               message: 'The dancing flames stir a distant memory...'
             }
           },
-          'chess set': {
-            name: 'chess set',
+          'chess game': {
+            name: 'chess game',
             description: 'A chess game frozen mid-play, pieces moved by phantom players.',
             canTake: true,
-            aliases: ['chess', 'chess pieces'],
-            examine: 'The position of the pieces reminds you of a game long forgotten. You could take it as a memory.',
+            aliases: ['chess', 'chess set', 'game'],
+            examine: 'The chess pieces seem to quiver with stored memories, each move telling a story. You could take it with you.',
             onTake: {
-              message: 'As you pick up the chess set, memories of past matches and strategies flood back...',
-              fragments: 20
+              message: 'As you pick up the chess set, you can almost hear the echoes of past matches...',
+              fragments: 30
+            }
+          },
+          'chess set': {
+            name: 'chess set',
+            description: 'A chess set mid-game, pieces moved by phantom players.',
+            canTake: true,
+            aliases: ['chess', 'chess game', 'game'],
+            examine: 'The chess pieces seem to quiver with stored memories, each move telling a story. You could take it with you.',
+            onTake: {
+              message: 'As you pick up the chess set, you can almost hear the echoes of past matches...',
+              fragments: 30
             }
           },
           'tea set': {
